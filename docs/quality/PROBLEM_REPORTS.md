@@ -9,7 +9,6 @@ from the first commit that has them.
 |---|---|---|---|
 | PR-0001 | The inherited Playground (`src/`) has no Arare requirement; only `detectRuntimeKind` is traced (AR-INH-001) | The shell is taken over as-is so it keeps running on the Ajisai oracle | Phase 5 |
 | PR-0002 | The Playground and its Reference (`public/docs/`) describe Ajisai, not Arare, and run the Ajisai engine | Arare has no engine until Phase 2 and no Playground adapter until Phase 5 | Phase 5 |
-| PR-0003 | No Kani harness exists, and `cargo kani` passes when it finds none | The kernels are Phase 2 work; the Lean half of this report closed in Phase 1 (see Closed) | Phase 2 |
 | PR-0006 | The Playground keeps Ajisai's internal identifiers (`__AJISAI_TARGET__`, `AJISAI_BUILD_TARGET`, storage keys such as `ajisai-state.json`) | Renaming them is part of making the shell engine-neutral, not a rename for its own sake | Phase 5 |
 | PR-0007 | `tools/mcp-server/` is Ajisai's server, kept only as the oracle for agent sessions, and is outside CI | Arare's own server is Phase 6 work | Phase 6 |
 | PR-0008 | Ajisai's Reference generator (`scripts/generate-word-reference.mjs`) was removed with Ajisai's spec | The Reference comes with the Playground; the specification half of this report closed in Phase 1 (see Closed) | Phase 5 |
@@ -23,3 +22,4 @@ from the first commit that has them.
 | PR-0003 (Lean) | The Lean job checked only a placeholder theorem | Closed 2026-10-28 (Phase 1): `formal/Arare/` holds the value model, 80 theorems, each audited by `scripts/check-formal-axioms.mjs` |
 | PR-0004 | `cargo-llvm-cov` was installed at its latest version in CI | Closed 2026-10-28 (Phase 1): pinned to 0.9.1 in `.github/workflows/test.yml` and `CONFIGURATION_INDEX.md` |
 | PR-0008 (spec) | Ajisai's specification generator was removed with Ajisai's spec | Closed 2026-10-28 (Phase 1): replaced, not ported — `spec/requirements.json` and `scripts/generate-requirements.mjs` (ADR-0006) |
+| PR-0003 (Kani) | No Kani harness existed, and `cargo kani` passed when it found none | Closed 2026-10-28 (Phase 2a): nine harnesses in `rust/crates/arare-kernel/src/proofs.rs`, and the Kani job fails when fewer are verified than the source declares |

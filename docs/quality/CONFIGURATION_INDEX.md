@@ -33,4 +33,6 @@ change that updates this file in the same diff
 |---|---|---|---|
 | Baseline | Done | `481dc6cac9e70df776b4cf0dec3b224bb1b47629` | Ajisai content without history (`UPSTREAM.md`). Identified by its commit; the owner chose not to tag it |
 | 0. Initialization | Merged | `02a8f32ebd5c6b28c8c748b10b4d0b8af754ea9b` (masamoto1982/Arare#1) | WORK_ORDER.md §10. Open gaps: `docs/quality/PROBLEM_REPORTS.md` |
-| 1. Requirements and formal model | In review | — | Requirements registry, ADR-0001 to ADR-0006, Lean model (AR-VER-101 to 106) |
+| 1. Requirements and formal model | Merged | `4c12a6e` (masamoto1982/Arare#3) | Requirements registry, ADR-0001 to ADR-0006, Lean model (AR-VER-101 to 106) |
+| 2a. Executable specification and kernel | In review | — | `arare-spec`, `arare-kernel`, AR-LLR-001 to 009, AR-VER-201 to 207 |
+| 2b. Front end and interpreter | Not started | — | Literals, QUANTIZE, the Words, NIL reasons, the Ajisai oracle |

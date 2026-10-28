@@ -25,6 +25,9 @@ version = "0.1.0-alpha.0"
 [[package]]
 name = "arare-kernel"
 version = "0.1.0-alpha.0"
+dependencies = [
+ "arare-spec",
+]
 
 [[package]]
 name = "arare-spec"

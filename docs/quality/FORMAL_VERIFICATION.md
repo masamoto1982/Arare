@@ -18,8 +18,13 @@ exactly where it is stated, and nowhere else.
 
 ## Status
 
-**Phase 1: the value model is proved; no implementation exists yet to hold
-to it.** 80 theorems in `formal/Arare/`, each resting only on `propext`,
+**Phase 2a: the value model is proved in Lean, mirrored in Rust and diffed
+against it, and the kernel is proved against laws in Kani.** The interpreter
+(Phase 2b) is not yet verified.
+
+### Lean
+
+80 theorems in `formal/Arare/`, each resting only on `propext`,
 `Classical.choice` and `Quot.sound` (`npm run check:formal` runs
 `scripts/check-formal-axioms.mjs` after `lake build`, because `lake build`
 alone accepts `sorry`). Every theorem is cited by a requirement in
@@ -35,30 +40,65 @@ one (`npm run check:requirements`).
 | `formal/Arare/Closed.lean` | AR-VER-105 | Over an expression language of literals, points, `+ − ·`, negation and DIV: closed code computes the exact integer; a machine that fits every intermediate into the widest width answers that integer or a point, never another finite number, and the exact integer when nothing overflows; associativity does not survive an intermediate overflow | AR-HLR-003, 004, 017 |
 | `formal/Arare/Sql.lean` | AR-VER-106 | NIL in truth position is UNKNOWN; EQ always decided; order of a point UNKNOWN; FILTER keeps exactly the TRUE elements; a branch takes THEN only on TRUE; SUM skips NIL and is NIL when nothing is left | AR-HLR-010, 011, 013, 014, 015, 016 |
 
+### Model to code (AR-VER-201)
+
+`formal/Table.lean` runs the Lean model over a fixed grid — every pair of int8
+values under ADD, SUB, MUL, DIV, EQ and LT, NEG, RESCALE, the two rounding
+quotients, `fit`, every code, the truth connectives, SUM, FILTER and SELECT —
+and prints 71,864 lines. `rust/crates/arare-spec/src/table.rs` prints the
+same grid from the Rust executable specification. The Lean job of CI diffs
+the two and fails on any difference. This ties `arare-spec` to the model on
+that grid, not beyond it: the theorems cover every input, the diff covers the
+grid.
+
+### Kani (AR-VER-207)
+
+`rust/crates/arare-kernel/src/proofs.rs`, run by the Kani job, which also
+fails when fewer harnesses are verified than the source declares (`cargo kani`
+alone passes with none).
+
+| Harness | What it proves | Scope | Time (local) |
+|---|---|---|---|
+| `and_word_is_lanewise_and` | Word-wide Kleene AND is the scalar AND on every lane, and stays canonical | Every pair of canonical 64-lane words | < 1 s |
+| `not_word_is_lanewise_not` | The same for NOT | Every canonical word | < 1 s |
+| `fit_is_exact_or_inf` | `fit` answers the integer itself inside the range and 1/0 outside | Every `i128`, every width | < 1 s |
+| `codes_round_trip` | Every code decodes to a value that encodes back; finite only in range | Every `i64` code, every width | < 1 s |
+| `rescale_is_round_half_even_w32` | The shift-based RESCALE equals round half to even of the Euclidean quotient | Every int32 code, every shift ≤ 31 | 3 s |
+| `add_exact_w16_w32` | ADD of int16 is the exact sum at int32; of int32, at int64 | Every pair | 2 s |
+| `add_w64_any_scales_no_overflow` | ADD at int64 at any two scales never overflows an intermediate and answers the exact aligned sum or 1/0 | Every pair, every scale pair in ±31 | 7 s |
+| `mul_exact_w16` | MUL of int16 is the exact product at int32 | Every pair | 9 s |
+| `div_half_unit_w16` | DIV is within half a unit of the exact quotient (the law `Arare.W.div_error` proves for the model), ties to even | Every pair, divisor nonzero, scale 0 | about 9 min |
+
+`add_w64_any_scales_no_overflow` found a defect on its first run: `Num::new`
+checked the scale with `scale.abs()`, which overflows for `i32::MIN` and in a
+release build wraps to a negative number that passed the check. The check is
+now a range check, with a regression test in
+`rust/crates/arare-kernel/tests/widths.rs`.
+
 ### What is not proved
 
 Read these as open, not as proved by implication:
 
-- **Scales and width selection.** The model computes on codes at one common
-  scale. Aligning scales before ADD and SUB, adding exponents in MUL, choosing
-  DIV's result scale and choosing the narrowest width are tested from Phase 2,
-  not proved (AR-HLR-001, 003, 007).
-- **Equality across widths and scales**, and MIN, MAX and SORT on points, are
-  not modelled (AR-HLR-010, 011).
-- **Agreement with Ajisai.** The model does not contain Ajisai's wheel of
-  fractions, so that Arare's rules are Ajisai's restricted to fixed point is
-  argued in ADR-0003, not proved; the oracle comparison of Phase 2 checks it
-  empirically.
+- **Scales and width selection in the model.** The Lean model computes on
+  codes at one common scale. The kernel's alignment, width rule and DIV result
+  scale are tested exhaustively over int8 values at exponents {−2, 0, 3}
+  (AR-VER-203) and proved free of overflow for ADD at int64 (Kani), but no
+  theorem states them (AR-HLR-001, 003, 007).
+- **MUL beyond int16, DIV beyond int16 at scale 0, EQ and LT across scales**
+  are tested, not proved: identities between products of two wide words are
+  out of the solvers' reach.
+- **Agreement with Ajisai.** Argued in ADR-0003, not proved; the oracle
+  comparison arrives with the interpreter in Phase 2b.
 - **The reciprocal wheel axioms** do not hold for fixed point and are not
   claimed (ADR-0003).
 - **NARROW inside expressions.** `Closed.lean`'s language has no NARROW; its
   `fit` is the widest-width limit. NARROW on its own is AR-VER-101.
 - **The static range proof** that makes code `field=closed` (AR-HLR-017) and
   the error budget are Phase 3.
-- **Aggregates other than SUM** and the Arrow layout (AR-HLR-019, exempt from
-  proof by its nature) are Phase 2 tests.
-- **The implementation.** No Rust code exists yet; there is no Kani harness
-  and `cargo kani` passes when it finds none (PR-0003).
+- **Aggregates other than SUM**, numeric columns, and 64-byte buffer alignment
+  (AR-HLR-019 is exempt from proof by its nature; its bitmaps are tested and
+  proved lane-wise).
+- **The interpreter** (Phase 2b).
 
 ## Running
 

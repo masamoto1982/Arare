@@ -574,6 +574,333 @@
         "lean": [],
         "planned": "Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI."
       }
+    },
+    {
+      "id": "AR-LLR-001",
+      "title": "The executable specification mirrors the Lean model",
+      "statement": "rust/crates/arare-spec defines every function of formal/Arare/ that has computational content, under the same name in snake case, on i128; over the grid formal/Table.lean prints, its output is byte for byte the Lean model's.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-002",
+        "AR-HLR-003",
+        "AR-HLR-004",
+        "AR-HLR-005",
+        "AR-HLR-006",
+        "AR-HLR-007",
+        "AR-HLR-008",
+        "AR-HLR-009",
+        "AR-HLR-010",
+        "AR-HLR-011",
+        "AR-HLR-012",
+        "AR-HLR-013",
+        "AR-HLR-014",
+        "AR-HLR-015",
+        "AR-HLR-016"
+      ],
+      "derived": false,
+      "implementation": [
+        "rust/crates/arare-spec/src/lib.rs",
+        "rust/crates/arare-spec/src/rounding.rs",
+        "rust/crates/arare-spec/src/wheel.rs",
+        "rust/crates/arare-spec/src/truth.rs",
+        "rust/crates/arare-spec/src/sql.rs",
+        "rust/crates/arare-spec/src/table.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-201",
+            "file": "rust/crates/arare-spec/tests/table.rs"
+          },
+          {
+            "id": "AR-VER-201",
+            "file": "formal/Table.lean"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-002",
+      "title": "Widths and the width of a result",
+      "statement": "Width gives each of 8, 16, 32 and 64 bits its half-range M, its largest finite code M−2, and the codes of 1/0 (M−1) and 0/0 (−M). An integer literal takes the narrowest width holding it. The result of ADD or SUB takes the narrowest width whose finite range holds the sum of the operands' ranges after alignment; MUL, their product; DIV, the dividend's range shifted by the divisor's negative exponent; none holding it, int64.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-001",
+        "AR-HLR-003"
+      ],
+      "derived": false,
+      "implementation": [
+        "rust/crates/arare-kernel/src/width.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-202",
+            "file": "rust/crates/arare-kernel/tests/int8_exhaustive.rs"
+          },
+          {
+            "id": "AR-VER-203",
+            "file": "rust/crates/arare-kernel/tests/scales.rs"
+          },
+          {
+            "id": "AR-VER-204",
+            "file": "rust/crates/arare-kernel/tests/widths.rs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-003",
+      "title": "Codes and fitting",
+      "statement": "encode, decode and is_code realise AR-HLR-002 at each width; fit maps an exact integer to itself inside a width's finite range and to 1/0 outside it, and fit_val passes the wheel points through.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-002",
+        "AR-HLR-004",
+        "AR-HLR-009"
+      ],
+      "derived": false,
+      "implementation": [
+        "rust/crates/arare-kernel/src/codes.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-204",
+            "file": "rust/crates/arare-kernel/tests/widths.rs"
+          },
+          {
+            "id": "AR-VER-206",
+            "file": "rust/crates/arare-kernel/src/tests.rs"
+          }
+        ],
+        "kani": [
+          {
+            "name": "fit_is_exact_or_inf",
+            "file": "rust/crates/arare-kernel/src/proofs.rs"
+          },
+          {
+            "name": "codes_round_trip",
+            "file": "rust/crates/arare-kernel/src/proofs.rs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-004",
+      "title": "ADD, SUB, NEG and MUL with scales",
+      "statement": "Scale exponents stay within ±31; an operation whose result exponent would leave that range is a ScaleOverflow error. ADD aligns both operands to the smaller exponent by an exact shift and adds; SUB adds the negation; NEG keeps width and scale; MUL adds the exponents and multiplies. Every intermediate is exact in i128, and the result is fitted into its width (AR-LLR-002). The wheel points follow AR-HLR-005 and AR-HLR-006.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-003",
+        "AR-HLR-004",
+        "AR-HLR-005",
+        "AR-HLR-006"
+      ],
+      "derived": true,
+      "rationale": "The ±31 exponent limit is not in the high-level requirements; it keeps every alignment shift within 62 bits, so that all arithmetic is exact in i128 (docs/design/kernel.md).",
+      "implementation": [
+        "rust/crates/arare-kernel/src/num.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-202",
+            "file": "rust/crates/arare-kernel/tests/int8_exhaustive.rs"
+          },
+          {
+            "id": "AR-VER-203",
+            "file": "rust/crates/arare-kernel/tests/scales.rs"
+          },
+          {
+            "id": "AR-VER-204",
+            "file": "rust/crates/arare-kernel/tests/widths.rs"
+          },
+          {
+            "id": "AR-VER-206",
+            "file": "rust/crates/arare-kernel/src/tests.rs"
+          }
+        ],
+        "kani": [
+          {
+            "name": "add_exact_w16_w32",
+            "file": "rust/crates/arare-kernel/src/proofs.rs"
+          },
+          {
+            "name": "add_w64_any_scales_no_overflow",
+            "file": "rust/crates/arare-kernel/src/proofs.rs"
+          },
+          {
+            "name": "mul_exact_w16",
+            "file": "rust/crates/arare-kernel/src/proofs.rs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-005",
+      "title": "DIV at the dividend's scale",
+      "statement": "DIV of two finite numbers, the divisor nonzero, keeps the dividend's exponent e_a and answers round(a·2^(−e_b) / b) half to even, computed on the truncating quotient; division by zero and by 1/0 follows AR-HLR-007.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-007"
+      ],
+      "derived": true,
+      "rationale": "AR-HLR-007 leaves the result scale to the surface syntax; keeping the dividend's scale makes DIV need no extra operand, and a program wanting more fraction bits quantizes the dividend first (docs/design/kernel.md).",
+      "implementation": [
+        "rust/crates/arare-kernel/src/num.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-202",
+            "file": "rust/crates/arare-kernel/tests/int8_exhaustive.rs"
+          },
+          {
+            "id": "AR-VER-203",
+            "file": "rust/crates/arare-kernel/tests/scales.rs"
+          },
+          {
+            "id": "AR-VER-206",
+            "file": "rust/crates/arare-kernel/src/tests.rs"
+          }
+        ],
+        "kani": [
+          {
+            "name": "div_half_unit_w16",
+            "file": "rust/crates/arare-kernel/src/proofs.rs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-006",
+      "title": "RESCALE and NARROW",
+      "statement": "RESCALE by s raises the exponent by s and rounds the code half to even by shifting, keeping the width; NARROW to a width fits the value into it and keeps the scale. The wheel points pass through both.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-008",
+        "AR-HLR-009"
+      ],
+      "derived": false,
+      "implementation": [
+        "rust/crates/arare-kernel/src/num.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-202",
+            "file": "rust/crates/arare-kernel/tests/int8_exhaustive.rs"
+          },
+          {
+            "id": "AR-VER-204",
+            "file": "rust/crates/arare-kernel/tests/widths.rs"
+          },
+          {
+            "id": "AR-VER-206",
+            "file": "rust/crates/arare-kernel/src/tests.rs"
+          }
+        ],
+        "kani": [
+          {
+            "name": "rescale_is_round_half_even_w32",
+            "file": "rust/crates/arare-kernel/src/proofs.rs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-007",
+      "title": "EQ and LT across scales",
+      "statement": "EQ and LT compare two finite numbers by value after exact alignment to the smaller exponent; EQ compares wheel points by identity and is always TRUE or FALSE; LT with a wheel point is UNKNOWN.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-010",
+        "AR-HLR-011"
+      ],
+      "derived": false,
+      "implementation": [
+        "rust/crates/arare-kernel/src/num.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-202",
+            "file": "rust/crates/arare-kernel/tests/int8_exhaustive.rs"
+          },
+          {
+            "id": "AR-VER-203",
+            "file": "rust/crates/arare-kernel/tests/scales.rs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-008",
+      "title": "Scalar truth",
+      "statement": "Truth's AND is the minimum and NOT the reversal of the ranks FALSE 0, UNKNOWN 1, TRUE 2; OR is NOT of the AND of the NOTs; Truth::of reads NIL as UNKNOWN.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-012",
+        "AR-HLR-013"
+      ],
+      "derived": false,
+      "implementation": [
+        "rust/crates/arare-kernel/src/truth.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-205",
+            "file": "rust/crates/arare-kernel/tests/truth.rs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-009",
+      "title": "Truth columns in Arrow's layout",
+      "statement": "A TruthColumn holds a validity and a value bitmap, lane i at bit i % 8 of byte i / 8, least significant bit first, each padded with zero bits to a multiple of 64 bytes, with no value bit set in a NIL lane. AND and NOT act 64 lanes at a time and agree with the scalar connectives on every lane.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-019",
+        "AR-HLR-012"
+      ],
+      "derived": false,
+      "implementation": [
+        "rust/crates/arare-kernel/src/column.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-205",
+            "file": "rust/crates/arare-kernel/tests/truth.rs"
+          },
+          {
+            "id": "AR-VER-206",
+            "file": "rust/crates/arare-kernel/src/tests.rs"
+          }
+        ],
+        "kani": [
+          {
+            "name": "and_word_is_lanewise_and",
+            "file": "rust/crates/arare-kernel/src/proofs.rs"
+          },
+          {
+            "name": "not_word_is_lanewise_not",
+            "file": "rust/crates/arare-kernel/src/proofs.rs"
+          }
+        ]
+      }
     }
   ]
 }

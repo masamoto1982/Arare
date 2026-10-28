@@ -139,9 +139,20 @@ jobs:
           cargo install --locked kani-verifier --version 0.68.0
           cargo kani setup
 
+      # `cargo kani` succeeds when it finds no harness at all, so the job also
+      # holds the number verified to the number the source declares.
       - name: Prove every harness
         working-directory: rust
-        run: cargo kani --jobs --output-format terse
+        run: |
+          set -o pipefail
+          cargo kani --workspace --jobs --output-format terse | tee "$RUNNER_TEMP/kani.log"
+          declared=$(grep -rho '#\[kani::proof\]' crates | wc -l)
+          verified=$(grep -oE 'Complete - [0-9]+ successfully verified' "$RUNNER_TEMP/kani.log" | grep -oE '[0-9]+' | awk '{s+=$1} END {print s+0}')
+          echo "Kani verified $verified of $declared declared harness(es)."
+          if [ "$verified" -ne "$declared" ]; then
+            echo "::error::Kani verified $verified harness(es) but the source declares $declared."
+            exit 1
+          fi
 
   formal-verification-lean:
     name: Formal Verification (Lean)
@@ -179,3 +190,17 @@ jobs:
 
       - name: Every theorem rests only on the standard axioms
         run: node scripts/check-formal-axioms.mjs
+
+      # AR-VER-201: the Lean model and the Rust executable specification print
+      # the same table over the same grid; any difference fails the job.
+      # rust/rust-toolchain.toml makes rustup install the pinned toolchain.
+      - name: The Rust specification agrees with the Lean model
+        run: |
+          (cd formal && lake build arare-table && lake exe arare-table > "$RUNNER_TEMP/lean-table.txt")
+          (cd rust && cargo run --quiet --release -p arare-spec --example lean_table > "$RUNNER_TEMP/rust-table.txt")
+          if ! diff -u "$RUNNER_TEMP/lean-table.txt" "$RUNNER_TEMP/rust-table.txt" > "$RUNNER_TEMP/table.diff"; then
+            head -40 "$RUNNER_TEMP/table.diff"
+            echo "::error::The Rust specification and the Lean model disagree ($(grep -c '^[-+][^-+]' "$RUNNER_TEMP/table.diff") lines)."
+            exit 1
+          fi
+          echo "Lean and Rust agree on all $(wc -l < "$RUNNER_TEMP/lean-table.txt") lines."
