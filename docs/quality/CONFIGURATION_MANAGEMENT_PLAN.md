@@ -11,8 +11,8 @@ generated files and the pinned oracle bundle. Build outputs (`rust/target/`,
 
 | Baseline | Identification | Content |
 |---|---|---|
-| `arare-baseline-0` | Commit `481dc6cac9e70df776b4cf0dec3b224bb1b47629` on `main` | The content of Ajisai `4d5f693` plus `WORK_ORDER.md`, `CLAUDE.md` and `UPSTREAM.md` (`UPSTREAM.md`) |
-| End of each phase | A tag `arare-phase-N` on `main` | The state that met the phase's exit criteria |
+| Baseline | Commit `481dc6cac9e70df776b4cf0dec3b224bb1b47629` on `main` (untagged, by the owner's choice) | The content of Ajisai `4d5f693` plus `WORK_ORDER.md`, `CLAUDE.md` and `UPSTREAM.md` (`UPSTREAM.md`) |
+| End of each phase | The merge commit on `main` recorded in `CONFIGURATION_INDEX.md`; a tag `arare-phase-N` when the owner sets one | The state that met the phase's exit criteria |
 | Each release | A tag `v<version>` on `main` | The released state, with its `RELEASE_SUMMARY.md` entry |
 
 ## Versions

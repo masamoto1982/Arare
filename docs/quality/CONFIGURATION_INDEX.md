@@ -31,5 +31,5 @@ change that updates this file in the same diff
 
 | Phase | State | Baseline | Notes |
 |---|---|---|---|
-| Baseline | Done | `481dc6cac9e70df776b4cf0dec3b224bb1b47629` (`arare-baseline-0`) | Ajisai content without history (`UPSTREAM.md`). The tag is not yet on the remote, PR-0005 |
-| 0. Initialization | In progress | — | WORK_ORDER.md §10 |
+| Baseline | Done | `481dc6cac9e70df776b4cf0dec3b224bb1b47629` | Ajisai content without history (`UPSTREAM.md`). Identified by its commit; the owner chose not to tag it |
+| 0. Initialization | Merged | `02a8f32ebd5c6b28c8c748b10b4d0b8af754ea9b` (masamoto1982/Arare#1) | WORK_ORDER.md §10. Open gaps: `docs/quality/PROBLEM_REPORTS.md` |
