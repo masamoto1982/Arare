@@ -25,7 +25,7 @@ export async function initWasm(): Promise<WasmModule | null> {
 
     try {
         if (!compiledModule) {
-            const wasmUrl = new URL('../wasm/generated/ajisai_core_bg.wasm', import.meta.url);
+            const wasmUrl = new URL('../wasm/ajisai-oracle/ajisai_core_bg.wasm', import.meta.url);
             try {
                 compiledModule = await WebAssembly.compileStreaming(fetch(wasmUrl));
             } catch {
@@ -35,7 +35,7 @@ export async function initWasm(): Promise<WasmModule | null> {
             }
         }
 
-        const module = await import('../wasm/generated/ajisai_core.js') as unknown as WasmModule;
+        const module = await import('../wasm/ajisai-oracle/ajisai_core.js') as unknown as WasmModule;
 
         if (module.default) {
             await (module.default as (input?: unknown) => Promise<unknown>)({ module_or_path: compiledModule });

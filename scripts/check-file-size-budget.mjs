@@ -1,26 +1,19 @@
 #!/usr/bin/env node
-// File-size budget guard for the Rust source surface (SPECIFICATION the file-size budget in docs/dev/specification-implementation-rules.md).
+// File-size budget guard for the Rust crates (docs/quality/STANDARDS.md, code
+// standard): a hand-written Rust file stays at or under LIMIT lines, so every
+// file remains reviewable in one sitting.
 //
-// docs/dev/specification-implementation-rules.md keeps new and substantially-rewritten Rust files at or under 500 lines.
-// A large legacy surface predates that discipline, so a hard 500-line wall would
-// fail on day one and get muted rather than obeyed. Instead this guard encodes
-// the the file-size budget in docs/dev/specification-implementation-rules.md policy mechanically:
-//   - a file NOT recorded in the baseline must stay at or under LIMIT lines
-//     (new files, and files small enough to have never breached it, cannot cross
-//     the wall unnoticed);
-//   - a file recorded in the baseline is grandfathered at its recorded size but
-//     may not grow by GROWTH_ALLOWANCE or more (the over-budget surface can only
-//     shrink or hold, never bloat).
-//
-// The baseline is docs/quality/file-size-baseline.json, regenerated with
-// `--update`. Its leading `_comment` records why the largest offenders are left
-// unsplit for now (see that file).
+// Arare starts with nothing over the limit, so the baseline is empty and should
+// stay so. The grandfathering mechanism inherited from Ajisai is kept for the
+// exception the standard allows: a file recorded in the baseline is held at its
+// recorded size and may not grow by GROWTH_ALLOWANCE or more, and recording one
+// is a reviewed change to docs/quality/file-size-baseline.json (`--update`).
 
 import { readFileSync, writeFileSync, statSync } from 'node:fs';
 import { resolve, relative, sep } from 'node:path';
 import { repoRoot, walk } from './lib/common.mjs';
 
-const rustSrcDir = resolve(repoRoot, 'rust/src');
+const rustSrcDir = resolve(repoRoot, 'rust/crates');
 const baselinePath = resolve(repoRoot, 'docs/quality/file-size-baseline.json');
 
 const LIMIT = 500;
@@ -29,11 +22,10 @@ const LIMIT = 500;
 const GROWTH_ALLOWANCE = 0.1;
 
 const BASELINE_COMMENT = [
-  'Baseline of Rust source files that exceed the SPECIFICATION the file-size budget in docs/dev/specification-implementation-rules.md 500-line',
-  'budget. Recorded so the mandatory rule can be enforced going forward without',
-  'a mass file split: files listed here are grandfathered at their recorded line',
-  'count and must not grow by 10% or more; files not listed here must stay at or',
-  'under 500 lines. Regenerate with: node scripts/check-file-size-budget.mjs --update',
+  'Rust source files allowed past the 500-line budget of docs/quality/STANDARDS.md.',
+  'A file listed here is held at its recorded line count and must not grow by 10%',
+  'or more; every other file must stay at or under 500 lines. Recording a file is a',
+  'reviewed exception. Regenerate with: node scripts/check-file-size-budget.mjs --update',
   '',
   'A baselined path that no longer exists is a hard error: delete the entry in',
   'the same change that removes the file (re-baseline with --update), so the',
@@ -51,9 +43,9 @@ function countLines(content) {
 }
 
 // A file is exempt when its first line carries the `// @generated` marker.
-// The the file-size budget in docs/dev/specification-implementation-rules.md budget exists to keep *hand-written and hand-maintained* Rust
+// The budget exists to keep *hand-written and hand-maintained* Rust
 // reviewable; a generated file is a mechanical projection of a source that is
-// itself reviewed and drift-checked (e.g. spec/words.json), so its line count
+// itself reviewed and drift-checked, so its line count
 // is not a maintainability signal and cannot be reduced by hand-splitting.
 function isGenerated(absPath) {
   const content = readFileSync(absPath, 'utf8');
@@ -123,7 +115,7 @@ function check() {
       }
     } else if (lines > LIMIT) {
       violations.push(
-        `${path}: ${lines} lines exceeds the ${LIMIT}-line budget (the file-size budget in docs/dev/specification-implementation-rules.md); keep new/rewritten files at or under ${LIMIT} lines`,
+        `${path}: ${lines} lines exceeds the ${LIMIT}-line budget (the file-size budget in docs/quality/STANDARDS.md); keep new/rewritten files at or under ${LIMIT} lines`,
       );
     }
   }

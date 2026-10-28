@@ -93,7 +93,8 @@ function setPlaygroundBadgeTooltip(lines: string[]): void {
  * is never a value, so the difference is a named failure on one host and an
  * answer on the other, never two answers; it is only a trap when a host does
  * not disclose what it applies, so this one does.
- * See docs/dev/mcp-host-profiles.md for the comparison.
+ * See Ajisai's docs/dev/mcp-host-profiles.md (at the commit UPSTREAM.md
+ * names) for the comparison.
  */
 function setHostProfileLabel(interpreter: AjisaiInterpreter): void {
     // Best effort throughout: this is a label, and nothing below it may throw

@@ -639,7 +639,8 @@ export const valueToLatex = (item: Value): string | null => {
     }
 };
 
-// Math view (docs/dev/gui-current-design-memory.md): an alternate KaTeX
+// Math view (Ajisai's docs/dev/gui-current-design-memory.md, at the commit
+// UPSTREAM.md names): an alternate KaTeX
 // rendering of stack values, derived from the structured protocol form.
 // Presentation only — the canonical display strings stay untouched and
 // remain the conformance observation; the toggle swaps the view, never

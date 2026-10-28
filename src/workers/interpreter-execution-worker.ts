@@ -9,7 +9,7 @@ import { applyInterpreterSnapshot } from './execution-contract';
 let interpreter: AjisaiInterpreter | null = null;
 
 
-const bindingsPromise = import('../wasm/generated/ajisai_core.js');
+const bindingsPromise = import('../wasm/ajisai-oracle/ajisai_core.js');
 
 
 async function initFromCompiledModule(wasmModule: WebAssembly.Module): Promise<boolean> {

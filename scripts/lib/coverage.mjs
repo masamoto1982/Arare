@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { readText, repoRoot } from './common.mjs';
 
-/** Which report measures a traced file: Rust sources live under rust/src. */
+/** Which report measures a traced file: Rust sources live under rust/crates. */
 export const languageOf = (path) => (path.startsWith('rust/') ? 'rust' : 'ts');
 
 /**
@@ -21,13 +21,13 @@ export const languageOf = (path) => (path.startsWith('rust/') ? 'rust' : 'ts');
  */
 export function tracedFiles() {
   const traced = new Map();
-  // Requirement rows: | **AQ-REQ-00N** | statement | implementation | verification | QL |
+  // Requirement rows: | **AR-HLR-00N** | statement | implementation | verification | QL |
   for (const line of readText('docs/quality/TRACEABILITY_MATRIX.md').split('\n')) {
     const cells = line.split('|').map((cell) => cell.trim());
-    const requirement = cells[1]?.match(/AQ-REQ-\d{3}/)?.[0];
+    const requirement = cells[1]?.match(/AR-(?:SYS|HLR|LLR|INH|PERF)-\d{3}/)?.[0];
     if (!requirement || cells.length < 6) continue;
     const level = cells[5];
-    for (const [, path] of cells[3].matchAll(/`((?:rust\/)?src\/[^`]+\.(?:rs|ts))`/g)) {
+    for (const [, path] of cells[3].matchAll(/`((?:rust\/crates\/[^`/]+\/)?src\/[^`]+\.(?:rs|ts))`/g)) {
       const entry = traced.get(path) ?? { requirements: [], level };
       entry.requirements.push(requirement);
       traced.set(path, entry);

@@ -1,0 +1,5 @@
+# The stable toolchain Arare builds with (docs/quality/CONFIGURATION_INDEX.md).
+# Changing it is a reviewed change that updates the index in the same diff.
+[toolchain]
+channel = "1.97.0"
+components = ["rustfmt", "clippy"]

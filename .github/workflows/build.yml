@@ -1,15 +1,10 @@
-name: Build and Deploy Ajisai
+name: Build and Deploy the Arare Playground
 
 on:
   push:
     branches: [ main ]
-  # Manual trigger. A push is otherwise the only thing that builds the site,
-  # so a push whose run never got created leaves main's HEAD with no run to
-  # re-run and no way to deploy it short of another commit. That happened on
-  # 2026-08-26: during a GitHub Actions incident the run for the merge of
-  # #1582 was never created, stranding the site on the previous commit. This
-  # deploys whatever ref it is dispatched against, so recovery no longer
-  # requires inventing a commit.
+  # Manual trigger, so a push whose run was never created can still be
+  # deployed without inventing a commit.
   workflow_dispatch:
 
 permissions:
@@ -28,51 +23,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache wasm-pack
-        uses: actions/cache@v5
-        with:
-          path: ~/.cargo/bin/wasm-pack
-          key: ${{ runner.os }}-wasm-pack-0.13.1
-
-      - name: Install wasm-pack
-        run: bash ./scripts/install-wasm-pack.sh
-
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: '20'
 
       - name: Install dependencies
-        # npm ci: reproducible install from the committed package-lock.json
-        # (R1-1); fails rather than silently re-resolving on lock drift.
         run: npm ci
-
-      - name: Build WASM artifacts
-        # Write straight into src/wasm/generated/ so the Vite build below
-        # always picks up the freshest bundle, regardless of whether the
-        # committed copy on main was rebuilt. See scripts/rebuild-wasm.sh
-        # for the same logic for local rebuilds.
-        run: bash ./scripts/rebuild-wasm.sh
 
       - name: Update asset version stamps
         run: |
           VERSION=$(date -u +%Y%m%d%H%M)
           sed -i "s/?v=[0-9]*/?v=${VERSION}/g" index.html
 
+      # Until Arare's engine is connected (Phase 5), the Playground runs the
+      # pinned Ajisai oracle bundle committed in src/wasm/ajisai-oracle/, so
+      # there is no WebAssembly to build here.
       - name: Build with Vite
-        # `npm run build` is `vite build` (package.json); the site is built
-        # once, from the freshly rebuilt wasm bundle and the stamped index.html.
         run: npm run build
-
-      - name: Copy the specification into the site
-        # SPECIFICATION.html is an authored HTML document
-        # (docs/dev/ajisai-authoring-style.md). GitHub's repository view shows
-        # HTML as source, so the rendered surface is the Pages site:
-        # /SPECIFICATION.html next to the Playground.
-        run: cp SPECIFICATION.html dist/
 
       - name: Create .nojekyll file
         run: touch dist/.nojekyll
@@ -88,11 +56,9 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-      
     steps:
       - name: Deploy to GitHub Pages
         id: deployment

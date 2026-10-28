@@ -6,7 +6,7 @@ export default [
     ignores: [
       'node_modules/**',
       'dist/**',
-      'src/wasm/generated/**',
+      'src/wasm/ajisai-oracle/**',
       'src-tauri/target/**',
       'rust/target/**',
       'public/**',

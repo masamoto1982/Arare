@@ -7,7 +7,7 @@ body:
     id: area
     attributes:
       label: Impacted area
-      placeholder: rust/interpreter, tokenizer, wasm boundary, docs, CI...
+      placeholder: arare-kernel, arare-budget, formal/, Playground, docs, CI...
     validations:
       required: true
 
@@ -48,4 +48,4 @@ body:
     id: traceability
     attributes:
       label: Traceability impact
-      description: Which AQ-REQ/AQ-VER links are impacted or missing?
+      description: Which AR-* requirement or verification links are impacted or missing?

@@ -1,4 +1,4 @@
-// AQ-VER-004-A: detectRuntimeKind MC/DC for QL-A boolean decisions.
+// AR-VER-001-A: detectRuntimeKind MC/DC for its boolean decisions.
 //
 // DUT: src/platform/index.ts, detectRuntimeKind()
 //
@@ -37,7 +37,7 @@
 //   Pair (4, 5) with B2 held T: B1 flips T->F -> outcome flips.
 //   Pair (4, 6) with B1 held T: B2 flips T->F -> outcome flips.
 //
-// Trace: docs/quality/TRACEABILITY_MATRIX.md, requirement AQ-REQ-004.
+// Trace: docs/quality/TRACEABILITY_MATRIX.md, requirement AR-INH-001.
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { detectRuntimeKind } from './index';
@@ -62,7 +62,7 @@ function readGlobal(name: string): unknown {
     return Reflect.get(globalThis, name);
 }
 
-describe('AQ-VER-004-A detectRuntimeKind classifier', () => {
+describe('AR-VER-001-A detectRuntimeKind classifier', () => {
     let originalTarget: unknown;
     let originalWindow: unknown;
     let hadTarget: boolean;

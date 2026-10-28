@@ -24,9 +24,17 @@ Arare は、量子化を前提とし、失った精度を数字で管理する�
 - 真偽値と NIL のメモリ配置は Apache Arrow と同じ（有効ビット列と値ビット列）。
 - Word の名前と意味は、Arare 固有の理由がない限り Ajisai に揃える。Ajisai はオラクル（正解の基準）である。
 
-## 検証で使うコマンド（Phase 0 で確定させて書き足す）
+## 検証で使うコマンド
 
-- `rust/` で：`cargo fmt --check`、`cargo clippy --all-targets -- -D warnings`、`cargo test --all-targets`、`cargo kani`
-- `formal/` で：`lake build`
-- リポジトリ直下で：`npm run check`、`npm run lint`、`npm test`、`npm run check:traceability`
-- 性能：`cargo run --release --example speed_bench`（AR-PERF の要件を割っていないか確かめる）
+- `npm run check:rust`：`rust/` で fmt、clippy（`-D warnings`）、テスト
+- `npm run check:formal`：`formal/` で `lake build`（elan が要る。入れ方は `docs/quality/FORMAL_VERIFICATION.md`）
+- `cargo kani`（`rust/` で）：Kani 0.68.0 が要る
+- `npm run check:gates`：トレーサビリティ、版の一致、Rust のファイルサイズ、Playground のコントラスト
+- `npm run check`、`npm run lint`、`npm test`：TypeScript
+- 性能（Phase 4 から）：AR-PERF の要件を割っていないか、ベンチマークで確かめる
+
+## 置き場所
+
+- 計画書と標準：`docs/quality/`（英語）。開発メモ：`docs/dev/`（日本語）
+- Phase 0 で意図的に残した課題：`docs/quality/PROBLEM_REPORTS.md`
+- Ajisai のオラクル：`src/wasm/ajisai-oracle/`（Playground）、`tools/mcp-server/`（エージェント用）。固定したコミットは `UPSTREAM.md`

@@ -1,9 +1,0 @@
-# Seeds for failure cases proptest has generated in the past. It is
-# automatically read and these particular cases re-run before any
-# novel cases are generated.
-#
-# It is recommended to check this file in to source control so that
-# everyone who runs the test benefits from these saved cases.
-cc 3aaa3f91b7e73b05f29c9b141ef80e776b379cce6375d452913c1f29892cfb71 # shrinks to src = "'math' IMPORT 2 MATH@SQRT 1 ADD 2 MATH@SQRT 1 ADD 8 COMPARE-WITHIN"
-cc 7067b752e2f24be192506d3c660d2220b9ba0983821a576c41befb7e2b3e74ab # shrinks to src = "0 ABS -1 SUB SQRT"
-cc 94f8f5d52965849e5035c84ee3291c3f21aacd58bbfa5cf0d69b25758b6718d0 # shrinks to src = "0 ABS -1 SUB SQRT"
