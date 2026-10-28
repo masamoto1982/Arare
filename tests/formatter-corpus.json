@@ -1,0 +1,29 @@
+{
+  "description": "Regression corpus for the Ajisai GUI source formatter (src/gui/code-formatter.ts). There is currently no second (e.g. Rust-side) implementation reading this file, so it pins that one module's behavior rather than cross-checking two implementations; its cases must be kept honest against the real tokenizer (rust/src/tokenizer.rs) by hand. `expected` is the content-level result (no trailing newline).",
+  "cases": [
+    { "name": "empty", "input": "", "expected": "" },
+    { "name": "pad vector brackets", "input": "[1 2 3]", "expected": "[ 1 2 3 ]" },
+    { "name": "nested brackets become standalone tokens", "input": "[[1 2][3 4]]", "expected": "[ [ 1 2 ] [ 3 4 ] ]" },
+    { "name": "collapse runs of spaces", "input": "[ 1    2   3 ]", "expected": "[ 1 2 3 ]" },
+    { "name": "trim leading and trailing whitespace", "input": "   [ 1 ] PRINT   ", "expected": "[ 1 ] PRINT" },
+    { "name": "split brackets glued to words", "input": "[1 2 3]PRINT", "expected": "[ 1 2 3 ] PRINT" },
+    { "name": "does not split a glued caret out of a word", "input": "a^c", "expected": "a^c" },
+    { "name": "does not split a glued bar out of a word", "input": "a|c", "expected": "a|c" },
+    { "name": "leave an unallocated symbol inside a word alone", "input": "a~b", "expected": "a~b" },
+    { "name": "idempotent on canonical input", "input": "[ [ 1 ] [ 2 ] ADD ] 'ADD12' DEF", "expected": "[ [ 1 ] [ 2 ] ADD ] 'ADD12' DEF" },
+    { "name": "string contents kept verbatim", "input": "[ 'a  b   c' ]", "expected": "[ 'a  b   c' ]" },
+    { "name": "brackets inside a string are not padded", "input": "'[not code]'", "expected": "'[not code]'" },
+    { "name": "comment text kept verbatim", "input": "[ 1 ]   #   keep   spacing", "expected": "[ 1 ] #   keep   spacing" },
+    { "name": "comment-only line preserved", "input": "# ===== header =====", "expected": "# ===== header =====" },
+    { "name": "significant line breaks preserved", "input": "[1]PRINT\n[2]PRINT", "expected": "[ 1 ] PRINT\n[ 2 ] PRINT" },
+    { "name": "indent multi-line block body and dedent close", "input": "[\n[ [ 5 ] GT | [ 'big' ] ]\n[ IDLE   | [ 'small' ] ] COND\n] 'SIZE' DEF", "expected": "[\n  [ [ 5 ] GT | [ 'big' ] ]\n  [ IDLE | [ 'small' ] ] COND\n] 'SIZE' DEF" },
+    { "name": "indent nested multi-line blocks by depth", "input": "[\n[\n[ 1 ]\n]\n]", "expected": "[\n  [\n    [ 1 ]\n  ]\n]" },
+    { "name": "collapse blank lines and trim surrounding blanks", "input": "\n\n[ 1 ]\n\n\n[ 2 ]\n\n", "expected": "[ 1 ]\n\n[ 2 ]" },
+    { "name": "unterminated string left untouched", "input": "[ 'oops ]", "expected": "[ 'oops ]" },
+    { "name": "newline inside a string left untouched", "input": "'line one\nline two'", "expected": "'line one\nline two'" },
+    { "name": "modifier sugar is not expanded", "input": "[ 1 ] ;", "expected": "[ 1 ] ;" },
+    { "name": "conversion word >CF kept intact", "input": "[ 1 ] [ 3 ] DIV >CF", "expected": "[ 1 ] [ 3 ] DIV >CF" },
+    { "name": "already-standalone bar is spacing-normalized", "input": "[ a   |   b ]", "expected": "[ a | b ]" },
+    { "name": "string not closed before a following > is left untouched", "input": "'foo'>bar", "expected": "'foo'>bar" }
+  ]
+}

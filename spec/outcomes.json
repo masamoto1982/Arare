@@ -1,0 +1,206 @@
+{
+  "schemaVersion": 1,
+  "nilReasons": [
+    {
+      "id": "conflict",
+      "projectable": true,
+      "documentation": "Two sources RECONCILE compared hold different values, so there is no one value they agree on — `'Tokyo' 'Osaka' RECONCILE`, and `TRUE FALSE RECONCILE` alike: in truth position it reads as UNKNOWN, and this reason says the sources disagreed (LANG.VALUES.TRUTH). The one absorbing absence: a conflict already found is not settled by a third source."
+    },
+    {
+      "id": "domainMiss",
+      "projectable": true,
+      "documentation": "A well-formed operand outside the operation's domain — the canonical case is SQRT of a negative rational; an order asked of a point over zero, `1/0` or `0/0`, which has none (LT, GT, MIN, MAX, SORT, ORDER, BSEARCH), a decimal asked of a number over zero (FORMAT), and NIL-REASON asked of a value that is not a NIL are others."
+    },
+    {
+      "id": "indexOutOfBounds",
+      "projectable": true,
+      "documentation": "A well-formed index or count outside the addressed collection's bounds, answered as a projection rather than a raise."
+    },
+    {
+      "id": "invalidEncoding",
+      "projectable": true,
+      "documentation": "Text that does not denote a value in the operation's target encoding — NUM applied to text outside the sealed numeric grammar, or JSON-DECODE applied to text that is not one JSON value."
+    },
+    {
+      "id": "literal",
+      "projectable": false,
+      "documentation": "A NIL the program wrote rather than computed: the NIL Word, or NIL inside a vector literal. Not produced by any Word's projection."
+    },
+    {
+      "id": "notFound",
+      "projectable": true,
+      "documentation": "A lookup found nothing at what it was asked for: a key a Record does not hold (GET, WITHOUT), a value a Vector does not contain (BSEARCH), a needle a text does not contain (SEARCH), or a name no Word answers to (CONTRACT)."
+    },
+    {
+      "id": "userDeclared",
+      "projectable": true,
+      "parameterized": true,
+      "documentation": "An absence the program declared itself with ABSENT. The registered reason is this one id; the text the program gave is carried on the value as its detail and is what NIL-REASON answers, so the reason space is closed here and open there — the first parameterized reason, recorded as such."
+    }
+  ],
+  "errorCategories": [
+    {
+      "id": "blockContractViolation",
+      "kind": "declared",
+      "repair": "program",
+      "documentation": "A higher-order Word's block operand did not return the shape its contract requires — MAP/FILTER/FOLD/SCAN's block returned other than one value per contract."
+    },
+    {
+      "id": "contractViolation",
+      "kind": "structural",
+      "attribution": "machine",
+      "repair": "program",
+      "documentation": "A `#:contract` declaration the inferred contract contradicts (LANG.CONTRACT.CHECK): the program says its own Word takes two inputs and the body takes one. Decided before anything runs, by `check` and by `compute`, which refuses to execute a program that is wrong about itself; the findings are in `contractDecls`."
+    },
+    {
+      "id": "declaredFailure",
+      "kind": "declared",
+      "repair": "program",
+      "documentation": "An ERROR the program raised itself with FAIL: a user Word saying that a call to it is wrong, with the program's own text as the message. The category is this one id; the text is a message, and like every message it is not a machine-readable surface."
+    },
+    {
+      "id": "definitionConflict",
+      "kind": "declared",
+      "repair": "program",
+      "documentation": "DEF or DEL asked for a dictionary change the words that call the named word refuse: DEF redefined, or DEL deleted, a User Word that other User Words still reference. Those words have to go first; there is no override."
+    },
+    {
+      "id": "duplicateKey",
+      "kind": "declared",
+      "documentation": "RECORD was given a key Vector in which some key appears twice. A Record holds each key once (LANG.RECORDS.STRUCTURE), and which of two values should win is a decision the program has not made, so the Word raises rather than keeping either."
+    },
+    {
+      "id": "executionLimitExceeded",
+      "kind": "structural",
+      "attribution": "machine",
+      "documentation": "The total execution-step budget was exhausted before the program finished."
+    },
+    {
+      "id": "invalidInteger",
+      "kind": "declared",
+      "documentation": "An operand that must be a whole number is not one: an index (GET, PUT), a count (TAKE, DROP, COLLECT, FORMAT's digits — a count that cannot be negative is also refused below zero), or a RANGE bound."
+    },
+    {
+      "id": "invalidDefinitionBody",
+      "kind": "declared",
+      "documentation": "DEF was given a body that is not a well-formed definition: not a Vector, an empty one, or one carrying a NIL that has a reason — a definition is kept as its source, and no source text denotes such a NIL (the NIL name denotes the literal NIL); produce it inside the body instead."
+    },
+    {
+      "id": "invalidName",
+      "kind": "declared",
+      "documentation": "DEF or BIND was given a name that cannot be a name at all (empty, wrong lexical shape). DEL takes any name, so a word saved under a rule that has since changed stays removable."
+    },
+    {
+      "id": "invalidShape",
+      "kind": "declared",
+      "documentation": "A shape operand (FILL, RESHAPE) is not a shape — a Vector of non-negative integers, the image of SHAPE — or, for RESHAPE, is one whose product is not the leaf count."
+    },
+    {
+      "id": "malformedSource",
+      "kind": "structural",
+      "attribution": "machine",
+      "repair": "program",
+      "documentation": "Program text the lexical grammar refuses (spec/grammar.json, LANG.SOURCE.TEXT): an unclosed string literal, a delimiter glued to another lexeme, or an unbalanced `[` or `]`. There are no other source errors, and a source error refuses the whole program before any of it runs."
+    },
+    {
+      "id": "nameConflict",
+      "kind": "declared",
+      "repair": "program",
+      "documentation": "A binding and a Word were asked to share a name: BIND to a name a Word holds, or DEF to a name a live binding holds. The two name spaces are disjoint by rule (LANG.DICTIONARY.RESOLUTION), so this is one condition from either side."
+    },
+    {
+      "id": "nestedDataBlock",
+      "kind": "declared",
+      "repair": "program",
+      "documentation": "EXEC, MAP, FILTER, FOLD or SCAN was handed a block built from data while another block built from data was running (LANG.SOURCE.CODE). A block the running code wrote may run at any depth, and one built from data may run when no other is; two nested is how a block would run a copy of itself, so the second is refused before its operands are taken (LANG.DICTIONARY.ACYCLIC). Code that runs a block it is given is written as a Word, which runs no block, rather than as a block handed to another."
+    },
+    {
+      "id": "nonRecord",
+      "kind": "declared",
+      "documentation": "A Record Word (KEYS, VALUES, WITHOUT, HAS?, MERGE) was given something other than a Record where one is required. A Record is its own domain (LANG.VALUES.DISJOINT): a Vector of pairs is not a Record and nothing converts one implicitly."
+    },
+    {
+      "id": "nonContainer",
+      "kind": "declared",
+      "documentation": "An operand the Word reads as a container — GET and PUT, which read and write a Vector at an index or a Record at a key — is neither a Vector nor a Record."
+    },
+    {
+      "id": "nonNumeric",
+      "kind": "declared",
+      "documentation": "An operand the Word reads as a Scalar is not one: arithmetic on a non-number, or an order asked of something the exact order is not defined on (LT/GT, MIN/MAX, SORT/ORDER/BSEARCH)."
+    },
+    {
+      "id": "nonText",
+      "kind": "declared",
+      "documentation": "An operand the Word reads as a String is not one, including an element of JOIN's Vector and TOKENIZE's separator."
+    },
+    {
+      "id": "nonTruthValue",
+      "kind": "declared",
+      "documentation": "AND, NOT, SELECT's mask, or a FILTER predicate block met a value that is not a truth value or Unknown."
+    },
+    {
+      "id": "nonVector",
+      "kind": "declared",
+      "documentation": "An operand the Word reads as a Vector is not one."
+    },
+    {
+      "id": "notASymbol",
+      "kind": "declared",
+      "documentation": "CONTRACT was given something other than a Symbol or a block. A name is a Symbol, never a String: no Word turns text into a Symbol (LANG.DICTIONARY.ACYCLIC), so a String asking about a Word is malformed use rather than a lookup that failed."
+    },
+    {
+      "id": "notExecutable",
+      "kind": "declared",
+      "documentation": "The code operand of a higher-order Word (MAP, FILTER, FOLD, SCAN) or of EXEC is not a Vector. Code is a Vector read as executable (LANG.SOURCE.CODE), and nothing else is code: a String, even one naming a Word, is refused, because a computed name would escape the acyclicity check (LANG.DICTIONARY.ACYCLIC)."
+    },
+    {
+      "id": "protectedWord",
+      "kind": "declared",
+      "repair": "program",
+      "documentation": "DEF or DEL targeted a Core Word, which the dictionary protects."
+    },
+    {
+      "id": "resourceLimitExceeded",
+      "kind": "structural",
+      "attribution": "machine",
+      "documentation": "A named internal-computation ceiling other than the step budget was crossed — bigintBits, algebraicTerms, nestingDepth, a numeric literal's digit count, a program's byte length, the numeric or collection work meter, or the elements one generative Word (RANGE, FILL, RESHAPE, JSON-DECODE, CHARS, TOKENIZE) was asked to materialize. A ceiling belongs to the host, not to the program, so crossing one is never a value: the run stops here, naming the ceiling, its value and what crossed it, and the same program cannot answer `ok` with different values on hosts that declare different ceilings."
+    },
+    {
+      "id": "selfReferentialDefinition",
+      "kind": "declared",
+      "repair": "program",
+      "documentation": "DEF or BIND was refused because what it names would reach itself: a body naming the Word being defined, directly or through other User words, or a bound value naming its own binding, directly or through other bindings — the acyclicity check of LANG.DICTIONARY.ACYCLIC, made when the name is given."
+    },
+    {
+      "id": "shapeMismatch",
+      "kind": "declared",
+      "documentation": "Operands a Word aligns position by position do not align: lifted operands whose shapes neither match nor broadcast (LANG.COLLECTIONS.LIFT), keys and values of different lengths (RECORD, GROUP), rows of different lengths (ZIP), or names that cannot destructure a value (BIND)."
+    },
+    {
+      "id": "stackUnderflow",
+      "kind": "structural",
+      "attribution": "machine",
+      "repair": "program",
+      "documentation": "A Word was applied with fewer operands than its declared arity."
+    },
+    {
+      "id": "unsortedInput",
+      "kind": "declared",
+      "documentation": "A Word that assumes its vector operand is in ascending order (BSEARCH) was given one that is not. The order is checked before the search, because a binary search over unordered data would answer something rather than nothing; that the vector is unsorted is the program being wrong about its own data, not data that did not work out."
+    },
+    {
+      "id": "unknownWord",
+      "kind": "structural",
+      "attribution": "machine",
+      "repair": "program",
+      "documentation": "A name in program text did not resolve to any Word in the compiled-in vocabulary or the live dictionary."
+    },
+    {
+      "id": "wordNotFound",
+      "kind": "declared",
+      "repair": "program",
+      "documentation": "DEL was given a name no User Word holds. The name is DEL's own operand, so this is DEL's condition to declare; a name written in program text that resolves to nothing is unknownWord, which the machine raises before any Word runs."
+    }
+  ]
+}

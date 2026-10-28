@@ -1,0 +1,42 @@
+# Independent-review surface (R1-4, docs/dev/critical-review-2026-07-
+# remediation-instructions.md §6).
+#
+# These paths are the trust-critical core: a defect here changes what programs
+# mean, what identities attest, or what memory-safety the process has. Changes
+# to them require review by someone other than the author. With branch
+# protection's "require review from Code Owners" enabled, GitHub enforces that
+# mechanically once a second maintainer exists.
+#
+# Until an independent reviewer is available, the documented fallback applies
+# (remediation instructions §9 R1-4): no self-approval inside the PR that makes
+# the change, and a minimum 24-hour cooling period between opening and merging
+# a PR that touches any path below.
+
+# The canonical language definition. Every implementation artifact is
+# subordinate to this file, so unreviewed drift here rewrites the language.
+/SPECIFICATION.html @masamoto1982
+
+# Numeric normal form and comparison. Value correctness for every program.
+/rust/src/types/fraction.rs @masamoto1982
+/rust/src/types/fraction_arithmetic.rs @masamoto1982
+/rust/src/types/exact/ @masamoto1982
+/rust/src/types/interval.rs @masamoto1982
+
+# Content-addressed identity (§8.6). Feeds the content store and lockfiles;
+# a defect here misexecutes or misattests.
+/rust/src/interpreter/word_identity.rs @masamoto1982
+
+# The crate's single audited unsafe island (memory safety).
+/rust/src/interpreter/parallel.rs @masamoto1982
+
+# Serialization formats: the shared value protocol and persistence.
+/rust/src/types/value_protocol.rs @masamoto1982
+/rust/src/types/value_persist.rs @masamoto1982
+
+# Capability boundary between programs and the host.
+/rust/src/interpreter/host.rs @masamoto1982
+
+# Optimization paths that must preserve the reference semantics bit-for-bit.
+/rust/src/elastic/ @masamoto1982
+/rust/src/interpreter/compiled_plan.rs @masamoto1982
+/rust/src/interpreter/shadow_validation.rs @masamoto1982

@@ -1,0 +1,34 @@
+# Rust/WASM関連
+rust/target/
+
+# Tauri
+src-tauri/target/
+src-tauri/gen/
+
+# Node.js
+node_modules/
+yarn.lock
+pnpm-lock.yaml
+
+# TypeScript/Vite
+dist/
+coverage/
+*.tsbuildinfo
+
+# OS関連
+.DS_Store
+Thumbs.db
+
+# エディタ関連
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# その他
+*.log
+
+# Temporarily allow pkg files
+!js/pkg/
+!js/pkg/**
+rust/wasm-tests/target/

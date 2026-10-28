@@ -1,0 +1,42 @@
+{
+  "family": "messy",
+  "inputKind": "a String of one or more words of letters in any mix of upper and lower case, separated by one or more spaces, possibly with spaces at the start or the end",
+  "inputs": [
+    "'  The cat saw THE dog   and the Cat  '",
+    "'one'",
+    "'Bb aa  BB Aa bb'",
+    "' x  Y z '"
+  ],
+  "tasks": [
+    {
+      "id": "messy.count",
+      "prompt": "Leave the number of words.",
+      "reference": "' ' TOKENIZE [ '' EQ NOT ] FILTER LENGTH"
+    },
+    {
+      "id": "messy.normalize",
+      "prompt": "Leave the words in lower case, in order, joined by single spaces, with no space at the start or end.",
+      "reference": "LOWER ' ' TOKENIZE [ '' EQ NOT ] FILTER [ ' ' 2 COLLECT ] MAP FLATTEN -1 DROP JOIN"
+    },
+    {
+      "id": "messy.distinct",
+      "prompt": "Leave the number of distinct words, ignoring case.",
+      "reference": "LOWER ' ' TOKENIZE [ '' EQ NOT ] FILTER UNIQUE LENGTH"
+    },
+    {
+      "id": "messy.top_word",
+      "prompt": "Leave, in lower case, the word that occurs most often ignoring case; when several occur equally often, the one whose first occurrence comes first.",
+      "reference": "LOWER ' ' TOKENIZE [ '' EQ NOT ] FILTER TALLY 'T' BIND T KEYS T VALUES -1 MUL ORDER 0 GET GET"
+    },
+    {
+      "id": "messy.title",
+      "prompt": "Leave the words, in order, each with its first letter in upper case and the rest in lower case, joined by single spaces.",
+      "reference": "LOWER ' ' TOKENIZE [ '' EQ NOT ] FILTER [ CHARS 'C' BIND C 1 TAKE JOIN UPPER C 1 DROP JOIN 2 COLLECT JOIN ] MAP [ ' ' 2 COLLECT ] MAP FLATTEN -1 DROP JOIN"
+    },
+    {
+      "id": "messy.sorted_unique",
+      "prompt": "Leave the distinct words in lower case, in alphabetical order, joined by single spaces.",
+      "reference": "LOWER ' ' TOKENIZE [ '' EQ NOT ] FILTER UNIQUE SORT [ ' ' 2 COLLECT ] MAP FLATTEN -1 DROP JOIN"
+    }
+  ]
+}

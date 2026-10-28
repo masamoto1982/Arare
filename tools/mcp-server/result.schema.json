@@ -1,0 +1,888 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "ajisai://schema/result",
+ "title": "Ajisai MCP result",
+ "description": "One envelope for every Ajisai MCP tool result (compute, check, infer_contracts, word_contract). `status` separates the three outcomes the boundary keeps distinct: a successful run (which includes a reason-carrying NIL), an Ajisai language error carrying its `message` and `error`, and a failure of the host rather than of the program. An optional field carrying no value is omitted rather than sent as `null`, so `message` and `error` are simply absent from a plain success, and `contractDecls` from a source that declares no contract — test for presence, not for `null`. The text content block of a tool result carries this same object serialized, so a text-only client receives the whole result and not a summary of it.",
+ "type": "object",
+ "additionalProperties": true,
+ "required": [
+  "schemaVersion",
+  "status"
+ ],
+ "allOf": [
+  {
+   "if": {
+    "properties": {
+     "status": {
+      "const": "hostError"
+     }
+    },
+    "required": [
+     "status"
+    ]
+   },
+   "then": {
+    "required": [
+     "error"
+    ]
+   },
+   "else": {
+    "required": [
+     "mcp"
+    ]
+   }
+  }
+ ],
+ "properties": {
+  "schemaVersion": {
+   "type": "integer",
+   "minimum": 1
+  },
+  "specificationVersion": {
+   "type": "string",
+   "minLength": 1,
+   "description": "The specification version the engine implements, as the engine's own envelope states it. During the beta a program's answer can change when it does; spec/CHANGELOG.md in the Ajisai repository names each change. Carried once, here, beside `mcp.engineVersion`'s release number."
+  },
+  "status": {
+   "type": "string",
+   "enum": [
+    "ok",
+    "error",
+    "hostError"
+   ]
+  },
+  "stack": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/protocolNode"
+   }
+  },
+  "stackDisplay": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "stackElided": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "description": "Present when the stack was too large to send in full and the values of the slots that do not fit a byte budget were dropped; this record says which. On an `error` the budget is the fixed one every error report applies (`errorStackBudget`): the report's answer is its error, and the stack is residual state. On an `ok` it is the agent profile's stack budget (`valueStackBudget`): the values that fit arrive whole, and an oversized one arrives as this record rather than the whole result being refused as `responseTooLarge`, so a caller learns what it left on the stack and can fix the program. Absent whenever nothing was dropped, which is every ordinary result.",
+   "properties": {
+    "reason": {
+     "type": "string",
+     "enum": [
+      "errorStackBudget",
+      "valueStackBudget"
+     ]
+    },
+    "budgetBytes": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "slots": {
+     "type": "array",
+     "description": "One entry per dropped slot, in stack order.",
+     "items": {
+      "type": "object",
+      "properties": {
+       "index": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Position in `stack` and `stackDisplay`. Slots keep their index: a dropped slot is replaced in place, never removed, so an index still points at the same thing."
+       },
+       "approxBytes": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Roughly what the slot would have serialized to, counted without building the text."
+       },
+       "elements": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Direct children, for a collection. Absent for a leaf."
+       }
+      }
+     }
+    }
+   }
+  },
+  "output": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   }
+  },
+  "outcome": {
+   "type": "string",
+   "pattern": "^(value|nil:[A-Za-z]+|error:[A-Za-z]+)$",
+   "description": "compute only. Which of the language’s three results (LANG.FAILURE) the run produced, as a spec/outcomes.json id: `value`, `nil:<reason>` for a reasoned absence on top of the stack (still `status: ok`), or `error:<category>` for a language ERROR (`status: error`, whose `error.category` is the same category). Absent only when the result cannot be classified (an unlabelled NIL, an error naming no category)."
+  },
+  "contracts": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "name": {
+      "type": "string"
+     },
+     "inputs": {
+      "oneOf": [
+       {
+        "type": "integer",
+        "minimum": 0
+       },
+       {
+        "const": "variable"
+       }
+      ],
+      "description": "Values the Word consumes, or `variable` where the data decides."
+     },
+     "outputs": {
+      "oneOf": [
+       {
+        "type": "integer",
+        "minimum": 0
+       },
+       {
+        "const": "variable"
+       }
+      ],
+      "description": "Values the Word leaves, or `variable` where the data decides."
+     },
+     "field": {
+      "enum": [
+       "closed",
+       "leaving"
+      ],
+      "description": "LANG.CONTRACT.FIELD: `leaving` when the body can answer a point over zero (`1/0` or `0/0`) from operands holding none — a DIV, POW or NUM whose operands can reach past the field, a literal over zero, or code the inference cannot read — and `closed` otherwise, in which case the field laws hold over finite operands. A `DIV` by a divisor that cannot be zero (`2 DIV`, `2 SQRT DIV`, `LENGTH 1 ADD DIV`) or a `POW` to an exponent that cannot be negative stays `closed`."
+     },
+     "fieldExits": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "description": "Where a `leaving` body leaves the field, in body order: the Words it calls there and the literals it writes over zero. Empty for a `closed` body."
+     },
+     "suggested": {
+      "type": "string",
+      "description": "A paste-ready `#:contract` line for this Word (`#:contract W inputs=N outputs=N field=closed|leaving`), so pasting it back verifies exactly what was reported."
+     }
+    },
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "inputs",
+     "outputs",
+     "field",
+     "fieldExits",
+     "suggested"
+    ]
+   },
+   "description": "Inferred contracts for the user-defined Words in the submitted source (`infer_contracts` only). `inputs`, `outputs` and `field` are spelled as in the Record `CONTRACT` answers inside the language, so an inferred and a registered contract compare directly."
+  },
+  "prelude": {
+   "type": "array",
+   "description": "The phrasebook Words a `words` argument defined before `source` ran, in the order they ran, each with its content digest (`[ NAME ] 0 GET DIGEST`), which matches the `#:digest` line of ajisai://phrasebook. Absent when the call named no `words`.",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "name",
+     "digest"
+    ],
+    "properties": {
+     "name": {
+      "type": "string",
+      "minLength": 1
+     },
+     "digest": {
+      "type": "string",
+      "pattern": "^#[0-9a-f]{64}$"
+     }
+    }
+   }
+  },
+  "resourceUsage": {
+   "type": "object",
+   "additionalProperties": false,
+   "description": "What this run spent of the budgets that could have refused it. Every key names a ceiling of the `ajisai://limits` profile (`mcp.limitProfile`) and carries the same number the ceiling compared against — read from the counter the check reads, not a parallel copy — so an agent can subtract one from the other and know what it has left. The accumulating ceilings always appear. `algebraicTerms` is a per-result ceiling, so it reports the largest term count any result of the run reached — the number that ceiling compared — and only when some result was an irrational.",
+   "required": [
+    "executionSteps",
+    "numericWork",
+    "collectionWork"
+   ],
+   "properties": {
+    "executionSteps": {
+     "type": "integer",
+     "minimum": 0,
+     "description": "Words executed, against the `executionSteps` ceiling."
+    },
+    "numericWork": {
+     "type": "integer",
+     "minimum": 0,
+     "description": "Internal arithmetic work charged, in limb-multiply units, against the `numericWork` ceiling."
+    },
+    "collectionWork": {
+     "type": "integer",
+     "minimum": 0,
+     "description": "Element operations charged inside collection Words — copies, order comparisons and equality probes — against the `collectionWork` ceiling. Priced from the operand, so an element that is wide, nested or algebraic costs more than a machine word; a collection Word loops inside one execution step, so this is the only counter that can see it."
+    },
+    "algebraicTerms": {
+     "type": "integer",
+     "minimum": 1,
+     "description": "The largest number of algebraic terms one result of the run carried, against the `algebraicTerms` ceiling. Absent when no result was an irrational. A Word whose charge grows with it marks that axis `valueDependent` in its `word_contract` entry."
+    }
+   }
+  },
+  "message": {
+   "type": "string",
+   "description": "On an `error`, what went wrong, as one line of text. Absent from a success."
+  },
+  "contractDecls": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "findings",
+    "outcome",
+    "declarations"
+   ],
+   "description": "check only, and only when the source declares a `#:contract` (`#:contract W inputs=N outputs=N field=closed|leaving`). Each declaration is compared with the contract inferred for its Word; a contradiction, or a malformed directive, is an `error` finding and makes the report a `contractViolation` error.",
+   "properties": {
+    "findings": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "severity",
+       "message"
+      ],
+      "properties": {
+       "severity": {
+        "enum": [
+         "error",
+         "note"
+        ]
+       },
+       "message": {
+        "type": "string"
+       }
+      }
+     }
+    },
+    "outcome": {
+     "enum": [
+      "value",
+      "nil",
+      "error"
+     ],
+     "description": "The worst outcome among the declarations: `error` when any is contradicted or malformed, `nil` when one cannot be verified, `value` when every one holds."
+    },
+    "declarations": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "word",
+       "outcome"
+      ],
+      "properties": {
+       "word": {
+        "type": "string"
+       },
+       "outcome": {
+        "enum": [
+         "value",
+         "nil",
+         "error"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "error": {
+   "oneOf": [
+    {
+     "$ref": "#/$defs/languageError"
+    },
+    {
+     "$ref": "#/$defs/hostError"
+    }
+   ],
+   "description": "On `status: error`, the language error (`languageError`); on `status: hostError`, the host failure (`hostError`). Absent from a success."
+  },
+  "registrySchemaVersion": {
+   "type": "integer",
+   "minimum": 1,
+   "description": "Schema version of the packaged Word registry (`word_contract` only). Distinct from the envelope's own `schemaVersion`."
+  },
+  "matches": {
+   "type": "array",
+   "description": "Canonical registry entries matching the requested Word (`word_contract` only).",
+   "items": {
+    "$ref": "#/$defs/wordContract"
+   }
+  },
+  "suggestions": {
+   "type": "array",
+   "description": "Registry names closest to an unmatched request, best match first (`word_contract` only). Empty whenever `matches` is non-empty.",
+   "items": {
+    "type": "string"
+   }
+  },
+  "mcp": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "serverVersion",
+    "engineVersion",
+    "assetDigest",
+    "backend",
+    "limitProfile"
+   ],
+   "properties": {
+    "serverVersion": {
+     "type": "string",
+     "minLength": 1,
+     "description": "Version of this MCP adapter — a separate component from the Ajisai engine below it. A stored result names both, so a missing field can be told apart from a field this adapter version never sent."
+    },
+    "engineVersion": {
+     "type": "string",
+     "minLength": 1
+    },
+    "assetDigest": {
+     "type": "string",
+     "pattern": "^[a-f0-9]{64}$",
+     "description": "SHA-256 of the Word registry file this adapter packages (assets/words.json), checked against assets/metadata.json at startup. It identifies the adapter's asset, not the engine."
+    },
+    "backend": {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind"
+     ],
+     "description": "Which of the two interchangeable backends answered. They are semantically equivalent — `backend/parity-test.js` asserts it case by case — so this identifies the execution path for auditing, not a difference in meaning.",
+     "properties": {
+      "kind": {
+       "type": [
+        "string",
+        "null"
+       ],
+       "enum": [
+        "nativeCli",
+        "wasmWorker",
+        null
+       ]
+      }
+     }
+    },
+    "limitProfile": {
+     "type": "string",
+     "minLength": 1,
+     "description": "The name of the host profile applied to this call — the `profile` of the `ajisai://limits` resource, which carries the twelve ceilings themselves. They are constants of the server, so they travel once, in that resource, rather than on every result; a ceiling that fires names itself in `error.resource` and its value in `message`, and a host failure about one names it in `error.limit`. Every entry is pinned by a case in `golden/limits.json`."
+    }
+   }
+  }
+ },
+ "$defs": {
+  "languageError": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "category"
+   ],
+   "description": "An Ajisai language ERROR, never a failure of the host. Branch on `category`; `message` beside it is the text.",
+   "properties": {
+    "category": {
+     "type": "string",
+     "minLength": 1,
+     "description": "The spec/outcomes.json error category — the id `outcome` names as `error:<category>`."
+    },
+    "resource": {
+     "type": "string",
+     "enum": [
+      "sourceBytes",
+      "numericLiteralDigits",
+      "numericWork",
+      "collectionWork",
+      "bigintBits",
+      "algebraicTerms",
+      "nestingDepth",
+      "materializedElements",
+      "executionSteps",
+      "callDepth"
+     ],
+     "description": "For `resourceLimitExceeded`, the ceiling crossed — an entry of the `ajisai://limits` profile."
+    },
+    "word": {
+     "type": "string",
+     "description": "The Word the failure is attributed to."
+    },
+    "line": {
+     "type": "integer",
+     "minimum": 1
+    },
+    "column": {
+     "type": "integer",
+     "minimum": 1
+    }
+   }
+  },
+  "hostError": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "code",
+    "message",
+    "retryable"
+   ],
+   "description": "A failure of the host, never of the Ajisai program. `code` is the stable identifier to branch on; `message` is safe to show a model and deliberately carries no host paths, environment-variable names or spawn detail.",
+   "properties": {
+    "code": {
+     "type": "string",
+     "enum": [
+      "invalidRequest",
+      "unknownTool",
+      "sourceTooLarge",
+      "backendUnavailable",
+      "capacityExhausted",
+      "timeout",
+      "responseTooLarge",
+      "malformedBackendResponse",
+      "backendFailure",
+      "registryUnavailable"
+     ]
+    },
+    "message": {
+     "type": "string"
+    },
+    "retryable": {
+     "type": "boolean"
+    },
+    "retryAfterMs": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "limit": {
+     "type": "string",
+     "description": "The declared ceiling (an entry of `ajisai://limits`) this failure is about, when it is about one.",
+     "enum": [
+      "sourceBytes",
+      "wallTimeMs",
+      "responseBytes",
+      "concurrentExecutions"
+     ]
+    }
+   }
+  },
+  "wordContract": {
+   "type": "object",
+   "additionalProperties": true,
+   "required": [
+    "name",
+    "family",
+    "stack",
+    "nilPolicy",
+    "projection",
+    "purity",
+    "determinism",
+    "cost",
+    "documentation"
+   ],
+   "description": "One canonical entry of the generated `spec/words.json` registry, reproduced verbatim.",
+   "properties": {
+    "name": {
+     "type": "string",
+     "minLength": 1
+    },
+    "family": {
+     "type": "string"
+    },
+    "vocabularyTier": {
+     "type": "string"
+    },
+    "purity": {
+     "type": "string"
+    },
+    "determinism": {
+     "type": "string"
+    },
+    "cost": {
+     "type": "object",
+     "description": "What the Word charges on each of the three metered resources the runtime counts (`executionSteps` / `numericWork` / `collectionWork`). The classes join pointwise under concatenation, so a phrase's bound on an axis is the widest class any of its Words declares there — which is what lets a caller budget a program without running it.",
+     "required": [
+      "steps",
+      "numeric",
+      "collection"
+     ],
+     "properties": {
+      "steps": {
+       "$ref": "#/$defs/costAxis"
+      },
+      "numeric": {
+       "$ref": "#/$defs/costAxis"
+      },
+      "collection": {
+       "$ref": "#/$defs/costAxis"
+      }
+     },
+     "additionalProperties": false
+    },
+    "partiality": {
+     "type": "string"
+    },
+    "field": {
+     "type": "string"
+    },
+    "nilPolicy": {
+     "type": "string"
+    },
+    "executorKey": {
+     "type": "string"
+    },
+    "effects": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "clauses": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "errorWhen": {
+     "type": "array"
+    },
+    "stack": {
+     "type": "object",
+     "additionalProperties": true,
+     "required": [
+      "inputs",
+      "outputs"
+     ],
+     "properties": {
+      "inputs": {
+       "type": "integer",
+       "minimum": 0
+      },
+      "outputs": {
+       "type": "integer",
+       "minimum": 0
+      }
+     }
+    },
+    "projection": {
+     "type": "object",
+     "additionalProperties": true,
+     "required": [
+      "when"
+     ],
+     "properties": {
+      "when": {
+       "type": "string"
+      },
+      "reason": {
+       "type": [
+        "string",
+        "null"
+       ]
+      }
+     }
+    },
+    "documentation": {
+     "type": "object",
+     "additionalProperties": true,
+     "required": [
+      "summary"
+     ],
+     "properties": {
+      "summary": {
+       "type": "string"
+      },
+      "hover": {
+       "type": "string"
+      },
+      "syntax": {
+       "type": "string"
+      },
+      "stackEffect": {
+       "type": "string"
+      }
+     }
+    }
+   }
+  },
+  "integerString": {
+   "type": "string",
+   "pattern": "^-?(0|[1-9][0-9]*)$"
+  },
+  "rational": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "numerator",
+    "denominator"
+   ],
+   "properties": {
+    "numerator": {
+     "$ref": "#/$defs/integerString"
+    },
+    "denominator": {
+     "type": "string",
+     "pattern": "^[1-9][0-9]*$"
+    }
+   }
+  },
+  "exactTerm": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "numerator",
+    "denominator",
+    "radicand"
+   ],
+   "description": "One term c·√m of the normal form: the rational coefficient numerator/denominator and the square-free radicand m (1 for the rational term).",
+   "properties": {
+    "numerator": {
+     "$ref": "#/$defs/integerString"
+    },
+    "denominator": {
+     "$ref": "#/$defs/positiveIntegerString"
+    },
+    "radicand": {
+     "$ref": "#/$defs/positiveIntegerString"
+    }
+   }
+  },
+  "protocolNode": {
+   "type": "object",
+   "required": [
+    "type",
+    "value"
+   ],
+   "additionalProperties": false,
+   "description": "One stack value as observed at the host boundary. Every field is derived from the value itself, never from the Word that produced it (LANG.VALUES.DENOTATION). A vector's own elements are observedValue nodes in turn (see `value` below), so this definition is recursive.",
+   "properties": {
+    "type": {
+     "description": "The value's domain (LANG.VALUES.DISJOINT), discriminating `value`'s shape. A NIL is `nil` wherever it stands, including in truth position, where it reads as UNKNOWN (LANG.VALUES.TRUTH).",
+     "enum": [
+      "nil",
+      "boolean",
+      "number",
+      "string",
+      "vector",
+      "symbol",
+      "record"
+     ]
+    },
+    "value": {
+     "description": "Shape depends on `type`: nil -> null; boolean -> boolean; number -> {numerator, denominator} (arbitrary-precision decimal strings, the pair reduced and the denominator non-negative: zero exactly for the two points over zero, `1/0` and `0/0`, LANG.VALUES.EXACT); string or symbol -> string (a symbol's bare name); vector -> an array of observedValue; record -> {keys, values}, two arrays of observedValue of equal length, aligned position by position (LANG.RECORDS.STRUCTURE). null for any type when `elided` is present.",
+     "oneOf": [
+      {
+       "type": "null"
+      },
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "string"
+      },
+      {
+       "type": "object",
+       "required": [
+        "numerator",
+        "denominator"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "numerator": {
+         "$ref": "#/$defs/integerString"
+        },
+        "denominator": {
+         "$ref": "#/$defs/nonNegativeIntegerString"
+        }
+       }
+      },
+      {
+       "type": "array",
+       "items": {
+        "$ref": "#/$defs/protocolNode"
+       }
+      },
+      {
+       "type": "object",
+       "required": [
+        "keys",
+        "values"
+       ],
+       "additionalProperties": false,
+       "properties": {
+        "keys": {
+         "type": "array",
+         "items": {
+          "$ref": "#/$defs/protocolNode"
+         }
+        },
+        "values": {
+         "type": "array",
+         "items": {
+          "$ref": "#/$defs/protocolNode"
+         }
+        }
+       }
+      }
+     ]
+    },
+    "semantics": {
+     "$ref": "#/$defs/protocolSemantics"
+    },
+    "elided": {
+     "$ref": "#/$defs/protocolElided"
+    },
+    "truncated": {
+     "$ref": "#/$defs/protocolTruncated"
+    }
+   }
+  },
+  "costAxis": {
+   "type": "object",
+   "description": "A sound upper bound on one metered resource. `class` bounds how the charge grows with the Word's input; `exact` records that some contribution provably attains it, rather than the bound being a safe over-approximation.",
+   "required": [
+    "class",
+    "exact"
+   ],
+   "properties": {
+    "class": {
+     "enum": [
+      "const",
+      "linear",
+      "superlinear",
+      "unbounded"
+     ]
+    },
+    "exact": {
+     "type": "boolean"
+    },
+    "valueDependent": {
+     "enum": [
+      "algebraicTerms"
+     ],
+     "description": "Present when this axis's charge also grows with an algebraic operand's term count, which `class` cannot see. Set by measurement."
+    }
+   },
+   "additionalProperties": false
+  },
+  "protocolSemantics": {
+   "description": "Present on every node, a Vector nested in a Vector included: how a value is stored does not decide what its node says (LANG.AUTHORITY.FREEDOM). Every field is optional. Both host surfaces emit the same set, because both render it with one function (rust/src/agent/report.rs::semantics_json).",
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "truthValue": {
+     "description": "Present on a Boolean node, and only there (rust/src/types/value_absence.rs::truth_value). UNKNOWN is a NIL (LANG.VALUES.TRUTH) and is observed through `absence`, not here.",
+     "enum": [
+      "true",
+      "false"
+     ]
+    },
+    "absence": {
+     "$ref": "#/$defs/protocolAbsence"
+    },
+    "approximate": {
+     "description": "true when the node is an irrational scalar (LANG.VALUES.EXACT), whose `value` is therefore a rational approximation: the best convergent the observation budget affords, or, for a value too large to afford even one, a term-by-term one. `exactTerms` is the value. Never present otherwise.",
+     "const": true
+    },
+    "exactTerms": {
+     "description": "An irrational scalar's exact multiquadratic normal form, structured for computation: one term per {numerator, denominator, radicand}. The stack display writes the same terms as one token (`sqrt(2)`, `1/1+sqrt(2)`).",
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "$ref": "#/$defs/exactTerm"
+     }
+    }
+   }
+  },
+  "protocolAbsence": {
+   "description": "Present only on a nil-type node. `reason` is the stable, machine-readable identifier LANG.VALUES.NIL calls the entire observable content of a NIL (one of spec/outcomes.json's NIL reasons); it is absent only for a NIL an implementation could not yet label. `detail` is the text a `userDeclared` reason carries, which is part of that reason.",
+   "type": "object",
+   "additionalProperties": false,
+   "properties": {
+    "reason": {
+     "type": "string"
+    },
+    "detail": {
+     "type": "string"
+    }
+   }
+  },
+  "protocolElided": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "reason",
+    "approxBytes"
+   ],
+   "description": "Present only in the stack of a CLI/MCP agent report, on a slot whose value was dropped to keep the report deliverable (rust/src/agent/error_stack.rs): under the fixed error budget every error report applies (`errorStackBudget`), or under the stack budget a host chose for successful results (`valueStackBudget`, the agent profile's; the trusted profile sets none). `type` and `semantics` still describe what the value was (less an algebraic value's `exactTerms`, whose count moves here); `value` is null. Tell it apart from a genuine NIL by `type`, which names the real domain, and by this field's presence.",
+   "properties": {
+    "reason": {
+     "enum": [
+      "errorStackBudget",
+      "valueStackBudget"
+     ]
+    },
+    "approxBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "elements": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "algebraicTerms": {
+     "type": "integer",
+     "minimum": 0
+    }
+   }
+  },
+  "positiveIntegerString": {
+   "type": "string",
+   "pattern": "^[1-9][0-9]*$"
+  },
+  "nonNegativeIntegerString": {
+   "type": "string",
+   "pattern": "^(0|[1-9][0-9]*)$"
+  },
+  "protocolTruncated": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "length",
+    "holdsNil",
+    "holdsRecord",
+    "digest"
+   ],
+   "description": "Present only in the playground's stack view (AjisaiInterpreter.collect_stack, rust/src/agent/stack_view.rs), on a vector cut to its first 100 elements, the most the playground draws of one collection; never in a CLI/MCP agent report. `value` holds those leading elements, each a full observedValue (cut in turn if it is a long vector). This field describes what was left out, so a host decides from the view what it would decide from the whole value: `length` is the vector's element count; `holdsNil` and `holdsRecord` say whether a NIL or a Record sits anywhere in the left-out elements; `digest` is a 64-bit hash of the left-out elements under value equality, so the views of two different values differ. Presentation only: the value on the stack stays whole.",
+   "properties": {
+    "length": {
+     "type": "integer",
+     "minimum": 101
+    },
+    "holdsNil": {
+     "type": "boolean"
+    },
+    "holdsRecord": {
+     "type": "boolean"
+    },
+    "digest": {
+     "type": "string",
+     "pattern": "^[0-9a-f]{16}$"
+    }
+   }
+  }
+ }
+}

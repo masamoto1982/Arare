@@ -1,0 +1,1214 @@
+{
+ "schemaVersion": 1,
+ "cases": [
+  {
+   "id": "exact-fraction",
+   "category": "rational",
+   "prompts": {
+    "en": "Compute one third exactly.",
+    "ja": "3 分の 1 を厳密に求めてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "1 3 DIV"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "1/3"
+   }
+  },
+  {
+   "id": "decimal-no-float",
+   "category": "decimal",
+   "prompts": {
+    "en": "Add 0.1 and 0.2 without floating-point error.",
+    "ja": "0.1 と 0.2 を浮動小数点誤差なしで足してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "0.1 0.2 ADD"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "3/10"
+   }
+  },
+  {
+   "id": "algebraic-sqrt",
+   "category": "algebraic",
+   "prompts": {
+    "en": "Give the square root of 2 as an exact value, not a decimal.",
+    "ja": "2 の平方根を小数ではなく厳密値で出してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "2 SQRT"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stack/0/semantics/exactTerms/0/radicand": "2"
+   }
+  },
+  {
+   "id": "vector-broadcast",
+   "category": "vector",
+   "prompts": {
+    "en": "Add 10 to every element of the vector [1, 2].",
+    "ja": "ベクタ [1, 2] の各要素に 10 を足してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 1 2 ] 10 ADD"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ 11/1 12/1 ]"
+   }
+  },
+  {
+   "id": "nil-reason",
+   "category": "nil",
+   "prompts": {
+    "en": "What does the square root of -1 give in Ajisai?",
+    "ja": "Ajisai で -1 の平方根を取ると何になりますか。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "-1 SQRT"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stack/0/semantics/absence/reason": "domainMiss"
+   }
+  },
+  {
+   "id": "nil-recovery",
+   "category": "nil",
+   "prompts": {
+    "en": "Take the square root of -1 and recover from the absence with 42.",
+    "ja": "-1 の平方根を取り、その不在から 42 で復帰してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "-1 SQRT 'S' BIND 42 S S NIL? SELECT"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "42/1"
+   }
+  },
+  {
+   "id": "language-error",
+   "category": "diagnostic",
+   "prompts": {
+    "en": "Run the Ajisai program FROBNICATE and tell me what happens.",
+    "ja": "Ajisai で FROBNICATE を実行して結果を教えてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "FROBNICATE"
+   },
+   "expect": {
+    "/status": "error",
+    "/error/category": "unknownWord"
+   }
+  },
+  {
+   "id": "static-check",
+   "category": "check",
+   "prompts": {
+    "en": "Check this Ajisai definition for problems without running it: [ [ 1 ] + ] 'INC' DEF",
+    "ja": "この Ajisai 定義を実行せずに検査してください: [ [ 1 ] + ] 'INC' DEF"
+   },
+   "expectedTool": "check",
+   "arguments": {
+    "source": "[ [ 1 ] ADD ] 'INC' DEF"
+   },
+   "expect": {
+    "/status": "ok",
+    "/output": []
+   }
+  },
+  {
+   "id": "contract-inference",
+   "category": "contract",
+   "prompts": {
+    "en": "What contract does [ [ 1 ] + ] 'INC' DEF infer?",
+    "ja": "[ [ 1 ] + ] 'INC' DEF はどんな契約になりますか。"
+   },
+   "expectedTool": "infer_contracts",
+   "arguments": {
+    "source": "[ [ 1 ] ADD ] 'INC' DEF"
+   },
+   "expect": {
+    "/status": "ok",
+    "/contracts/0/name": "INC"
+   }
+  },
+  {
+   "id": "word-contract",
+   "category": "registry",
+   "prompts": {
+    "en": "What is the contract of the Ajisai Word MAP?",
+    "ja": "Ajisai の Word MAP の契約を教えてください。"
+   },
+   "expectedTool": "word_contract",
+   "arguments": {
+    "word": "MAP"
+   },
+   "expect": {
+    "/matches/0/name": "MAP",
+    "/matches/0/purity": "conditional"
+   }
+  },
+  {
+   "id": "reduced-fraction",
+   "category": "rational",
+   "prompts": {
+    "en": "Reduce 2/8 to lowest terms exactly.",
+    "ja": "2/8 を厳密に既約分数にしてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "2 8 DIV"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "1/4"
+   }
+  },
+  {
+   "id": "large-integer",
+   "category": "integer",
+   "prompts": {
+    "en": "Add 1 to 9007199254740993 without losing precision.",
+    "ja": "9007199254740993 に 1 を足して、精度を落とさずに答えてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "9007199254740993 1 ADD"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "9007199254740994/1"
+   }
+  },
+  {
+   "id": "vector-pairwise",
+   "category": "vector",
+   "prompts": {
+    "en": "Add the vectors [1, 2] and [3, 4] element by element.",
+    "ja": "ベクタ [1, 2] と [3, 4] を要素ごとに足してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 1 2 ] [ 3 4 ] ADD"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ 4/1 6/1 ]"
+   }
+  },
+  {
+   "id": "sqrt-domain-nil",
+   "category": "nil",
+   "prompts": {
+    "en": "What is the square root of -1 in Ajisai?",
+    "ja": "Ajisai で -1 の平方根はどうなりますか。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "-1 SQRT"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stack/0/semantics/absence/reason": "domainMiss"
+   }
+  },
+  {
+   "id": "exact-comparison",
+   "category": "comparison",
+   "prompts": {
+    "en": "Is 1 less than 2? Answer with Ajisai.",
+    "ja": "1 は 2 より小さいですか。Ajisai で確かめてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "1 2 LT"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "TRUE"
+   }
+  },
+  {
+   "id": "integer-modulus",
+   "category": "integer",
+   "prompts": {
+    "en": "What is 10 modulo 4?",
+    "ja": "10 を 4 で割った余りはいくつですか。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "10 'A' BIND 4 'B' BIND A A B DIV FLOOR B MUL SUB"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "2/1"
+   }
+  },
+  {
+   "id": "static-check-error",
+   "category": "check",
+   "prompts": {
+    "en": "Statically check the Ajisai source FROBNICATE without executing it.",
+    "ja": "Ajisai のソース FROBNICATE を実行せずに静的検査してください。"
+   },
+   "expectedTool": "check",
+   "arguments": {
+    "source": "FROBNICATE"
+   },
+   "expect": {
+    "/status": "error",
+    "/error/category": "unknownWord"
+   }
+  },
+  {
+   "id": "sort-ascending",
+   "category": "collection",
+   "prompts": {
+    "en": "Sort the numbers 3, 1, 2 into ascending order.",
+    "ja": "3, 1, 2 を昇順に並べ替えてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 3 1 2 ] SORT"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ 1/1 2/1 3/1 ]"
+   }
+  },
+  {
+   "id": "unique-labels",
+   "category": "collection",
+   "prompts": {
+    "en": "Give the distinct labels in ['a', 'b', 'a'].",
+    "ja": "['a', 'b', 'a'] の相異なるラベルを挙げてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 'a' 'b' 'a' ] UNIQUE"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ 'a' 'b' ]"
+   }
+  },
+  {
+   "id": "tally-labels",
+   "category": "collection",
+   "prompts": {
+    "en": "Count how many times each label occurs in ['a', 'b', 'a'].",
+    "ja": "['a', 'b', 'a'] で各ラベルが何回現れるか数えてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 'a' 'b' 'a' ] TALLY"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ 'a' 'b' ] [ 2/1 1/1 ] RECORD"
+   }
+  },
+  {
+   "id": "group-by-key",
+   "category": "collection",
+   "prompts": {
+    "en": "Group the values 1, 2, 3 by the keys 'a', 'b', 'a'.",
+    "ja": "値 1, 2, 3 をキー 'a', 'b', 'a' でグループ化してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 'a' 'b' 'a' ] [ 1 2 3 ] GROUP"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ 'a' 'b' ] [ [ 1/1 3/1 ] [ 2/1 ] ] RECORD"
+   }
+  },
+  {
+   "id": "order-permutation",
+   "category": "collection",
+   "prompts": {
+    "en": "Give the indices that would sort [30, 10, 20], not the sorted values.",
+    "ja": "[30, 10, 20] を並べ替える添字の並びを、値ではなく添字で出してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 30 10 20 ] ORDER"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ 1/1 2/1 0/1 ]"
+   }
+  },
+  {
+   "id": "range-sequence",
+   "category": "collection",
+   "prompts": {
+    "en": "Build the sequence of integers from 0 to 4.",
+    "ja": "0 から 4 までの整数列を作ってください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "0 4 RANGE"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ 0/1 1/1 2/1 3/1 4/1 ]"
+   }
+  },
+  {
+   "id": "sum-vector",
+   "category": "collection",
+   "prompts": {
+    "en": "Sum the vector [1, 2, 3, 4] exactly.",
+    "ja": "ベクタ [1, 2, 3, 4] の合計を厳密に求めてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 1 2 3 4 ] 0 [ ADD ] FOLD"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "10/1"
+   }
+  },
+  {
+   "id": "zip-transpose",
+   "category": "collection",
+   "prompts": {
+    "en": "Transpose [[1, 2], [3, 4]] so the columns become rows.",
+    "ja": "[[1, 2], [3, 4]] を転置して列を行にしてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ [ 1 2 ] [ 3 4 ] ] ZIP"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ [ 1/1 3/1 ] [ 2/1 4/1 ] ]"
+   }
+  },
+  {
+   "id": "take-prefix",
+   "category": "collection",
+   "prompts": {
+    "en": "Take the first three elements of [1, 2, 3, 4, 5].",
+    "ja": "[1, 2, 3, 4, 5] の先頭 3 要素を取り出してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 1 2 3 4 5 ] 3 TAKE"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ 1/1 2/1 3/1 ]"
+   }
+  },
+  {
+   "id": "concat-vectors",
+   "category": "collection",
+   "prompts": {
+    "en": "Join the vectors [1, 2] and [3, 4] into one.",
+    "ja": "ベクタ [1, 2] と [3, 4] を 1 つに連結してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 1 2 ] [ 3 4 ] CONCAT"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ 1/1 2/1 3/1 4/1 ]"
+   }
+  },
+  {
+   "id": "reverse-vector",
+   "category": "collection",
+   "prompts": {
+    "en": "Reverse the vector [1, 2, 3].",
+    "ja": "ベクタ [1, 2, 3] を逆順にしてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 1 2 3 ] REVERSE"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ 3/1 2/1 1/1 ]"
+   }
+  },
+  {
+   "id": "length-count",
+   "category": "collection",
+   "prompts": {
+    "en": "How many elements does [1, 2, 3] have?",
+    "ja": "[1, 2, 3] は要素をいくつ持っていますか。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 1 2 3 ] LENGTH"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "3/1"
+   }
+  },
+  {
+   "id": "index-of-value",
+   "category": "collection",
+   "prompts": {
+    "en": "At what position does 20 sit in [10, 20, 30]?",
+    "ja": "[10, 20, 30] の中で 20 は何番目にありますか。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 10 20 30 ] 20 BSEARCH"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "1/1"
+   }
+  },
+  {
+   "id": "get-element",
+   "category": "collection",
+   "prompts": {
+    "en": "Read the element at index 1 of [10, 20, 30].",
+    "ja": "[10, 20, 30] の添字 1 の要素を読んでください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 10 20 30 ] 1 GET"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "20/1"
+   }
+  },
+  {
+   "id": "put-element",
+   "category": "collection",
+   "prompts": {
+    "en": "Replace the element at index 1 of [1, 2, 3] with 9.",
+    "ja": "[1, 2, 3] の添字 1 の要素を 9 に置き換えてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 1 2 3 ] 1 9 PUT"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ 1/1 9/1 3/1 ]"
+   }
+  },
+  {
+   "id": "fill-matrix",
+   "category": "collection",
+   "prompts": {
+    "en": "Build a 2 by 2 matrix of zeros.",
+    "ja": "2 行 2 列のゼロ行列を作ってください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 2 2 ] 0 FILL"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ [ 0/1 0/1 ] [ 0/1 0/1 ] ]"
+   }
+  },
+  {
+   "id": "map-double",
+   "category": "higherOrder",
+   "prompts": {
+    "en": "Double every element of [1, 2, 3].",
+    "ja": "[1, 2, 3] の各要素を 2 倍してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 1 2 3 ] [ 2 MUL ] MAP"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ 2/1 4/1 6/1 ]"
+   }
+  },
+  {
+   "id": "filter-even",
+   "category": "higherOrder",
+   "prompts": {
+    "en": "Keep only the even numbers in [1, 2, 3, 4].",
+    "ja": "[1, 2, 3, 4] から偶数だけ残してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 1 2 3 4 ] [ 2 DIV 'H' BIND H FLOOR H EQ ] FILTER"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ 2/1 4/1 ]"
+   }
+  },
+  {
+   "id": "fold-product",
+   "category": "higherOrder",
+   "prompts": {
+    "en": "Multiply all of [1, 2, 3, 4] together.",
+    "ja": "[1, 2, 3, 4] を全部掛け合わせてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 1 2 3 4 ] 1 [ MUL ] FOLD"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "24/1"
+   }
+  },
+  {
+   "id": "any-predicate",
+   "category": "higherOrder",
+   "prompts": {
+    "en": "Does [1, 2, 3] contain a 2?",
+    "ja": "[1, 2, 3] に 2 は含まれますか。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 1 2 3 ] [ 2 EQ ] FILTER LENGTH 0 GT"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "TRUE"
+   }
+  },
+  {
+   "id": "all-predicate",
+   "category": "higherOrder",
+   "prompts": {
+    "en": "Are all of [2, 4] even?",
+    "ja": "[2, 4] はすべて偶数ですか。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 2 4 ] [ 2 DIV 'H' BIND H FLOOR H EQ ] MAP TRUE [ AND ] FOLD"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "TRUE"
+   }
+  },
+  {
+   "id": "chars-split",
+   "category": "text",
+   "prompts": {
+    "en": "Split the string 'hi' into its characters.",
+    "ja": "文字列 'hi' を 1 文字ずつに分解してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "'hi' CHARS"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ 'h' 'i' ]"
+   }
+  },
+  {
+   "id": "join-chars",
+   "category": "text",
+   "prompts": {
+    "en": "Join the characters 'h' and 'i' back into one string.",
+    "ja": "文字 'h' と 'i' を 1 つの文字列に戻してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 'h' 'i' ] JOIN"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "'hi'"
+   }
+  },
+  {
+   "id": "tokenize-csv",
+   "category": "text",
+   "prompts": {
+    "en": "Split 'a,b,c' on commas.",
+    "ja": "'a,b,c' をカンマで分割してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "'a,b,c' ',' TOKENIZE"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "[ 'a' 'b' 'c' ]"
+   }
+  },
+  {
+   "id": "num-parse",
+   "category": "text",
+   "prompts": {
+    "en": "Turn the string '42' into a number.",
+    "ja": "文字列 '42' を数値に変換してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "'42' NUM"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "42/1"
+   }
+  },
+  {
+   "id": "str-render",
+   "category": "text",
+   "prompts": {
+    "en": "Render the number 42 as a string.",
+    "ja": "数値 42 を文字列にしてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "42 STR"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "'42'"
+   }
+  },
+  {
+   "id": "sqrt-perfect-square",
+   "category": "algebraic",
+   "prompts": {
+    "en": "What is the square root of 9?",
+    "ja": "9 の平方根はいくつですか。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "9 SQRT"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "3/1"
+   }
+  },
+  {
+   "id": "sum-of-two-roots",
+   "category": "algebraic",
+   "prompts": {
+    "en": "Add the square roots of 2 and 3 and keep the result exact.",
+    "ja": "2 の平方根と 3 の平方根を足して、結果を厳密なまま保ってください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "2 SQRT 3 SQRT ADD"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stack/0/semantics/exactTerms/0/radicand": "2",
+    "/stack/0/semantics/exactTerms/1/radicand": "3"
+   }
+  },
+  {
+   "id": "third-times-three",
+   "category": "rational",
+   "prompts": {
+    "en": "Multiply one third by three and show it is exactly one.",
+    "ja": "3 分の 1 に 3 を掛けて、ちょうど 1 になることを示してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "1 3 DIV 3 MUL"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "1/1"
+   }
+  },
+  {
+   "id": "decimal-equality",
+   "category": "decimal",
+   "prompts": {
+    "en": "Is 0.1 plus 0.2 exactly equal to 0.3?",
+    "ja": "0.1 + 0.2 はちょうど 0.3 と等しいですか。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "0.1 0.2 ADD 0.3 EQ"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "TRUE"
+   }
+  },
+  {
+   "id": "boolean-and",
+   "category": "logic",
+   "prompts": {
+    "en": "What is TRUE and FALSE?",
+    "ja": "TRUE と FALSE の論理積は何ですか。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "TRUE FALSE AND"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "FALSE"
+   }
+  },
+  {
+   "id": "disjoint-domains",
+   "category": "comparison",
+   "prompts": {
+    "en": "Is the string 'A' equal to the vector [65] in Ajisai?",
+    "ja": "Ajisai で文字列 'A' はベクタ [65] と等しいですか。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "'A' [ 65 ] EQ"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "FALSE"
+   }
+  },
+  {
+   "id": "nil-is-detectable",
+   "category": "nil",
+   "prompts": {
+    "en": "Take the square root of -1 and then test whether the result is absent.",
+    "ja": "-1 の平方根を取り、その結果が不在かどうかを判定してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "-1 SQRT NIL?"
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "TRUE"
+   }
+  },
+  {
+   "id": "ceiling-collection-work",
+   "category": "resourceLimit",
+   "prompts": {
+    "en": "Deduplicate the 99999 integers from 0 to 99998 six times over and tell me how many are left.",
+    "ja": "0 から 99998 までの 99999 個の整数を 6 回重複除去して、残りが何個か教えてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "0 99998 RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH"
+   },
+   "expect": {
+    "/status": "error",
+    "/error/category": "resourceLimitExceeded",
+    "/error/resource": "collectionWork"
+   }
+  },
+  {
+   "id": "ceiling-numeric-work",
+   "category": "resourceLimit",
+   "prompts": {
+    "en": "Multiply eight two-radical sums together and then repeat that whole product twenty times.",
+    "ja": "2 根号の和 8 個の積を作り、その積全体をさらに 20 回繰り返してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 2 SQRT 3 SQRT ADD 5 SQRT 7 SQRT ADD MUL 11 SQRT 13 SQRT ADD MUL 17 SQRT 19 SQRT ADD MUL 23 SQRT 29 SQRT ADD MUL 31 SQRT 37 SQRT ADD MUL 41 SQRT 43 SQRT ADD MUL 47 SQRT 53 SQRT ADD MUL ] 'C' DEF C C C C C C C C C C C C C C C C C C C C"
+   },
+   "expect": {
+    "/status": "error",
+    "/error/category": "resourceLimitExceeded",
+    "/error/resource": "numericWork"
+   }
+  },
+  {
+   "id": "ceiling-materialization",
+   "category": "resourceLimit",
+   "prompts": {
+    "en": "Build the sequence of integers from 0 to 100001.",
+    "ja": "0 から 100001 までの整数列を作ってください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "0 100001 RANGE"
+   },
+   "expect": {
+    "/status": "error",
+    "/error/category": "resourceLimitExceeded",
+    "/error/resource": "materializedElements"
+   }
+  },
+  {
+   "id": "ceiling-execution-steps",
+   "category": "resourceLimit",
+   "prompts": {
+    "en": "Sum the numbers 1 through 999, two hundred times over, and add up all two hundred sums.",
+    "ja": "1 から 999 までの合計を 200 回計算し、その 200 個の合計をすべて足し合わせてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "1 200 RANGE 0 [ ADD 1 999 RANGE 0 [ ADD ] FOLD ADD ] FOLD"
+   },
+   "expect": {
+    "/status": "error",
+    "/error/category": "executionLimitExceeded"
+   }
+  },
+  {
+   "id": "shape-mismatch",
+   "category": "diagnostic",
+   "prompts": {
+    "en": "Add the vectors [1, 2, 3] and [1, 2] and tell me what Ajisai says.",
+    "ja": "ベクタ [1, 2, 3] と [1, 2] を足して、Ajisai が何と言うか教えてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 1 2 3 ] [ 1 2 ] ADD"
+   },
+   "expect": {
+    "/status": "error",
+    "/error/category": "shapeMismatch"
+   }
+  },
+  {
+   "id": "stack-shape-error",
+   "category": "diagnostic",
+   "prompts": {
+    "en": "Run the Ajisai program `1 ADD` and explain the failure.",
+    "ja": "Ajisai で `1 ADD` を実行し、失敗の理由を説明してください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "1 ADD"
+   },
+   "expect": {
+    "/status": "error",
+    "/error/category": "stackUnderflow"
+   }
+  },
+  {
+   "id": "malformed-source",
+   "category": "diagnostic",
+   "prompts": {
+    "en": "Run the Ajisai source `[ 1 2` and tell me what is wrong with it.",
+    "ja": "Ajisai のソース `[ 1 2` を実行して、どこがおかしいか教えてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 1 2"
+   },
+   "expect": {
+    "/status": "error",
+    "/error/category": "malformedSource"
+   }
+  },
+  {
+   "id": "unique-word-contract",
+   "category": "registry",
+   "prompts": {
+    "en": "What is the contract of the Ajisai Word UNIQUE?",
+    "ja": "Ajisai の Word UNIQUE の契約を教えてください。"
+   },
+   "expectedTool": "word_contract",
+   "arguments": {
+    "word": "UNIQUE"
+   },
+   "expect": {
+    "/matches/0/name": "UNIQUE"
+   }
+  },
+  {
+   "id": "irrelevant-weather",
+   "category": "negative",
+   "prompts": {
+    "en": "What is the weather like in Tokyo today?",
+    "ja": "今日の東京の天気はどうですか。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-writing",
+   "category": "negative",
+   "prompts": {
+    "en": "Write a haiku about hydrangeas.",
+    "ja": "紫陽花についての俳句を詠んでください。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-translation",
+   "category": "negative",
+   "prompts": {
+    "en": "Translate 'hello' into French.",
+    "ja": "'hello' をフランス語に訳してください。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-history",
+   "category": "negative",
+   "prompts": {
+    "en": "Who was the first shogun of the Kamakura shogunate?",
+    "ja": "鎌倉幕府の初代将軍は誰ですか。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-recipe",
+   "category": "negative",
+   "prompts": {
+    "en": "How long should I steam rice for?",
+    "ja": "ご飯は何分蒸らせばいいですか。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-opinion",
+   "category": "negative",
+   "prompts": {
+    "en": "Which programming language should I learn first?",
+    "ja": "最初に学ぶプログラミング言語は何がいいですか。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-sine",
+   "category": "negative",
+   "prompts": {
+    "en": "What is the sine of 30 degrees?",
+    "ja": "30 度のサインはいくつですか。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-logarithm",
+   "category": "negative",
+   "prompts": {
+    "en": "What is the natural logarithm of 2?",
+    "ja": "2 の自然対数はいくつですか。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-pi-digits",
+   "category": "negative",
+   "prompts": {
+    "en": "Give me pi to 20 decimal places.",
+    "ja": "円周率を小数点以下 20 桁まで教えてください。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-currency",
+   "category": "negative",
+   "prompts": {
+    "en": "Convert 100 US dollars to Japanese yen.",
+    "ja": "100 米ドルを日本円に換算してください。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-weekday",
+   "category": "negative",
+   "prompts": {
+    "en": "What day of the week was 14 May 1990?",
+    "ja": "1990 年 5 月 14 日は何曜日でしたか。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-distance",
+   "category": "negative",
+   "prompts": {
+    "en": "How far is Tokyo from Osaka?",
+    "ja": "東京から大阪までの距離はどれくらいですか。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-explain-rpn",
+   "category": "negative",
+   "prompts": {
+    "en": "Explain what postfix notation is and why a stack suits it.",
+    "ja": "後置記法とは何か、なぜスタックと相性が良いのかを説明してください。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-estimate",
+   "category": "negative",
+   "prompts": {
+    "en": "Roughly how long does a 500-page novel take to read?",
+    "ja": "500 ページの小説を読むのに、だいたいどれくらいかかりますか。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-naming",
+   "category": "negative",
+   "prompts": {
+    "en": "Suggest a good variable name for a user's age.",
+    "ja": "ユーザーの年齢を保持する変数の良い名前を提案してください。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-python",
+   "category": "negative",
+   "prompts": {
+    "en": "Write a Python function that reverses a string.",
+    "ja": "文字列を逆順にする Python の関数を書いてください。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-regex",
+   "category": "negative",
+   "prompts": {
+    "en": "Write a regular expression that matches an email address.",
+    "ja": "メールアドレスにマッチする正規表現を書いてください。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-debug",
+   "category": "negative",
+   "prompts": {
+    "en": "Why does `for (i=0;i<n;i++)` skip the last element in my JavaScript loop?",
+    "ja": "JavaScript の `for (i=0;i<n;i++)` で最後の要素が飛ばされるのはなぜですか。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-summary",
+   "category": "negative",
+   "prompts": {
+    "en": "Summarize the plot of Momotaro in two sentences.",
+    "ja": "桃太郎のあらすじを 2 文で要約してください。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "irrelevant-book",
+   "category": "negative",
+   "prompts": {
+    "en": "Recommend a book about compiler construction.",
+    "ja": "コンパイラ構築についての本を 1 冊薦めてください。"
+   },
+   "expectedTool": null,
+   "arguments": null,
+   "expect": null
+  },
+  {
+   "id": "phrasebook-mean",
+   "category": "phrasebook",
+   "prompts": {
+    "en": "Using the phrasebook's MEAN, find the exact average of 3, 4 and 8.",
+    "ja": "フレーズブックの MEAN を使って、3・4・8 の平均を厳密に求めてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 3 4 8 ] MEAN",
+    "words": [
+     "MEAN"
+    ]
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "5/1",
+    "/prelude/1/name": "MEAN"
+   }
+  },
+  {
+   "id": "phrasebook-mod",
+   "category": "phrasebook",
+   "prompts": {
+    "en": "With the phrasebook Word MOD, compute -7 modulo 3, with the divisor's sign.",
+    "ja": "フレーズブックのワード MOD で、-7 を 3 で割った余りを除数の符号で求めてください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "-7 3 MOD",
+    "words": [
+     "MOD"
+    ]
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "2/1"
+   }
+  },
+  {
+   "id": "phrasebook-join-with",
+   "category": "phrasebook",
+   "prompts": {
+    "en": "Use the phrasebook's JOIN-WITH to join 'a', 'b' and 'c' with commas.",
+    "ja": "フレーズブックの JOIN-WITH で 'a'・'b'・'c' をカンマでつないでください。"
+   },
+   "expectedTool": "compute",
+   "arguments": {
+    "source": "[ 'a' 'b' 'c' ] ',' JOIN-WITH",
+    "words": [
+     "JOIN-WITH"
+    ]
+   },
+   "expect": {
+    "/status": "ok",
+    "/stackDisplay/0": "'a,b,c'"
+   }
+  }
+ ]
+}

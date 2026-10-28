@@ -1,0 +1,265 @@
+{
+  "schemaVersion": 1,
+  "comment": "Every entry of the server's declared limits (`ajisai://limits`; `LIMITS` in index.js) must appear here exactly once, and selftest.js fails if the two key sets differ. A limit an agent plans against has to have pinned, observable behaviour at its boundary; one that is declared and never exercised is a claim, not a control.",
+  "coverageKinds": {
+    "boundary": "A pair of real sources: one just under the declared value that succeeds, one just over it that fails in the stated way. Run against the live server on every selftest.",
+    "hostGate": "Enforced by the adapter before or around execution, so it is exercised through the server's own admission path rather than through a source program.",
+    "injectedLimit": "Not reachable at the declared value within `wallTimeMs`, so the boundary is pinned in Rust with a small injected ceiling instead. The `rustTest` field names that test."
+  },
+  "limits": {
+    "sourceBytes": {
+      "coverage": "boundary",
+      "declared": 65536,
+      "under": {
+        "kind": "generatedSource",
+        "generator": "spaces",
+        "bytes": 65536,
+        "expect": {
+          "/status": "ok"
+        }
+      },
+      "over": {
+        "kind": "generatedSource",
+        "generator": "spaces",
+        "bytes": 65537,
+        "expect": {
+          "/status": "hostError",
+          "/error/code": "sourceTooLarge",
+          "/error/limit": "sourceBytes",
+          "/error/retryable": false
+        }
+      },
+      "note": "Rejected by the adapter on UTF-8 byte length before a backend is entered. The engine applies the same 65536-byte ceiling as `ResourceLimitExceeded { resource: sourceBytes }` if a host ever forwards a larger program."
+    },
+    "wallTimeMs": {
+      "coverage": "hostGate",
+      "declared": 5000,
+      "note": "Enforced by the adapter around execution (`backend/native-cli.js` spawn timeout, `backend/wasm-worker.js` worker deadline) and exercised through it in selftest.js, which drives a backend built with a 1 ms deadline against a program that cannot finish in one. It stopped being reachable through a source program when the collection meter landed, and that is the point rather than a regression: the over case used to be `0 99999 RANGE UNIQUE LENGTH`, 48 seconds of quadratic scanning that no ceiling counted, and it is now refused by `collectionWork` in 164 ms. With every path named, the slowest program the other ceilings admit runs about 1.4 s -- `numericWork` buys ~0.7 s at its slowest charged path and `collectionWork` ~0.65 s at its own -- so 5,000 ms is a backstop on their sum, which is what a wall clock should be. Do not go looking for a source-program boundary pair for it; finding one would mean a ceiling had gone quiet again."
+    },
+    "responseBytes": {
+      "coverage": "hostGate",
+      "declared": 1048576,
+      "note": "Enforced by both backends on the one result copy they produce (`backend/native-cli.js` maxBuffer and its own byte check, `backend/wasm-worker-entry.js`) and by the adapter on the whole response as sent — structured result, serialized text mirror and provenance together — and exercised in selftest.js through a backend built with a 256-byte budget that no result fits. It stopped being reachable through a source program when successful results gained a stack budget: a success whose stack would not fit is elided by the engine (`stackElided.reason: valueStackBudget`, 440 KiB, sized so the doubled response stays under this ceiling), so `0 20000 RANGE`, the old over case, now answers `ok` with its vector elided and the rest whole, and selftest.js pins that it, `0 7000 RANGE 1 2 ADD` and the still-whole `0 5000 RANGE` all arrive under the declared value. Do not go looking for a source-program over case; finding one would mean the elision had stopped covering what it covers."
+    },
+    "executionSteps": {
+      "coverage": "boundary",
+      "declared": 100000,
+      "under": {
+        "kind": "source",
+        "source": "1 20 RANGE 0 [ ADD 1 999 RANGE 0 [ ADD ] FOLD ADD ] FOLD",
+        "expect": {
+          "/status": "ok"
+        }
+      },
+      "over": {
+        "kind": "source",
+        "source": "1 200 RANGE 0 [ ADD 1 999 RANGE 0 [ ADD ] FOLD ADD ] FOLD",
+        "expect": {
+          "/status": "error",
+          "/error/category": "executionLimitExceeded",
+          "/message": "Execution step limit (100000) exceeded"
+        }
+      }
+    },
+    "concurrentExecutions": {
+      "coverage": "hostGate",
+      "declared": 4,
+      "note": "Exercised through `ExecutionGate` in selftest.js: the gate admits exactly its capacity, queues a further caller for up to CAPACITY_WAIT_MS, hands a released slot to the longest-waiting caller, and answers `capacityExhausted` with `retryable: true` only when the wait elapses."
+    },
+    "materializedElements": {
+      "coverage": "boundary",
+      "declared": 100000,
+      "under": {
+        "kind": "source",
+        "source": "0 99999 RANGE LENGTH",
+        "expect": {
+          "/status": "ok",
+          "/stackDisplay/0": "100000/1"
+        }
+      },
+      "over": {
+        "kind": "source",
+        "source": "0 100001 RANGE",
+        "expect": {
+          "/status": "error",
+          "/error/category": "resourceLimitExceeded",
+          "/error/resource": "materializedElements",
+          "/message": "materializedElements of 100002 exceeds the limit of 100000",
+          "/stackDisplay/0": "0/1",
+          "/stackDisplay/1": "100001/1"
+        }
+      },
+      "note": "A generative ceiling is an error like every other ceiling, refused by name before anything is built, with the bounds left on the stack. It is never a value: through engine 1.0.0-beta.1 it projected a NIL(spaceExhausted), and that NIL flowed on, so the same program answered `ok` with different values here and in the playground."
+    },
+    "numericLiteralDigits": {
+      "coverage": "boundary",
+      "declared": 4096,
+      "under": {
+        "kind": "generatedSource",
+        "generator": "digits",
+        "digits": 4096,
+        "expect": {
+          "/status": "ok"
+        }
+      },
+      "over": {
+        "kind": "generatedSource",
+        "generator": "digits",
+        "digits": 4097,
+        "expect": {
+          "/status": "error",
+          "/error/category": "resourceLimitExceeded",
+          "/error/resource": "numericLiteralDigits",
+          "/message": "numericLiteralDigits of 4097 exceeds the limit of 4096"
+        }
+      }
+    },
+    "numericWork": {
+      "coverage": "boundary",
+      "declared": 10000000,
+      "under": {
+        "kind": "generatedSource",
+        "generator": "algebraicCascade",
+        "factors": 8,
+        "repetitions": 19,
+        "expect": {
+          "/status": "ok"
+        }
+      },
+      "over": {
+        "kind": "generatedSource",
+        "generator": "algebraicCascade",
+        "factors": 8,
+        "repetitions": 20,
+        "expect": {
+          "/status": "error",
+          "/error/category": "resourceLimitExceeded",
+          "/error/resource": "numericWork",
+          "/message": "numericWork of 10030760 exceeds the limit of 10000000"
+        }
+      },
+      "note": "Charged on every rational and algebraic operation in every operand shape, priced as lanes x limb-multiply units, addition included -- Ajisai's `+` is rational addition, three multiplications and a gcd, not anything linear. The pair applies one 256-term cascade nineteen times against twenty (524,560 units each since a sum is priced by `ALGEBRAIC_SUM_TERM_UNITS` rather than as term pairs): work accumulates while no single value grows, which is the shape only a *cumulative* ceiling can catch, and keeps this pair from testing `algebraicTerms` or `bigintBits` by accident. It was `injectedLimit` for three rounds and three different reasons -- arithmetic outside the scalar path was not charged at all, then the refusal's 27MB envelope became `responseTooLarge`, then the cascade that reaches it could not be built because *rendering* 32 terms took 147s."
+    },
+    "collectionWork": {
+      "coverage": "boundary",
+      "declared": 20000000,
+      "under": {
+        "kind": "source",
+        "source": "0 99998 RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH",
+        "expect": {
+          "/status": "ok",
+          "/stackDisplay/0": "99999/1"
+        }
+      },
+      "over": {
+        "kind": "source",
+        "source": "0 99998 RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH",
+        "expect": {
+          "/status": "error",
+          "/error/category": "resourceLimitExceeded",
+          "/error/resource": "collectionWork",
+          "/message": "collectionWork of 20000007 exceeds the limit of 20000000 after 38240 of 99999 elements"
+        }
+      },
+      "note": "The element copies, order comparisons and equality probes a collection Word performs inside a single execution step -- the work the step budget cannot see, because such a Word is one step however many elements it touches. This pair used to be `0 6290 RANGE UNIQUE LENGTH` / `0 6291 RANGE UNIQUE LENGTH`: `UNIQUE` scanned the distinct values found so far for each element (n x distinct), so a boundary was reachable in one pass over plain rational scalars. The de-quadraticization follow-up (`Value: Hash`) turned that scan into an O(n)-average `HashMap` lookup, so one pass over 100,000 all-distinct machine words -- the most `materializedElements` permits -- now costs about 5.1M of the 20M budget, nowhere near this ceiling. Repeating `UNIQUE` on the same all-distinct 99,999-element vector reaches it in cheap, uniform passes instead: each repeat re-scans the same elements (still all distinct, so every pass is the same shape) and the sixth crosses on its 38,240th element. This was deliberately chosen over a single expensive-per-element pass (an algebraic or wide-BigInt vector, which can also reach the ceiling in one pass): those pay real per-element cost in `Algebraic::hash`'s interval refinement or BigInt limb-walking that is dramatically more expensive unoptimized than optimized, and an unoptimized `ajisai` binary is exactly what exercises this golden file (`npm run test:mcp` builds without `--release`) -- a single-pass algebraic witness here once took 16s against a 5,000ms `wallTimeMs`. What is charged per element is still operations x the measured cost of one element -- leaves per element, limbs per leaf, 512 units for an algebraic one -- plus a fixed `COLLECTION_HASH_UNITS` for the table lookup itself, re-measured at scale because a flat per-leaf charge alone undercounted a `HashMap`'s own growth and cache cost. `LENGTH` is on both sides to keep the response small. Priced in rust/src/interpreter/collection_meter.rs; the derivation is summarized in docs/dev/mcp-host-profiles.md. The refusal also reports how far it got: a meter charged as it goes stops the instant the budget is crossed, so the charge it names sits a hair over the limit however far over the request was, and the `message` says instead how many elements the budget bought (`after 38240 of 99999 elements`) -- the size that fits."
+    },
+    "bigintBits": {
+      "coverage": "boundary",
+      "declared": 262144,
+      "under": {
+        "kind": "generatedSource",
+        "generator": "widePowers",
+        "digits": 4096,
+        "multiplications": 19,
+        "expect": {
+          "/status": "ok"
+        }
+      },
+      "over": {
+        "kind": "generatedSource",
+        "generator": "widePowers",
+        "digits": 4096,
+        "multiplications": 20,
+        "expect": {
+          "/status": "error",
+          "/error/category": "resourceLimitExceeded",
+          "/error/resource": "bigintBits",
+          "/message": "bigintBits of 272133 exceeds the limit of 262144"
+        }
+      },
+      "note": "Bounds the width of any exact arithmetic result, rational as well as algebraic, in every operand shape. Nineteen multiplications by a 4096-digit literal reach 77,824 digits and succeed; the twentieth would reach 272,133 bits and is refused by name, in about 16ms and 4.2KB of source. The literal is parsed once into a user word, so the pair tests this ceiling rather than `numericLiteralDigits` or the O(n^2) decimal parse. Reaching it costs roughly 9.5M work units, just under `numericWork`'s 10,000,000 -- the two sit close together because building an N-limb integer by multiplication costs about N^2/4 limb-operations by construction, so size and work grow together on this path. Keep that in mind before re-pricing either."
+    },
+    "algebraicTerms": {
+      "coverage": "boundary",
+      "declared": 512,
+      "under": {
+        "kind": "generatedSource",
+        "generator": "algebraicCascade",
+        "factors": 9,
+        "expect": {
+          "/status": "ok"
+        }
+      },
+      "over": {
+        "kind": "generatedSource",
+        "generator": "algebraicCascade",
+        "factors": 10,
+        "expect": {
+          "/status": "error",
+          "/error/category": "resourceLimitExceeded",
+          "/error/resource": "algebraicTerms",
+          "/message": "algebraicTerms of 1024 exceeds the limit of 512"
+        }
+      },
+      "note": "Nine two-radical factors reach 512 terms and succeed; the tenth doubling reaches 1,024 and is refused by name, in about 13ms. The declared value was 4,096 and had never fired in its life: the doubling that would first exceed it charges 16,780,400 units against a 10,000,000 work budget, so `numericWork` always answered first. Lowering it rather than raising the work budget keeps the hierarchy right -- a size ceiling bounds one value *inside* a run the work ceiling bounds -- and 512 is derived rather than rounded: `exactTerms` for 512 terms is 31,745 bytes, 3.0% of `responseBytes`, where 4,096 terms was 278,110 bytes and 26.5%, a quarter of the whole response for one number that renders as `[ … ]` and that no computation wants. `rust/src/agent/profile_liveness_tests.rs` now fails the build if any size ceiling is declared past what the work budget can pay for."
+    },
+    "nestingDepth": {
+      "coverage": "boundary",
+      "declared": 256,
+      "under": {
+        "kind": "source",
+        "source": "0 254 RANGE [ ] [ 2 COLLECT 1 TAKE ] FOLD DEPTH",
+        "expect": {
+          "/status": "ok",
+          "/stackDisplay/0": "256/1"
+        }
+      },
+      "over": {
+        "kind": "source",
+        "source": "0 255 RANGE [ ] [ 2 COLLECT 1 TAKE ] FOLD DEPTH",
+        "expect": {
+          "/status": "error",
+          "/error/category": "resourceLimitExceeded",
+          "/error/resource": "nestingDepth",
+          "/message": "nestingDepth of 257 exceeds the limit of 256"
+        }
+      },
+      "note": "Each FOLD step wraps the accumulator one level deeper, so 255 steps over `[ ]` reach 256 and succeed and the 256th reaches 257 and is refused by name. Every walk over a value descends one native frame per level, so before this ceiling a program that nested a value a few thousand deep aborted the process instead of failing. A literal written that deep is refused the same way, and so is a generative Word asked for a result that deep (FILL or RESHAPE with that many axes, JSON-DECODE of text nested that deep), by the same name and before building, as it refuses a count past `materializedElements`."
+    },
+    "callDepth": {
+      "coverage": "boundary",
+      "declared": 256,
+      "under": {
+        "kind": "generatedSource",
+        "generator": "wordChain",
+        "words": 256,
+        "expect": {
+          "/status": "ok",
+          "/stackDisplay/0": "1/1"
+        }
+      },
+      "over": {
+        "kind": "generatedSource",
+        "generator": "wordChain",
+        "words": 257,
+        "expect": {
+          "/status": "error",
+          "/error/category": "resourceLimitExceeded",
+          "/error/resource": "callDepth",
+          "/message": "callDepth of 257 exceeds the limit of 256"
+        }
+      },
+      "note": "A chain of 256 Words, each calling the one before, nests 256 frames and succeeds; the 257th is refused by name before its body runs. The engine fixes this ceiling for every host, because each level is native stack, and blocks count too: EXEC, MAP, FILTER, FOLD and SCAN each take a level. A block that runs a copy of itself (`[ 1 COLLECT [ 0 0 ] GET EXEC EXEC ] 1 COLLECT [ 0 0 ] GET EXEC EXEC`) also ends here, which is why this ceiling, not the dictionary's acyclicity, is what stops it. The chain charges about 12.4 million units of collectionWork, mostly DEF walking the dictionary, which the 20,000,000 budget covers."
+    }
+  }
+}

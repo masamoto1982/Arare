@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ajisai Documentation</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --ink: #26272a;
+  --ink-light: #5b6068;
+  --page: #ffffff;
+  --accent: #6b5b95;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e6e6e9;
+    --ink-light: #a9adb5;
+    --page: #17181b;
+    --accent: #b9a8e6;
+  }
+}
+body {
+  margin: 0 auto;
+  max-width: 40rem;
+  padding: 1.5rem 1rem 3rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--page);
+}
+a { color: var(--accent); }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+li { margin-bottom: 0.75rem; }
+.note { color: var(--ink-light); }
+</style>
+</head>
+<body>
+<main>
+<h1>Ajisai Documentation</h1>
+<ul>
+<li lang="en"><a href="en/index.html">English — Reference</a><br>
+<span class="note">The whole language with runnable samples, and a Word list giving every Word's stack effect, NIL policy and contract.</span></li>
+<li lang="ja"><a href="ja/index.html" hreflang="ja">日本語 — リファレンス</a><br>
+<span class="note">言語全体をサンプル付きで解説し、全ワードのスタック効果・NIL方針・契約をワード一覧にまとめています。サンプルは Playground に読み込んで試せます。</span></li>
+</ul>
+<p><a href="../index.html">Back to the Playground</a></p>
+</main>
+</body>
+</html>

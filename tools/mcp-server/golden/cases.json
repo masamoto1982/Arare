@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "successful exact rational",
+      "source": "[ 1 ] [ 2 ] ADD",
+      "expect": {
+        "/status": "ok",
+        "/outcome": "value",
+        "/stackDisplay/0": "[ 3/1 ]"
+      }
+    },
+    {
+      "name": "reason-carrying NIL is a successful value",
+      "source": "-1 SQRT",
+      "expect": {
+        "/status": "ok",
+        "/outcome": "nil:domainMiss",
+        "/stackDisplay/0": "NIL",
+        "/stack/0/semantics/absence/reason": "domainMiss"
+      }
+    },
+    {
+      "name": "a quotient by zero is a point over zero, a number",
+      "source": "100 0 DIV -5 0 DIV 0 0 DIV",
+      "expect": {
+        "/status": "ok",
+        "/outcome": "value",
+        "/stackDisplay/0": "1/0",
+        "/stackDisplay/1": "1/0",
+        "/stackDisplay/2": "0/0",
+        "/stack/0/type": "number",
+        "/stack/0/value/numerator": "1",
+        "/stack/0/value/denominator": "0"
+      }
+    },
+    {
+      "name": "language ERROR remains a structured tool result",
+      "source": "FROBNICATE",
+      "expect": {
+        "/status": "error",
+        "/outcome": "error:unknownWord",
+        "/error/category": "unknownWord",
+        "/error/word": "FROBNICATE",
+        "/error/line": 1,
+        "/error/column": 1,
+        "/message": "Unknown word: FROBNICATE"
+      }
+    },
+    {
+      "name": "a misspelled Word is an error naming it where it was written",
+      "source": "[ 1 2 3 ] LENGHT",
+      "expect": {
+        "/status": "error",
+        "/error/category": "unknownWord",
+        "/error/word": "LENGHT",
+        "/error/line": 1,
+        "/error/column": 11
+      }
+    },
+    {
+      "name": "algebraic result keeps its normal form",
+      "source": "[ 2 ] SQRT",
+      "expect": {
+        "/status": "ok",
+        "/stack/0/value/0/semantics/approximate": true,
+        "/stack/0/value/0/semantics/exactTerms/0/numerator": "1",
+        "/stack/0/value/0/semantics/exactTerms/0/denominator": "1",
+        "/stack/0/value/0/semantics/exactTerms/0/radicand": "2",
+        "/stackDisplay/0": "[ sqrt(2) ]"
+      }
+    },
+    {
+      "name": "a scaled algebraic value writes its coefficient",
+      "source": "1 2 DIV SQRT",
+      "expect": {
+        "/status": "ok",
+        "/stack/0/semantics/exactTerms/0/numerator": "1",
+        "/stack/0/semantics/exactTerms/0/denominator": "2",
+        "/stack/0/semantics/exactTerms/0/radicand": "2",
+        "/stackDisplay/0": "1/2*sqrt(2)"
+      }
+    },
+    {
+      "name": "a multi-term algebraic value writes every term",
+      "source": "2 SQRT 3 SQRT ADD",
+      "expect": {
+        "/status": "ok",
+        "/stack/0/semantics/exactTerms/0/radicand": "2",
+        "/stack/0/semantics/exactTerms/1/radicand": "3",
+        "/stackDisplay/0": "sqrt(2)+sqrt(3)"
+      }
+    },
+    {
+      "name": "a rational carries no algebraic rendering",
+      "source": "2 3 DIV 1 3 DIV ADD",
+      "expect": {
+        "/status": "ok",
+        "/stackDisplay/0": "1/1"
+      },
+      "expectAbsent": [
+        "/stack/0/semantics/exactTerms",
+        "/stack/0/semantics/approximate"
+      ]
+    },
+    {
+      "name": "a vector of rationals carries no algebraic rendering",
+      "source": "[ 1 2 3 ] [ 4 5 6 ] ADD",
+      "expect": {
+        "/status": "ok",
+        "/stackDisplay/0": "[ 5/1 7/1 9/1 ]"
+      },
+      "expectAbsent": [
+        "/stack/0/value/0/semantics/exactTerms"
+      ]
+    },
+    {
+      "name": "a NIL lane survives arithmetic applied to the whole vector",
+      "source": "[ 1 NIL 3 ] [ 2 ] MUL",
+      "expect": {
+        "/status": "ok",
+        "/stackDisplay/0": "[ 2/1 NIL 6/1 ]",
+        "/stack/0/value/1/type": "nil",
+        "/stack/0/value/2/value/numerator": "6"
+      }
+    },
+    {
+      "name": "a zero divisor marks its own lane with the point over zero",
+      "source": "[ 6 6 6 ] [ 1 2 0 ] DIV",
+      "expect": {
+        "/status": "ok",
+        "/stackDisplay/0": "[ 6/1 3/1 1/0 ]",
+        "/stack/0/value/2/type": "number",
+        "/stack/0/value/2/value/numerator": "1",
+        "/stack/0/value/2/value/denominator": "0"
+      }
+    },
+    {
+      "name": "an order asked of 0/0 projects domainMiss and reads as unknown",
+      "source": "0 0 DIV 1 LT",
+      "expect": {
+        "/status": "ok",
+        "/stackDisplay/0": "NIL",
+        "/stack/0/semantics/absence/reason": "domainMiss",
+        "/outcome": "nil:domainMiss"
+      }
+    },
+    {
+      "name": "execution budget exhaustion is a language ERROR",
+      "source": "1 200 RANGE 0 [ ADD 1 999 RANGE 0 [ ADD ] FOLD ADD ] FOLD",
+      "expect": {
+        "/status": "error",
+        "/outcome": "error:executionLimitExceeded",
+        "/error/category": "executionLimitExceeded",
+        "/error/word": "ADD",
+        "/message": "Execution step limit (100000) exceeded"
+      }
+    },
+    {
+      "name": "agent materialization ceiling is an error named before anything is built",
+      "source": "0 100001 RANGE",
+      "expect": {
+        "/status": "error",
+        "/outcome": "error:resourceLimitExceeded",
+        "/error/category": "resourceLimitExceeded",
+        "/error/resource": "materializedElements",
+        "/error/word": "RANGE",
+        "/message": "materializedElements of 100002 exceeds the limit of 100000",
+        "/stackDisplay/0": "0/1",
+        "/stackDisplay/1": "100001/1"
+      },
+      "hostDivergence": {
+        "playground": "succeeds, materializing 100002 elements",
+        "why": "The browser playground applies the interpreter's default RuntimeLimits (max_materialized_elements = 1,000,000); this profile applies LOCAL_AGENT_RUNTIME_LIMITS (100,000). Both are correct for their host: LANG.MACHINE.LIMITS makes limits a safety control rather than value semantics, so a conforming host chooses its own — and that is exactly why a crossed ceiling is an ERROR and never a value. A host difference is visible here as a failure that names the ceiling, not as a different `ok` answer (through engine 1.0.0-beta.1 this projected a NIL that flowed on, and `0 X X NIL? SELECT` silently chose a different branch per host). Recorded here so the divergence is a documented decision rather than a surprise for anyone who prototypes in the playground and runs through MCP. See docs/dev/mcp-host-profiles.md."
+      }
+    },
+    {
+      "name": "a stack underflow names the Word it is attributed to",
+      "source": "'hello world' TOKENIZE",
+      "expect": {
+        "/status": "error",
+        "/outcome": "error:stackUnderflow",
+        "/error/word": "TOKENIZE",
+        "/message": "TOKENIZE: stack underflow — for example `'a,b,c' ',' TOKENIZE`"
+      }
+    },
+    {
+      "name": "SELECT's truth-operand failure is its own category",
+      "source": "[ 'y' ] [ 'n' ] 1 SELECT",
+      "expect": {
+        "/status": "error",
+        "/outcome": "error:nonTruthValue",
+        "/error/word": "SELECT",
+        "/message": "SELECT: expected a truth value, got Scalar — for example `[ 'yes' ] [ 'no' ] TRUE SELECT`"
+      }
+    },
+    {
+      "name": "a huge failing stack does not cost the error",
+      "source": "0 99999 RANGE LENGHT",
+      "expect": {
+        "/status": "error",
+        "/error/category": "unknownWord",
+        "/error/word": "LENGHT",
+        "/stackElided/reason": "errorStackBudget",
+        "/stackElided/slots/0/index": 0,
+        "/stackElided/slots/0/elements": 100000,
+        "/stack/0/type": "vector",
+        "/stack/0/elided/reason": "errorStackBudget"
+      }
+    },
+    {
+      "name": "a run reports the resources it actually spent",
+      "source": "1 20 RANGE 1 [ MUL ] FOLD",
+      "expect": {
+        "/status": "ok",
+        "/resourceUsage/executionSteps": 22,
+        "/resourceUsage/numericWork": 20
+      },
+      "expectAbsent": [
+        "/runtimeMetrics"
+      ],
+      "comment": "RANGE and FOLD are one step each and the block's `MUL` runs twenty times: 22. The step count is a budget, reported once under resourceUsage; the engine reports no optimizer counters (`runtimeMetrics` is gone). Pinned as an exact number because the defect was a constant — every program reported 0 — so only an exact expectation catches a regression to one."
+    },
+    {
+      "name": "a violated #:contract declaration stops compute before anything runs",
+      "source": "#:contract DOUBLE inputs=2 outputs=1\n[ 2 MUL ] 'DOUBLE' DEF 5 DOUBLE PRINT",
+      "expect": {
+        "/status": "error",
+        "/outcome": "error:contractViolation",
+        "/error/category": "contractViolation",
+        "/error/word": "DOUBLE",
+        "/contractDecls/outcome": "error",
+        "/contractDecls/findings/0/message": "`#:contract DOUBLE`: declared `inputs=2` but inferred `inputs=1`.",
+        "/output": [],
+        "/stackDisplay": []
+      },
+      "comment": "The PRINT never runs: LANG.CONTRACT.CHECK is a pre-execution check, and compute is where execution happens. The same report, less the outcome id, is what check answers."
+    },
+    {
+      "name": "a verified #:contract declaration is reported beside the run",
+      "source": "#:contract DOUBLE inputs=1 outputs=1 field=closed\n[ 2 MUL ] 'DOUBLE' DEF 21 DOUBLE",
+      "expect": {
+        "/status": "ok",
+        "/outcome": "value",
+        "/stackDisplay/0": "42/1",
+        "/contractDecls/outcome": "value",
+        "/contractDecls/declarations": [
+          {
+            "outcome": "value",
+            "word": "DOUBLE"
+          }
+        ]
+      }
+    },
+    {
+      "name": "an oversized success is elided rather than refused",
+      "source": "0 7000 RANGE 1 2 ADD",
+      "expect": {
+        "/status": "ok",
+        "/outcome": "value",
+        "/stackElided/reason": "valueStackBudget",
+        "/stackElided/budgetBytes": 450560,
+        "/stackElided/slots/0/index": 0,
+        "/stackElided/slots/0/elements": 7001,
+        "/stack/0/type": "vector",
+        "/stack/0/value": null,
+        "/stack/0/elided/reason": "valueStackBudget",
+        "/stackDisplay/1": "3/1"
+      },
+      "comment": "A success is its stack, so the budget is generous (440 KiB, sized against responseBytes with the response's two copies in mind) and the trusted profile sets none. The answer that fits (`3/1`) is whole; the 7,001-element intermediate arrives as a record of what it was, which is what tells the caller to drop it."
+    },
+    {
+      "name": "a block that leaves more than its one result is a contract violation",
+      "source": "[ 1 2 3 ] [ 2 MUL 7 ] MAP",
+      "expect": {
+        "/status": "error",
+        "/outcome": "error:blockContractViolation",
+        "/error/category": "blockContractViolation",
+        "/error/word": "MAP",
+        "/message": "MAP: expected the block to leave one value, and it left 2"
+      },
+      "comment": "The surplus used to be discarded and the top taken, so this answered `[ 7 7 7 ]` without a word about the `2 MUL` it threw away (LANG.COLLECTIONS.HIGHER). A block owes exactly one value; none and a surplus are the one violation."
+    }
+  ]
+}

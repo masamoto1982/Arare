@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "warmupRuns": 1,
+  "measuredRuns": 5,
+  "p95BudgetMs": 1000,
+  "medianResponseBytesBudget": 1140,
+  "caseIds": [
+    "exact-fraction",
+    "decimal-no-float",
+    "algebraic-sqrt",
+    "vector-broadcast",
+    "static-check",
+    "contract-inference",
+    "word-contract"
+  ]
+}

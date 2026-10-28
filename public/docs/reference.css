@@ -1,0 +1,627 @@
+/* Shared styles of the Ajisai Reference (public/docs/ja/index.html and
+   public/docs/en/index.html). Both pages link this file, so a change to the
+   design is made once, for every language. */
+
+:root {
+    --font-stack-primary: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    --font-stack-mono: "SF Mono", Consolas, "Liberation Mono", Monaco, monospace;
+
+    --radius-button: 6px;
+
+    --color-primary:   oklch(51.1% 0.091 295.7);
+    --color-secondary: oklch(73.9% 0.012 297.5);
+
+    --color-text:       oklch(24.7% 0.002 247.9);
+    --color-text-light: oklch(46.1% 0.009 241.8);
+
+    --color-border: oklch(73.2% 0.014 251.6);
+    --border-main: solid 1px var(--color-border);
+
+    --color-light:  oklch(98.2% 0.002 247.8);
+    --color-medium: oklch(94.3% 0.006 264.5);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    min-height: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: var(--font-stack-primary);
+    background: oklch(100% 0 0);
+    color: var(--color-text);
+    line-height: 1.7;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+
+    &:hover { color: var(--color-secondary); }
+}
+
+/* Shifting hues: a gradient cycling through four colors (blue-violet,
+   red-violet, pale aqua, pale green). 0% and 100% are identical so the loop
+   never jumps. */
+@property --mv-h-a { syntax: "<number>"; inherits: false; initial-value: 265; }
+@property --mv-h-b { syntax: "<number>"; inherits: false; initial-value: 300; }
+@property --mv-l { syntax: "<percentage>"; inherits: false; initial-value: 90%; }
+@property --mv-c-a { syntax: "<number>"; inherits: false; initial-value: 0.085; }
+@property --mv-c-b { syntax: "<number>"; inherits: false; initial-value: 0.085; }
+
+@keyframes mv-hydrangea-hues {
+    0%,  100% { --mv-h-a: 265; --mv-h-b: 300; }
+    25%       { --mv-h-a: 305; --mv-h-b: 325; }
+    50%       { --mv-h-a: 195; --mv-h-b: 225; }
+    75%       { --mv-h-a: 150; --mv-h-b: 178; }
+}
+@keyframes mv-chroma {
+    0%, 100% { --mv-c-a: 0.085; --mv-c-b: 0.085; }
+    40%      { --mv-c-a: 0.095; --mv-c-b: 0.095; }
+    65%      { --mv-c-a: 0.065; --mv-c-b: 0.065; }
+}
+@keyframes mv-light { 0%, 100% { --mv-l: 90%; } 50% { --mv-l: 93%; } }
+
+.ref-header,
+.ref-footer {
+    background: linear-gradient(
+        to right in oklch,
+        oklch(var(--mv-l) var(--mv-c-a) var(--mv-h-a)) 0%,
+        oklch(calc(var(--mv-l) + 1%) var(--mv-c-b) var(--mv-h-b)) 100%
+    );
+    animation:
+        mv-hydrangea-hues 260s ease-in-out infinite,
+        mv-chroma 210s ease-in-out infinite,
+        mv-light 170s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ref-header, .ref-footer { animation: none; }
+}
+
+.ref-header {
+    border-bottom: var(--border-main);
+    padding: 1rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    color: var(--color-text);
+}
+
+.app-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+}
+
+.app-brand-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.app-brand-block {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: inherit;
+}
+
+.logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.ref-header h1 {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: var(--color-text);
+}
+
+.ref-tagline {
+    display: inline-block;
+    font-size: 0.75rem;
+    color: oklch(100% 0 0);
+    background: oklch(51.1% 0.091 295.7);
+    border: 1px solid oklch(51.1% 0.091 295.7);
+    border-radius: 6px;
+    padding: 0.125rem 0.5rem;
+    line-height: 1.5;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Language switch, right of the Reference tag in the brand row. A link would
+   not read as a control and could not show the current language, so it is a
+   <select> like the Playground's area selector (area-selector select in
+   components.css): the selected option is the language being shown, and a
+   new language is one more <option>. Its font-size/line-height/padding/
+   border-radius copy components.css, which these pages cannot load. */
+.lang-select {
+    display: inline-block;
+    font-family: var(--font-stack-mono);
+    font-size: 0.8rem;
+    line-height: 1.2;
+    padding: 0.3125rem 0.5rem 0.1875rem;
+    color: var(--color-text);
+    background: oklch(100% 0 0);
+    border: var(--border-main);
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+
+    &:focus {
+        outline: none;
+        background: var(--color-light);
+    }
+}
+
+.header-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 2.125rem;
+    padding: 0.5rem 1rem;
+    font-family: var(--font-stack-primary);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.2;
+    border: var(--border-main);
+    border-radius: var(--radius-button);
+    cursor: pointer;
+    color: var(--color-text);
+    background: #fff;
+
+    &:hover {
+        background: var(--color-light);
+        color: var(--color-text);
+    }
+}
+
+/* Content: 3:7 horizontally, navigation on the left 30%, article on the
+   right 70%. On mobile they stack as article then navigation, so the DOM puts
+   the article first and desktop moves the nav left with `order`. */
+.ref-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.ref-article {
+    padding: 1.5rem 2rem 3rem;
+    min-width: 0;
+}
+
+.ref-nav {
+    padding: 1.5rem 2rem;
+    border-top: var(--border-main);
+    background: var(--color-light);
+
+    & h2 {
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-text-light);
+        margin-bottom: 0.75rem;
+    }
+
+    /* navigation is a plain list of links. Leave link colors (unvisited /
+       visited), underline, and hover to the user-agent default — minimal,
+       unadorned styling. */
+    & a,
+    & a:hover {
+        color: revert;
+        text-decoration: revert;
+    }
+}
+
+/* Each .ref-page is one page. Visibility is declarative: the URL fragment
+   selects the visible page through :target, so no JS show/hide is needed
+   (and there is no first-paint flash of every page at once). The fragment
+   may also name a heading *inside* a page — the ids of the pages that
+   were merged away are kept as <h3 id> so their links stay alive — so a
+   page whose descendant is targeted opens too. When nothing at all is
+   targeted — a bare URL — :has() falls back to showing the first page. */
+.ref-page {
+    display: none;
+}
+
+.ref-page:target,
+.ref-page:has(:target) {
+    display: block;
+}
+
+.ref-main:not(:has(:target)) #intro {
+    display: block;
+}
+
+.ref-article {
+    & h2 {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        padding-bottom: 0.3rem;
+        border-bottom: var(--border-main);
+    }
+
+    & h3 {
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin: 1.25rem 0 0.4rem;
+    }
+
+    & p { margin: 0.5rem 0; }
+
+    & ol.ref-list,
+    & ul.ref-list {
+        margin: 0.5rem 0;
+        padding-left: 1.5rem;
+
+        & li { margin: 0.25rem 0; }
+    }
+
+    & code {
+        font-family: var(--font-stack-mono);
+        font-size: 0.9em;
+        background: var(--color-medium);
+        padding: 0.1rem 0.3rem;
+        border-radius: 3px;
+    }
+}
+
+/* The "Open in Playground" button sits on its own line at the bottom
+   right of each section. */
+/* Each sample is a self-contained unit: a one-row table (sample code,
+   expected value, notes) followed by its own "Open in Playground"
+   button at the bottom right. */
+.sample {
+    margin: 1.25rem 0;
+
+    & .sample-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 0.5rem;
+    }
+}
+
+/* The table is wrapped in a horizontally scrollable container so long
+   code rows can be scrolled (and copied) on narrow viewports instead of
+   being clipped by the page's hidden horizontal overflow. */
+.ref-table-wrap {
+    overflow-x: auto;
+}
+
+.ref-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    & th,
+    & td {
+        border: var(--border-main);
+        padding: 0.5rem 0.75rem;
+        text-align: left;
+        vertical-align: top;
+    }
+
+    & th {
+        background: var(--color-light);
+        font-weight: 600;
+        font-size: 0.8rem;
+        color: var(--color-text-light);
+    }
+
+    & td code {
+        background: none;
+        padding: 0;
+        font-family: var(--font-stack-mono);
+        font-size: 0.85rem;
+        color: var(--color-text);
+        white-space: pre;
+    }
+
+    & td.notes {
+        font-size: 0.85rem;
+        color: var(--color-text-light);
+    }
+}
+
+/* Word/sugar summary tables (not samples): same look, slightly tighter. */
+.word-table {
+    margin: 0.75rem 0 1.25rem;
+}
+
+.ref-note {
+    font-size: 0.85rem;
+    color: var(--color-text-light);
+}
+
+.ref-footer {
+    border-top: var(--border-main);
+    padding: 0.75rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    color: var(--color-text);
+    font-size: 0.875rem;
+    text-align: center;
+}
+
+.ref-footer a {
+    color: var(--color-text-light);
+
+    &:hover { color: var(--color-text); }
+}
+
+/* Desktop: 3:7, nav left (30%), article right (70%). align-items: stretch
+   (the default) gives both columns the same height, so the nav's background
+   and divider cover the full height of the content area. */
+@media (min-width: 769px) {
+    .ref-main {
+        flex-direction: row;
+        align-items: stretch;
+    }
+
+    .ref-nav {
+        order: -1;
+        flex: 0 0 30%;
+        max-width: 30%;
+        border-top: none;
+        border-right: var(--border-main);
+    }
+
+    .ref-article {
+        flex: 1 1 70%;
+    }
+}
+
+/* Mobile: header (fixed) → article → navigation → footer (fixed). The
+   viewport is fixed and only the content area between (.ref-main) scrolls, so
+   header and footer stay put without relying on sticky, and finishing a
+   section brings the reader naturally to the navigation. */
+@media (max-width: 768px) {
+    html, body {
+        height: 100%;
+        overflow: hidden;
+    }
+
+    body {
+        height: 100vh;
+        height: 100dvh;
+        min-height: 0;
+    }
+
+    .ref-header,
+    .ref-footer {
+        flex: 0 0 auto;
+    }
+
+    .ref-main {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .ref-header { padding: 1rem 2rem; }
+    .ref-article { padding: 1.25rem 1rem 2rem; }
+    .ref-nav { padding: 1.25rem 1rem; }
+}
+
+/* Built-in Words, generated from spec/words.json by
+   scripts/generate-word-reference.mjs: the index table on the "Kinds of token"
+   page shows every Word at a glance, grouped by family, and each family page
+   ends with its Words' contract entries, which keep the fields a table would
+   crowd (stack effect, NIL policy, errors, clauses). */
+.word-jump {
+    margin: 0.75rem 0 1.25rem;
+
+    & th {
+        white-space: nowrap;
+    }
+
+    & td code {
+        white-space: nowrap;
+    }
+
+    & td a {
+        display: inline-block;
+        margin: 0 0.5rem 0.25rem 0;
+    }
+}
+
+.word-entry {
+    border-top: var(--border-main);
+    padding: 0.75rem 0 0.5rem;
+    scroll-margin-top: 1rem;
+
+    & h4 {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 0.25rem;
+    }
+
+    & p { margin: 0.25rem 0 0.5rem; }
+}
+
+.word-tier {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--color-text-light);
+    border: var(--border-main);
+    border-radius: 999px;
+    padding: 0 0.5rem;
+}
+
+.notation {
+    font-family: var(--font-stack-mono);
+    font-size: 0.85em;
+}
+
+.word-contract {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 0.2rem 1rem;
+    font-size: 0.85rem;
+
+    & dt { color: var(--color-text-light); }
+    & dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+}
+
+@media (max-width: 36rem) {
+    .notation {
+    font-family: var(--font-stack-mono);
+    font-size: 0.85em;
+}
+
+.word-contract { grid-template-columns: minmax(0, 1fr); }
+    .word-contract dd { margin-bottom: 0.35rem; }
+}
+
+/* The Reference is a tree: a program divides into elements, an element into
+   its kinds, a name into bindings and Words, and Words into families whose
+   individual Words are the leaves. The table of contents nests to match, and
+   every page heading carries its number in that tree. */
+.ref-nav {
+    & ul ul {
+        padding-left: 1.1rem;
+        margin: 0.15rem 0 0.25rem;
+    }
+
+    & li {
+        margin: 0.15rem 0;
+    }
+}
+
+.secnum {
+    color: var(--color-text-light);
+    font-weight: 500;
+    margin-right: 0.25rem;
+}
+
+/* The lexer diagram (#lexer). It scrolls sideways on a narrow screen rather
+   than shrinking its labels past reading. */
+.lexer-diagram {
+    margin: 1rem 0;
+    overflow-x: auto;
+
+    & svg {
+        display: block;
+        width: 100%;
+        min-width: 560px;
+        max-width: 680px;
+        height: auto;
+    }
+
+    & rect {
+        fill: var(--color-light);
+        stroke: var(--color-border);
+    }
+
+    & rect.action {
+        fill: oklch(100% 0 0);
+    }
+
+    & text {
+        fill: var(--color-text);
+        font-family: var(--font-stack-primary);
+        font-size: 13px;
+    }
+
+    & text.stage {
+        font-weight: 600;
+        fill: var(--color-text-light);
+    }
+
+    & text.mono {
+        font-family: var(--font-stack-mono);
+        font-size: 15px;
+    }
+
+    & text.result {
+        font-weight: 600;
+    }
+
+    & text.err {
+        fill: oklch(50% 0.15 25);
+    }
+
+    & .arrow {
+        stroke: var(--color-text-light);
+        stroke-width: 1.5;
+        fill: none;
+    }
+
+    & .head {
+        fill: var(--color-text-light);
+    }
+}
+
+
+/* The language name in the Reference's opening sentence carries its origin
+   as a tooltip, shown on hover and on keyboard focus. */
+.name-origin {
+    position: relative;
+    text-decoration: underline dotted;
+    text-underline-offset: 3px;
+    cursor: help;
+}
+
+.name-origin-tip {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 6px);
+    z-index: 10;
+    width: max-content;
+    max-width: min(30rem, calc(100vw - 32px));
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-button);
+    background: var(--color-text);
+    color: var(--color-light);
+    font-size: 0.875rem;
+    font-weight: normal;
+    line-height: 1.6;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+
+.name-origin:hover .name-origin-tip,
+.name-origin:focus .name-origin-tip {
+    visibility: visible;
+    opacity: 1;
+}

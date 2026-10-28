@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "id": "decimal-add",
+      "source": "0.1 0.2 ADD",
+      "operation": "add",
+      "operands": ["0.1", "0.2"],
+      "expectedCanonical": "3/10"
+    },
+    {
+      "id": "large-integer-add",
+      "source": "9007199254740993 1 ADD",
+      "operation": "add",
+      "operands": ["9007199254740993", "1"],
+      "expectedCanonical": "9007199254740994"
+    },
+    {
+      "id": "repeating-fraction",
+      "source": "1 3 DIV",
+      "operation": "divide",
+      "operands": ["1", "3"],
+      "expectedCanonical": "1/3"
+    },
+    {
+      "id": "small-integer-add",
+      "source": "1 2 ADD",
+      "operation": "add",
+      "operands": ["1", "2"],
+      "expectedCanonical": "3"
+    },
+    {
+      "id": "small-integer-modulus",
+      "source": "10 'A' BIND 4 'B' BIND A A B DIV FLOOR B MUL SUB",
+      "operation": "modulo",
+      "operands": ["10", "4"],
+      "expectedCanonical": "2"
+    }
+  ]
+}

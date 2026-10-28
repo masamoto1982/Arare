@@ -1,0 +1,43 @@
+{
+  "family": "sensor",
+  "inputKind": "a Vector of one or more readings, each an exact number (possibly zero, negative or fractional) or NIL for a missing reading; at least one reading is present",
+  "inputs": [
+    "[ 3 NIL 5 1 NIL NIL 4 ]",
+    "[ NIL NIL 2 2 NIL 8 ]",
+    "[ 6 NIL ]",
+    "[ -1 0 2 NIL -3 0 0 ]",
+    "[ NIL -2 0 ]"
+  ],
+  "tasks": [
+    {
+      "id": "sensor.present_mean",
+      "prompt": "Leave the mean of the readings that are present.",
+      "reference": "[ NIL? NOT ] FILTER 'P' BIND P 0 [ ADD ] FOLD P LENGTH DIV"
+    },
+    {
+      "id": "sensor.filled",
+      "prompt": "Leave a Vector as long as the input in which each missing reading is replaced by the nearest present reading before it; missing readings before the first present one take the first present reading.",
+      "reference": "'V' BIND V V [ NIL? NOT ] FILTER 0 GET [ 'E' BIND 'A' BIND A E E NIL? SELECT ] SCAN"
+    },
+    {
+      "id": "sensor.gap_count",
+      "prompt": "Leave the number of runs of consecutive missing readings (a run is one or more missing readings in a row).",
+      "reference": "[ NIL? ] MAP 'B' BIND B FALSE 1 COLLECT B -1 DROP CONCAT NOT AND [ ] FILTER LENGTH"
+    },
+    {
+      "id": "sensor.longest_gap",
+      "prompt": "Leave the length of the longest run of consecutive missing readings (0 when no reading is missing).",
+      "reference": "[ NIL? ] MAP 0 [ 'E' BIND 'A' BIND A 1 ADD 0 E SELECT ] SCAN 0 [ MAX ] FOLD"
+    },
+    {
+      "id": "sensor.ratios",
+      "prompt": "Leave a Vector, one shorter than the input, of each reading divided by the reading just before it, in order; where either reading is missing, that element is NIL.",
+      "reference": "'V' BIND V 1 DROP V -1 DROP DIV"
+    },
+    {
+      "id": "sensor.scaled",
+      "prompt": "Leave a Vector as long as the input with each present reading divided by the largest present reading; missing readings stay NIL.",
+      "reference": "'V' BIND V V [ NIL? NOT ] FILTER 'P' BIND P P 0 GET [ MAX ] FOLD DIV"
+    }
+  ]
+}

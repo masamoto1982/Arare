@@ -1,0 +1,137 @@
+{
+ "schemaVersion": 1,
+ "provenance": {
+  "source": "referenceFixture",
+  "note": "Hand-written repair trace built to pass score-repairs.js in both languages. It proves the scorer requires the expected error before the repair counts; it is not a model result and says nothing about any model's repair rate."
+ },
+ "traces": [
+  {
+   "caseId": "repair-unknown-word",
+   "language": "en",
+   "firstAttempt": {
+    "selectedTool": "compute",
+    "arguments": {
+     "source": "1 2 AD"
+    }
+   },
+   "repairedAttempt": {
+    "selectedTool": "compute",
+    "arguments": {
+     "source": "1 2 ADD"
+    }
+   }
+  },
+  {
+   "caseId": "repair-unknown-word",
+   "language": "ja",
+   "firstAttempt": {
+    "selectedTool": "compute",
+    "arguments": {
+     "source": "1 2 AD"
+    }
+   },
+   "repairedAttempt": {
+    "selectedTool": "compute",
+    "arguments": {
+     "source": "1 2 ADD"
+    }
+   }
+  },
+  {
+   "caseId": "repair-stack-underflow",
+   "language": "en",
+   "firstAttempt": {
+    "selectedTool": "compute",
+    "arguments": {
+     "source": "1 ADD"
+    }
+   },
+   "repairedAttempt": {
+    "selectedTool": "compute",
+    "arguments": {
+     "source": "1 2 ADD"
+    }
+   }
+  },
+  {
+   "caseId": "repair-stack-underflow",
+   "language": "ja",
+   "firstAttempt": {
+    "selectedTool": "compute",
+    "arguments": {
+     "source": "1 ADD"
+    }
+   },
+   "repairedAttempt": {
+    "selectedTool": "compute",
+    "arguments": {
+     "source": "1 2 ADD"
+    }
+   }
+  },
+  {
+   "caseId": "repair-unclosed-vector",
+   "language": "en",
+   "firstAttempt": {
+    "selectedTool": "compute",
+    "arguments": {
+     "source": "[ 1 2"
+    }
+   },
+   "repairedAttempt": {
+    "selectedTool": "compute",
+    "arguments": {
+     "source": "[ 1 2 ]"
+    }
+   }
+  },
+  {
+   "caseId": "repair-unclosed-vector",
+   "language": "ja",
+   "firstAttempt": {
+    "selectedTool": "compute",
+    "arguments": {
+     "source": "[ 1 2"
+    }
+   },
+   "repairedAttempt": {
+    "selectedTool": "compute",
+    "arguments": {
+     "source": "[ 1 2 ]"
+    }
+   }
+  },
+  {
+   "caseId": "repair-collection-ceiling",
+   "language": "en",
+   "firstAttempt": {
+    "selectedTool": "compute",
+    "arguments": {
+     "source": "0 99998 RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH"
+    }
+   },
+   "repairedAttempt": {
+    "selectedTool": "compute",
+    "arguments": {
+     "source": "0 99998 RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH"
+    }
+   }
+  },
+  {
+   "caseId": "repair-collection-ceiling",
+   "language": "ja",
+   "firstAttempt": {
+    "selectedTool": "compute",
+    "arguments": {
+     "source": "0 99998 RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH"
+    }
+   },
+   "repairedAttempt": {
+    "selectedTool": "compute",
+    "arguments": {
+     "source": "0 99998 RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH"
+    }
+   }
+  }
+ ]
+}

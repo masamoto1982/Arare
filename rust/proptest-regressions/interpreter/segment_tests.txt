@@ -1,0 +1,8 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 99a44a5985209c1d4582a28c077ce74d683515c32e93c7b57386f20013ff97c3 # shrinks to elements = ["0"], callee = "0 ADD", code = "0 0 TRUE SELECT [ 7 ] LENGTH ADD 'Y' BIND Y 's' 's' 1 SELECT", mode = 3, steps = None, work = None, bits = None
+cc ee67c4e53a12370cbace2a264be494d33345a1e168398e584aa10e12172a0a1b # shrinks to elements = ["0"], callee = "NIL 0 FALSE SELECT", code = "F 0 TRUE SELECT", mode = 3, steps = None, work = None, bits = None

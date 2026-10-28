@@ -1,0 +1,24 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.masamoto1982/ajisai",
+  "title": "Ajisai",
+  "description": "Exact rational and algebraic computation, with machine-readable Word contracts, in Ajisai.",
+  "websiteUrl": "https://masamoto1982.github.io/Ajisai/",
+  "repository": {
+    "url": "https://github.com/masamoto1982/Ajisai",
+    "source": "github",
+    "subfolder": "tools/mcp-server"
+  },
+  "version": "0.9.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "ajisai-mcp-server",
+      "version": "0.9.0",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}

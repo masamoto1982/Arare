@@ -1,0 +1,9 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 9f2e07233d4c9fce50f90dce62f2540deec8d113595b7a114900ba4aa3efb2b4 # shrinks to (m, bare, qual) = ("MATH", "4 SQRT", "4 SQRT")
+cc a1931921504c52c0d8b345fdfb4ced73725f02f063ffad1a3d2735aaaafe1669 # shrinks to n = 2
+cc 79d0f4254d514cf682d9592473bfa441646d1b179e56873b779f6b5898255e30 # shrinks to (m, bare, _q) = ("MATH", "4 SQRT", "4 SQRT"), k = 1

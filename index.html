@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Ajisai - AI-first, vector-oriented, fractional-dataflow language">
+    <meta name="theme-color" content="#6b5b95">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+    <title>Ajisai</title>
+    <link rel="stylesheet" href="/src/styles/playground.css">
+</head>
+<body data-active-area="input">
+    <!-- First-visit walkthrough: the logo, then a curated two lines of
+         technical detail — which build, and which resource profile — kept
+         short enough to read at a glance on a phone. The full detail lives in
+         the header badge's tooltip.
+         Click, tap, or any key skips it; see initSplashScreen() in
+         src/entry/entry-common.ts. -->
+    <div id="splash-screen" class="splash-screen utsuroi" role="dialog" aria-modal="true" aria-label="Ajisai" tabindex="-1" hidden>
+        <div class="splash-content">
+            <img src="./images/QR_341216.png" alt="" class="splash-logo">
+            <div class="splash-heading">
+                <p class="splash-title">Ajisai</p>
+                <span class="version">Playground</span>
+            </div>
+            <p class="splash-version-line" id="splash-version-line" hidden></p>
+            <p class="splash-note" id="splash-host-profile" hidden></p>
+            <p class="splash-hint">Click, tap, or press any key to continue</p>
+        </div>
+    </div>
+    <a href="#code-input" class="skip-link">Skip to main content</a>
+    <div class="container">
+        <header>
+            <div class="app-header-top">
+                <div class="app-brand-meta">
+                    <a href="https://masamoto1982.github.io/Ajisai/" class="app-brand-block" aria-label="Ajisai">
+                        <img src="./images/QR_341216.png" alt="" class="logo">
+                        <h1>Ajisai</h1>
+                    </a>
+                    <!-- Carries the full build and resource-limit detail in its
+                         tooltip (the splash shows only a curated summary). -->
+                    <span class="version">Playground</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <!-- The MCP setup instructions live in one place (the server's
+                     README); this links there rather than repeating them. -->
+                <a id="mcp-link" href="https://github.com/masamoto1982/Ajisai/blob/main/tools/mcp-server/README.md#install-and-connect" class="btn" target="_blank" rel="noopener noreferrer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 22v-5"/>
+                        <path d="M9 8V2"/>
+                        <path d="M15 8V2"/>
+                        <path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/>
+                    </svg>
+                    MCP
+                </a>
+                <!-- The Reference: the guide with runnable samples, and the Word
+                     list generated from spec/words.json. It opens in the
+                     reader's language when there is a version for it (Japanese
+                     or English); the page's own selector switches between them. -->
+                <a id="reference-link" href="docs/en/index.html" class="btn" target="_blank" rel="noopener noreferrer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <path d="M9 9h6v6M15 9l-6 6M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/>
+                    </svg>
+                    Reference
+                </a>
+            </div>
+        </header>
+
+        <main class="main-layout">
+            <!-- Desktop reaches its surfaces through the two in-panel selectors,
+                 mobile through this single one; CSS shows the right set for the
+                 viewport. The word search belongs to the Dictionary area itself,
+                 so there is one of it whichever selector brought the area up. -->
+            <div class="area-selector area-selector-mobile">
+                <label for="mobile-panel-select" class="visually-hidden">Select panel</label>
+                <select id="mobile-panel-select">
+                    <option value="input">Input</option>
+                    <option value="output">Output</option>
+                    <option value="stack">Stack</option>
+                    <option value="dictionary">Dictionary</option>
+                </select>
+            </div>
+
+            <div id="editor-panel">
+                <div class="area-selector area-selector-left">
+                    <label for="left-panel-select" class="visually-hidden">Select left panel</label>
+                    <select id="left-panel-select">
+                        <option value="input">Input</option>
+                        <option value="output">Output</option>
+                    </select>
+                </div>
+                <section id="output-panel" class="output-area" aria-label="Output" tabindex="0" hidden>
+                    <h2 class="visually-hidden">Output</h2>
+                    <div id="output-display" class="display-area" aria-live="polite" aria-atomic="false"></div>
+                    <button id="copy-output-btn" class="btn" type="button" aria-label="Copy output to clipboard">Copy</button>
+                </section>
+                <section id="input-panel" class="input-area" aria-label="Input" tabindex="0">
+                    <h2 class="visually-hidden">Input</h2>
+                    <textarea id="code-input" aria-label="Ajisai code input" placeholder="Enter code here" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+                    <!-- The empty editor's cheat sheet with keys drawn as keycaps;
+                         the textarea's placeholder carries the same text for
+                         assistive technology (src/gui/editor-hint.ts). -->
+                    <div id="editor-hint" class="editor-hint" aria-hidden="true"></div>
+                    <button id="editor-format-btn" type="button" class="inline-clear-btn" aria-label="Format code" title="Format (Shift+Alt+F)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                            <path d="M4 6h16M4 12h10M4 18h13"/>
+                        </svg>
+                    </button>
+                    <button id="editor-clear-btn" type="button" class="inline-clear-btn" aria-label="Clear editor" title="Clear editor (Ctrl+Alt+E)">&times;</button>
+                    <!-- A run in progress, said where the run was started from:
+                         Output shares this column and is hidden while Input shows. -->
+                    <div id="run-status" class="run-status" role="status" hidden></div>
+                </section>
+            </div>
+
+            <div id="state-panel">
+                <div class="area-selector area-selector-right">
+                    <label for="right-panel-select" class="visually-hidden">Select right panel</label>
+                    <select id="right-panel-select">
+                        <option value="stack">Stack</option>
+                        <option value="dictionary">Dictionary</option>
+                    </select>
+                </div>
+                <section id="stack-panel" class="stack-area" aria-label="Stack" tabindex="0">
+                    <h2 class="visually-hidden">Stack</h2>
+                    <div id="stack-display" class="state-display" aria-live="polite" aria-atomic="false"></div>
+                    <!-- Clears the values and leaves the dictionary — what separates
+                         this from Reset. -->
+                    <button id="stack-clear-btn" type="button" class="inline-clear-btn" aria-label="Clear stack" title="Clear stack (Ctrl+Alt+S)">&times;</button>
+                </section>
+
+                <section id="dictionary-panel" class="dictionary-area" aria-label="Dictionary" tabindex="0" hidden>
+                    <h2 class="visually-hidden">Dictionary</h2>
+                    <div class="dictionary-toolbar">
+                        <label for="dictionary-sheet-select" class="visually-hidden">Select dictionary</label>
+                        <select id="dictionary-sheet-select">
+                            <option value="core">Core Words</option>
+                            <option value="user">User Words</option>
+                        </select>
+                        <div class="search-wrapper">
+                            <input type="text" id="dictionary-search" class="vocabulary-search-input" placeholder="Search word" aria-label="Search word" autocomplete="off">
+                            <button id="dictionary-search-clear-btn" type="button" class="inline-clear-btn vocabulary-search-clear-btn" aria-label="Clear search">&times;</button>
+                        </div>
+                    </div>
+                    <div id="dictionary-sheet-core" class="dictionary-sheet">
+                        <div id="core-words-display" class="words-display"></div>
+                    </div>
+                    <div id="dictionary-sheet-user" class="dictionary-sheet" hidden>
+                        <div id="user-words-display" class="words-display"></div>
+                        <div class="vocabulary-actions">
+                            <button id="export-btn" class="btn" type="button">Export</button>
+                            <button id="import-btn" class="btn" type="button">Import</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+        <footer>
+            <span>&copy; <span id="footer-year"></span> <a href="https://github.com/masamoto1982/Ajisai" target="_blank" rel="noopener noreferrer">masamoto yamashiro</a></span>
+        </footer>
+        <script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
+        <script>
+            if ((navigator.language || '').toLowerCase().startsWith('ja')) {
+                document.getElementById('reference-link').href = 'docs/ja/index.html';
+            }
+        </script>
+    </div>
+
+    <script type="module">
+        import('./src/entry/entry-common.ts');
+    </script>
+</body>
+</html>

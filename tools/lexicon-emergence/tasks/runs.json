@@ -1,0 +1,38 @@
+{
+  "family": "runs",
+  "inputKind": "a Vector of one or more integers (values may repeat, adjacent or not)",
+  "inputs": [
+    "[ 1 1 2 2 2 3 1 1 ]",
+    "[ 5 ]",
+    "[ 4 4 4 4 ]",
+    "[ 1 2 1 2 ]",
+    "[ 3 1 4 1 5 9 2 6 5 3 5 ]"
+  ],
+  "tasks": [
+    {
+      "id": "runs.rle",
+      "prompt": "Leave the run-length encoding: a Vector of two-element Vectors [ value count ], one per maximal run of equal adjacent values, in order.",
+      "reference": "'V' BIND V LENGTH 'N' BIND V 0 GET 1 COLLECT V -1 DROP CONCAT V 2 COLLECT ZIP [ 'P' BIND P 0 GET P 1 GET EQ NOT ] MAP 'S' BIND 0 N 1 SUB RANGE [ 'I' BIND S I GET NOT I 0 EQ NOT AND NOT ] FILTER 'B' BIND B 1 DROP N 1 COLLECT CONCAT 'E' BIND V B GET E B SUB 2 COLLECT ZIP"
+    },
+    {
+      "id": "runs.upruns",
+      "prompt": "Leave the length of the longest stretch of adjacent values that strictly increase (a single value is a stretch of length 1).",
+      "reference": "'V' BIND V 1 DROP V -1 DROP GT 0 [ 'E' BIND 'A' BIND A 1 ADD 0 E SELECT ] SCAN 0 [ MAX ] FOLD 1 ADD"
+    },
+    {
+      "id": "runs.dedupe",
+      "prompt": "Leave the Vector with every run of equal adjacent values collapsed to one value, in order.",
+      "reference": "'V' BIND V LENGTH 'N' BIND V 0 GET 1 COLLECT V -1 DROP CONCAT V 2 COLLECT ZIP [ 'P' BIND P 0 GET P 1 GET EQ NOT ] MAP 'S' BIND V 0 N 1 SUB RANGE [ 'I' BIND S I GET NOT I 0 EQ NOT AND NOT ] FILTER GET"
+    },
+    {
+      "id": "runs.second_largest",
+      "prompt": "Leave the second-largest distinct value, or NIL when all the values are equal.",
+      "reference": "UNIQUE SORT 'U' BIND NIL U -2 GET U LENGTH 1 EQ SELECT"
+    },
+    {
+      "id": "runs.majority",
+      "prompt": "Leave the value that occurs in more than half of the positions, or NIL when no value does.",
+      "reference": "'V' BIND V TALLY 'T' BIND T KEYS NIL T VALUES 2 MUL V LENGTH GT SELECT [ NIL? NOT ] FILTER 'M' BIND NIL M 0 GET M LENGTH 0 EQ SELECT"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "$comment": "The \"did you mean\" ranking, as [written, expected] pairs. Two suggesters answer it — word-candidates.js for the word_contract tool and rust/src/diagnostic_hint.rs for the Unknown Word diagnosis — and both tests read this file, so the two cannot rank differently unnoticed. A one-letter slip on a short, medium and long name (each a different distance-ceiling bucket); names with several equally close matches, for the distance-then-name tie-break; an unmatched name, which comes back empty; full-width input, which a Japanese input method produces and which folds to ASCII; and an exact name, which is a match rather than a near-miss of itself.",
+  "cases": [
+    ["LENGHT", ["LENGTH"]],
+    ["MAPP", ["MAP", "MAX"]],
+    ["FILTR", ["FILTER", "FILL"]],
+    ["PRIN", ["PRINT", "JOIN", "MIN"]],
+    ["ADDD", ["ADD", "AND"]],
+    ["SQR", ["SQRT", "STR"]],
+    ["EXECC", ["EXEC"]],
+    ["ZZZZZZZZZZ", []],
+    ["ＡＤＤ", ["ADD", "AND"]],
+    ["ＬＥＮＧＨＴ", ["LENGTH"]],
+    ["ADD", ["AND"]]
+  ]
+}

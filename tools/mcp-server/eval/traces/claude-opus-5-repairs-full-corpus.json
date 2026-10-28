@@ -1,0 +1,367 @@
+{
+  "schemaVersion": 1,
+  "provenance": {
+    "source": "model",
+    "modelId": "claude-opus-5",
+    "promptTemplateDigest": "6ab77253ef57f34a",
+    "toolChoice": "auto",
+    "capturedAt": "2026-08-17T19:20:57.595Z",
+    "serverVersion": "0.3.0",
+    "engineVersion": "0.2.0-beta.1",
+    "registryDigest": "a67241e09f36537a53ec4353e40fa740af9a7dd30c9bf0d101390d78e151243b"
+  },
+  "traces": [
+    {
+      "caseId": "repair-unknown-word",
+      "language": "en",
+      "firstAttempt": {
+        "selectedTool": "check",
+        "arguments": {
+          "source": "1 2 AD"
+        },
+        "toolCalls": [
+          {
+            "name": "check",
+            "arguments": {
+              "source": "1 2 AD"
+            }
+          },
+          {
+            "name": "word_contract",
+            "arguments": {
+              "word": "AD"
+            }
+          }
+        ]
+      },
+      "repairedAttempt": {
+        "selectedTool": "compute",
+        "arguments": {
+          "source": "1 2 ADD"
+        },
+        "toolCalls": [
+          {
+            "name": "compute",
+            "arguments": {
+              "source": "1 2 ADD"
+            }
+          }
+        ]
+      },
+      "observed": {
+        "turns": 2,
+        "firstTurnToolCalls": 2,
+        "stopReason": "tool_use",
+        "sawDiagnosis": true
+      }
+    },
+    {
+      "caseId": "repair-unknown-word",
+      "language": "ja",
+      "firstAttempt": {
+        "selectedTool": "check",
+        "arguments": {
+          "source": "1 2 AD"
+        },
+        "toolCalls": [
+          {
+            "name": "check",
+            "arguments": {
+              "source": "1 2 AD"
+            }
+          },
+          {
+            "name": "word_contract",
+            "arguments": {
+              "word": "AD"
+            }
+          }
+        ]
+      },
+      "repairedAttempt": {
+        "selectedTool": "compute",
+        "arguments": {
+          "source": "1 2 ADD"
+        },
+        "toolCalls": [
+          {
+            "name": "compute",
+            "arguments": {
+              "source": "1 2 ADD"
+            }
+          }
+        ]
+      },
+      "observed": {
+        "turns": 2,
+        "firstTurnToolCalls": 2,
+        "stopReason": "tool_use",
+        "sawDiagnosis": true
+      }
+    },
+    {
+      "caseId": "repair-stack-underflow",
+      "language": "en",
+      "firstAttempt": {
+        "selectedTool": "check",
+        "arguments": {
+          "source": "1 ADD"
+        },
+        "toolCalls": [
+          {
+            "name": "check",
+            "arguments": {
+              "source": "1 ADD"
+            }
+          },
+          {
+            "name": "word_contract",
+            "arguments": {
+              "word": "ADD"
+            }
+          }
+        ]
+      },
+      "repairedAttempt": {
+        "selectedTool": "compute",
+        "arguments": {
+          "source": "1 ADD"
+        },
+        "toolCalls": [
+          {
+            "name": "compute",
+            "arguments": {
+              "source": "1 ADD"
+            }
+          }
+        ]
+      },
+      "observed": {
+        "turns": 2,
+        "firstTurnToolCalls": 2,
+        "stopReason": "tool_use",
+        "sawDiagnosis": false
+      }
+    },
+    {
+      "caseId": "repair-stack-underflow",
+      "language": "ja",
+      "firstAttempt": {
+        "selectedTool": "check",
+        "arguments": {
+          "source": "1 ADD"
+        },
+        "toolCalls": [
+          {
+            "name": "check",
+            "arguments": {
+              "source": "1 ADD"
+            }
+          },
+          {
+            "name": "word_contract",
+            "arguments": {
+              "word": "ADD"
+            }
+          }
+        ]
+      },
+      "repairedAttempt": {
+        "selectedTool": "compute",
+        "arguments": {
+          "source": "1 ADD"
+        },
+        "toolCalls": [
+          {
+            "name": "compute",
+            "arguments": {
+              "source": "1 ADD"
+            }
+          }
+        ]
+      },
+      "observed": {
+        "turns": 2,
+        "firstTurnToolCalls": 2,
+        "stopReason": "tool_use",
+        "sawDiagnosis": false
+      }
+    },
+    {
+      "caseId": "repair-unclosed-vector",
+      "language": "en",
+      "firstAttempt": {
+        "selectedTool": "check",
+        "arguments": {
+          "source": "[ 1 2"
+        },
+        "toolCalls": [
+          {
+            "name": "check",
+            "arguments": {
+              "source": "[ 1 2"
+            }
+          },
+          {
+            "name": "check",
+            "arguments": {
+              "source": "[ 1 2 ]"
+            }
+          }
+        ]
+      },
+      "repairedAttempt": {
+        "selectedTool": "compute",
+        "arguments": {
+          "source": "[ 1 2 ]"
+        },
+        "toolCalls": [
+          {
+            "name": "compute",
+            "arguments": {
+              "source": "[ 1 2 ]"
+            }
+          }
+        ]
+      },
+      "observed": {
+        "turns": 2,
+        "firstTurnToolCalls": 2,
+        "stopReason": "tool_use",
+        "sawDiagnosis": true
+      }
+    },
+    {
+      "caseId": "repair-unclosed-vector",
+      "language": "ja",
+      "firstAttempt": {
+        "selectedTool": "check",
+        "arguments": {
+          "source": "[ 1 2"
+        },
+        "toolCalls": [
+          {
+            "name": "check",
+            "arguments": {
+              "source": "[ 1 2"
+            }
+          },
+          {
+            "name": "check",
+            "arguments": {
+              "source": "[ 1 2 ]"
+            }
+          }
+        ]
+      },
+      "repairedAttempt": {
+        "selectedTool": "compute",
+        "arguments": {
+          "source": "[ 1 2 ]"
+        },
+        "toolCalls": [
+          {
+            "name": "compute",
+            "arguments": {
+              "source": "[ 1 2 ]"
+            }
+          }
+        ]
+      },
+      "observed": {
+        "turns": 2,
+        "firstTurnToolCalls": 2,
+        "stopReason": "tool_use",
+        "sawDiagnosis": true
+      }
+    },
+    {
+      "caseId": "repair-collection-ceiling",
+      "language": "en",
+      "firstAttempt": {
+        "selectedTool": "compute",
+        "arguments": {
+          "source": "[ 0 99998 ] RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH"
+        },
+        "toolCalls": [
+          {
+            "name": "compute",
+            "arguments": {
+              "source": "[ 0 99998 ] RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH"
+            }
+          }
+        ]
+      },
+      "repairedAttempt": {
+        "selectedTool": "compute",
+        "arguments": {
+          "source": "[ 0 38239 ] RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH"
+        },
+        "toolCalls": [
+          {
+            "name": "compute",
+            "arguments": {
+              "source": "[ 0 38239 ] RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH"
+            }
+          }
+        ]
+      },
+      "observed": {
+        "turns": 2,
+        "firstTurnToolCalls": 1,
+        "stopReason": "tool_use",
+        "sawDiagnosis": true
+      }
+    },
+    {
+      "caseId": "repair-collection-ceiling",
+      "language": "ja",
+      "firstAttempt": {
+        "selectedTool": "compute",
+        "arguments": {
+          "source": "[ 0 99998 ] RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH"
+        },
+        "toolCalls": [
+          {
+            "name": "compute",
+            "arguments": {
+              "source": "[ 0 99998 ] RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH"
+            }
+          },
+          {
+            "name": "word_contract",
+            "arguments": {
+              "word": "RANGE"
+            }
+          }
+        ]
+      },
+      "repairedAttempt": {
+        "selectedTool": "compute",
+        "arguments": {
+          "source": "[ 0 38239 ] RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH"
+        },
+        "toolCalls": [
+          {
+            "name": "compute",
+            "arguments": {
+              "source": "[ 0 38239 ] RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH"
+            }
+          },
+          {
+            "name": "compute",
+            "arguments": {
+              "source": "[ 0 999 ] RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH"
+            }
+          }
+        ]
+      },
+      "observed": {
+        "turns": 2,
+        "firstTurnToolCalls": 2,
+        "stopReason": "tool_use",
+        "sawDiagnosis": true
+      }
+    }
+  ]
+}

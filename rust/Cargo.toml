@@ -1,0 +1,82 @@
+[package]
+name = "ajisai-core"
+version = "1.0.0-beta.3"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+# Headless agent-facing CLI (docs/dev/agent-cli-output-contract.md).
+# Builds with the default native features (std); never depends on
+# the wasm feature.
+[[bin]]
+name = "ajisai"
+path = "src/bin/ajisai.rs"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+num-bigint = { version = "0.4", features = ["serde"] }
+num-traits = "0.2"
+num-integer = "0.1"
+serde_json = "1.0"
+lazy_static = "1.4"
+smallvec = "1"
+# Word / source / result identity (§8.6). The audit-surface-minimal feature set
+# is deliberate: `pure` drops the C and assembly build paths, and the four
+# `no_*` flags drop the Rust SIMD intrinsics modules, leaving `portable.rs`
+# (zero `unsafe`) as the only compiled backend. `content_digest` hashes word
+# bodies and source files, never a hot loop, so losing SIMD costs nothing that
+# matters here. BLAKE3 digests do not depend on the backend, so enabling SIMD
+# later would not change a single identity.
+blake3 = { version = "1", default-features = false, features = [
+  "pure", "no_sse2", "no_sse41", "no_avx2", "no_avx512",
+] }
+# chrono was previously declared but is unused: NOW reads the host clock
+# directly (js Date.now / std SystemTime, see interpreter/datetime.rs) and all
+# civil <-> instant conversion is host-independent exact-rational arithmetic in
+# time_ops/time_calendar. Removed to keep Core dependency-light.
+
+wasm-bindgen = { version = "0.2", features = ["serde-serialize"], optional = true }
+js-sys = { version = "0.3", optional = true }
+serde-wasm-bindgen = { version = "0.6", optional = true }
+wasm-bindgen-futures = { version = "0.4", optional = true }
+console_error_panic_hook = { version = "0.1", optional = true }
+
+[dependencies.web-sys]
+version = "0.3"
+optional = true
+features = ["console", "Window", "CustomEvent", "EventTarget", "Event"]
+
+# The native allocator (the `global_allocator` in src/lib.rs). Values are
+# small and short-lived — a one-lane Tensor is four allocations — so the
+# allocator sits on every hot path the fused tiers do not cover, and mimalloc
+# runs those 1.3-3.5x faster than the system allocator
+# (scripts/bench/speed-bench-cases.json). Native only: the WebAssembly build
+# keeps Rust's default allocator.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+mimalloc = { version = "0.1", default-features = false }
+
+[features]
+default = ["std"]
+std = []
+wasm = [
+  "std",
+  "dep:wasm-bindgen", "dep:js-sys", "dep:serde-wasm-bindgen",
+  "dep:wasm-bindgen-futures", "dep:console_error_panic_hook", "dep:web-sys",
+]
+
+# `cfg(kani)` is set by `cargo kani`, which compiles the bounded-model-checking
+# harnesses (docs/quality/FORMAL_VERIFICATION.md); a plain build never sees it.
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(kani)"] }
+
+[dev-dependencies]
+tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
+proptest = "1"
+
+[profile.release]
+lto = true
+codegen-units = 1
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-O3"]

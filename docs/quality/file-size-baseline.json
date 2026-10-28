@@ -1,0 +1,23 @@
+{
+  "_comment": [
+    "Baseline of Rust source files that exceed the SPECIFICATION the file-size budget in docs/dev/specification-implementation-rules.md 500-line",
+    "budget. Recorded so the mandatory rule can be enforced going forward without",
+    "a mass file split: files listed here are grandfathered at their recorded line",
+    "count and must not grow by 10% or more; files not listed here must stay at or",
+    "under 500 lines. Regenerate with: node scripts/check-file-size-budget.mjs --update",
+    "",
+    "A baselined path that no longer exists is a hard error: delete the entry in",
+    "the same change that removes the file (re-baseline with --update), so the",
+    "baseline never references source that is gone."
+  ],
+  "limit": 500,
+  "growthAllowance": 0.1,
+  "files": {
+    "rust/src/types/fraction.rs": 795,
+    "rust/src/types/fraction_mcdc_tests.rs": 784,
+    "rust/src/interpreter/dictionary_operation_tests.rs": 660,
+    "rust/src/interpreter/arithmetic.rs": 597,
+    "rust/src/interpreter/interpreter_core.rs": 527,
+    "rust/src/arithmetic_operation_tests.rs": 511
+  }
+}

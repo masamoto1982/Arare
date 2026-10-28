@@ -1,0 +1,3244 @@
+{
+  "schemaVersion": 1,
+  "provenance": {
+    "source": "model",
+    "modelId": "claude-opus-5",
+    "promptTemplateDigest": "6ab77253ef57f34a",
+    "toolChoice": "auto",
+    "capturedAt": "2026-08-17T19:13:10.901Z",
+    "serverVersion": "0.3.0",
+    "engineVersion": "0.2.0-beta.1",
+    "registryDigest": "a67241e09f36537a53ec4353e40fa740af9a7dd30c9bf0d101390d78e151243b"
+  },
+  "traces": [
+    {
+      "caseId": "exact-fraction",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "1 3 DIV"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "1 3 DIV"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "exact-fraction",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "1 3 DIV"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "1 3 DIV 3 MUL"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "1 3 DIV"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "decimal-no-float",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "0.1 0.2 ADD"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "0.1 0.2 ADD 0.3 EQ"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "0.1 0.2 ADD"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "decimal-no-float",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "0.1 0.2 ADD 0.3 EQ"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "0.1 0.2 ADD 0.3 EQ"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "algebraic-sqrt",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "2 SQRT"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "SQRT"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "2 SQRT"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "algebraic-sqrt",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "2 SQRT"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "2 SQRT 2 SQRT MUL   2 SQRT 1 GT"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "2 SQRT"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "vector-broadcast",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 ] 10 ADD"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 ] 10 ADD"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "vector-broadcast",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 ] 10 ADD"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 ] 10 ADD"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "nil-reason",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "DIV"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "1 0 DIV"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "DIV"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "nil-reason",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "DIV"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "1 0 DIV"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "DIV"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "nil-recovery",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "DIV"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "VENT"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "DIV"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "nil-recovery",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "DIV"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "VENT"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "DIV"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "language-error",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "FROBNICATE"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "FROBNICATE"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "FROBNICATE"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "language-error",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "FROBNICATE"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "FROBNICATE"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "static-check",
+      "toolCalls": [
+        {
+          "name": "check",
+          "arguments": {
+            "source": "[ [ 1 ] + ] 'INC' DEF"
+          }
+        },
+        {
+          "name": "infer_contracts",
+          "arguments": {
+            "source": "[ [ 1 ] + ] 'INC' DEF"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "+"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "check",
+      "arguments": {
+        "source": "[ [ 1 ] + ] 'INC' DEF"
+      },
+      "observed": {
+        "toolCalls": 3,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "static-check",
+      "toolCalls": [
+        {
+          "name": "check",
+          "arguments": {
+            "source": "[ [ 1 ] + ] 'INC' DEF"
+          }
+        },
+        {
+          "name": "infer_contracts",
+          "arguments": {
+            "source": "[ [ 1 ] + ] 'INC' DEF"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "+"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "check",
+      "arguments": {
+        "source": "[ [ 1 ] + ] 'INC' DEF"
+      },
+      "observed": {
+        "toolCalls": 3,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "contract-inference",
+      "toolCalls": [
+        {
+          "name": "infer_contracts",
+          "arguments": {
+            "source": "[ [ 1 ] + ] 'INC' DEF"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "+"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "infer_contracts",
+      "arguments": {
+        "source": "[ [ 1 ] + ] 'INC' DEF"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "contract-inference",
+      "toolCalls": [
+        {
+          "name": "infer_contracts",
+          "arguments": {
+            "source": "[ [ 1 ] + ] 'INC' DEF"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "+"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "infer_contracts",
+      "arguments": {
+        "source": "[ [ 1 ] + ] 'INC' DEF"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "word-contract",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "MAP"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "MAP"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "word-contract",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "MAP"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "MAP"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "reduced-fraction",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "2 8 DIV"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "2 8 DIV"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "reduced-fraction",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "2 8 DIV"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "2 8 DIV"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "large-integer",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "9007199254740993 1 ADD"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "9007199254740993 1 ADD"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "large-integer",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "9007199254740993 1 ADD"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "9007199254740993 1 ADD"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "vector-pairwise",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 ] [ 3 4 ] ADD"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 ] [ 3 4 ] ADD"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "vector-pairwise",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 ] [ 3 4 ] ADD"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 ] [ 3 4 ] ADD"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "sqrt-domain-nil",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "SQRT"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "-1 SQRT"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "SQRT"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "sqrt-domain-nil",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "SQRT"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "-1 SQRT"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "SQRT"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "exact-comparison",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "1 2 LT"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "1 2 LT"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "exact-comparison",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "1 2 LT"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "1 2 LT"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "integer-modulus",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "integer-modulus",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "static-check-error",
+      "toolCalls": [
+        {
+          "name": "check",
+          "arguments": {
+            "source": "FROBNICATE"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "FROBNICATE"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "check",
+      "arguments": {
+        "source": "FROBNICATE"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "static-check-error",
+      "toolCalls": [
+        {
+          "name": "check",
+          "arguments": {
+            "source": "FROBNICATE"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "FROBNICATE"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "check",
+      "arguments": {
+        "source": "FROBNICATE"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "alias-word-contract",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "+"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "+"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "alias-word-contract",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "+"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "ADD"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "+"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "sort-ascending",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "sort-ascending",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 3 1 2 ] SORT"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 3 1 2 ] SORT"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "unique-labels",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 'a' 'b' 'a' ] UNIQUE"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 'a' 'b' 'a' ] UNIQUE"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "unique-labels",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 'a' 'b' 'a' ] UNIQUE"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 'a' 'b' 'a' ] UNIQUE"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "tally-labels",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 'a' 'b' 'a' ] TALLY"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 'a' 'b' 'a' ] TALLY"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "tally-labels",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 'a' 'b' 'a' ] TALLY"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "TALLY"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 'a' 'b' 'a' ] TALLY"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "group-by-key",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "GROUP"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "GROUP"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "group-by-key",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "GROUP"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ [ 'a' 'b' 'a' ] [ 1 2 3 ] ] GROUP"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "GROUP"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "order-permutation",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 30 10 20 ] ORDER"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "ORDER"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 30 10 20 ] ORDER"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "order-permutation",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "ORDER"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 30 10 20 ] ORDER"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "ORDER"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "range-sequence",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "RANGE"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 0 4 ] RANGE"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "RANGE"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "range-sequence",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "RANGE"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 0 4 ] RANGE"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "RANGE"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "sum-vector",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 4 ] SUM"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 4 ] SUM"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "sum-vector",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 4 ] SUM"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 4 ] SUM"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "zip-transpose",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ [ 1 2 ] [ 3 4 ] ] ZIP"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "ZIP"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ [ 1 2 ] [ 3 4 ] ] ZIP"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "zip-transpose",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ [ 1 2 ] [ 3 4 ] ] ZIP"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "ZIP"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ [ 1 2 ] [ 3 4 ] ] ZIP"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "take-prefix",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 4 5 ] 3 TAKE"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 4 5 ] 3 TAKE"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "take-prefix",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 4 5 ] 3 TAKE"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 4 5 ] 3 TAKE"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "concat-vectors",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 ] [ 3 4 ] CONCAT"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "CONCAT"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 ] [ 3 4 ] CONCAT"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "concat-vectors",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 ] [ 3 4 ] CONCAT"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 ] [ 3 4 ] CONCAT"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "reverse-vector",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 ] REVERSE"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 ] REVERSE"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "reverse-vector",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 ] REVERSE"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 ] REVERSE"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "length-count",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "length-count",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "index-of-value",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 10 20 30 ] 20 INDEX-OF"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "INDEX-OF"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 10 20 30 ] 20 INDEX-OF"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "index-of-value",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 10 20 30 ] 20 INDEX-OF"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "INDEX-OF"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 10 20 30 ] 20 INDEX-OF"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "get-element",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 10 20 30 ] 1 GET"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "GET"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 10 20 30 ] 1 GET"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "get-element",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "GET"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 10 20 30 ] 1 GET"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "GET"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "put-element",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 ] 1 9 PUT"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "PUT"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 ] 1 9 PUT"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "put-element",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "PUT"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 ] 1 9 PUT"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "PUT"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "fill-matrix",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "FILL"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 2 2 ] 0 FILL"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "FILL"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "fill-matrix",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "FILL"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 2 2 ] 0 FILL"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "FILL"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "map-double",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 ] 2 MUL"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 ] 2 MUL"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "map-double",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 ] 2 MUL"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 ] 2 MUL"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "filter-even",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 4 ] [ 2 MOD 0 EQ ] FILTER"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 4 ] [ 2 MOD 0 EQ ] FILTER"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "filter-even",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 4 ] [ 2 MOD 0 EQ ] FILTER"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 4 ] [ 2 MOD 0 EQ ] FILTER"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "fold-product",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 4 ] 1 [ MUL ] FOLD"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 4 ] 1 [ MUL ] FOLD"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "fold-product",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 4 ] 1 [ MUL ] FOLD"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 4 ] 1 [ MUL ] FOLD"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "any-predicate",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 ] [ 2 EQ ] ANY\n[ 1 2 3 ] 2 INDEX-OF"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 ] [ 2 EQ ] ANY\n[ 1 2 3 ] 2 INDEX-OF"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "any-predicate",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 ] 2 INDEX-OF\n[ 1 2 3 ] [ 2 EQ ] ANY"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 ] 2 INDEX-OF\n[ 1 2 3 ] [ 2 EQ ] ANY"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "all-predicate",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 2 4 ] [ 2 MOD 0 EQ ] ALL"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 2 4 ] [ 2 MOD 0 EQ ] ALL"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "all-predicate",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 2 4 ] [ 2 MOD 0 EQ ] ALL"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 2 4 ] [ 2 MOD 0 EQ ] ALL"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "chars-split",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "'hi' CHARS"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "'hi' CHARS"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "chars-split",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "'hi' CHARS"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "'hi' CHARS"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "join-chars",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 'h' 'i' ] '' JOIN"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 'h' 'i' ] '' JOIN"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "join-chars",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 'h' 'i' ] '' JOIN"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "JOIN"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 'h' 'i' ] '' JOIN"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "tokenize-csv",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "TOKENIZE"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "'a,b,c' ',' TOKENIZE"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "TOKENIZE"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "tokenize-csv",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "TOKENIZE"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "'a,b,c' ',' TOKENIZE"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "TOKENIZE"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "num-parse",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "'42' NUM"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "'42' NUM"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "num-parse",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "'42' NUM"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "'42' NUM"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "str-render",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "42 STR"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "42 STR"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "str-render",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "42 STR"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "42 STR"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "sqrt-perfect-square",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "sqrt-perfect-square",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "9 SQRT"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "9 SQRT"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "sum-of-two-roots",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "2 SQRT 3 SQRT ADD"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "SQRT"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "2 SQRT 3 SQRT ADD"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "sum-of-two-roots",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "2 SQRT 3 SQRT ADD"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "SQRT"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "2 SQRT 3 SQRT ADD"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "third-times-three",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "1 3 DIV 3 MUL\n1 3 DIV 3 MUL 1 EQ"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "DIV"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "1 3 DIV 3 MUL\n1 3 DIV 3 MUL 1 EQ"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "third-times-three",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "1 3 DIV 3 MUL\n1 3 DIV 3 MUL 1 EQ"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "1 3 DIV 3 MUL\n1 3 DIV 3 MUL 1 EQ"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "decimal-equality",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "0.1 0.2 ADD 0.3 EQ\n0.1 0.2 ADD\n0.1 0.2 ADD 0.3 SUB"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "EQ"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "0.1 0.2 ADD 0.3 EQ\n0.1 0.2 ADD\n0.1 0.2 ADD 0.3 SUB"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "decimal-equality",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "0.1 0.2 ADD\n0.1 0.2 ADD 0.3 EQ"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "0.1 0.2 ADD\n0.1 0.2 ADD 0.3 EQ"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "boolean-and",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "TRUE"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "FALSE"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "TRUE"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "boolean-and",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "TRUE FALSE AND"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "TRUE FALSE AND"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "disjoint-domains",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "'A' [ 65 ] EQ"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "EQ"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "'A' [ 65 ] EQ"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "disjoint-domains",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "'A' [ 65 ] EQ"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "EQ"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "'A' [ 65 ] EQ"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "nil-is-detectable",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "DIV"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "NIL?"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "1 0 DIV NIL?"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "DIV"
+      },
+      "observed": {
+        "toolCalls": 3,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "nil-is-detectable",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "DIV"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "NIL?"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "DIV"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "ceiling-collection-work",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "RANGE"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "UNIQUE"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "RANGE"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "ceiling-collection-work",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "RANGE"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "UNIQUE"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "RANGE"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "ceiling-numeric-work",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "SQRT"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "2 SQRT 3 SQRT ADD"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "SQRT"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "ceiling-numeric-work",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "FILL"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "FOLD"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "FILL"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "ceiling-materialization",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "RANGE"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 0 100001 ] RANGE LENGTH"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "RANGE"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "ceiling-materialization",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "RANGE"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 0 100001 ] RANGE LENGTH"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "RANGE"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "ceiling-execution-steps",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "RANGE"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "REVERSE"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "RANGE"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "ceiling-execution-steps",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "RANGE"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": ": COUNTDOWN ( n -- v ) [ 0 ] SWAP CONCAT RANGE REVERSE ;\n5 COUNTDOWN"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "RANGE"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "shape-mismatch",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 ] [ 1 2 ] ADD"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "ADD"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 ] [ 1 2 ] ADD"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "shape-mismatch",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2 3 ] [ 1 2 ] ADD"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "ADD"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 1 2 3 ] [ 1 2 ] ADD"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "stack-shape-error",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "1 ADD"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "ADD"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "1 ADD"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "stack-shape-error",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "1 ADD"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "ADD"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "1 ADD"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "malformed-source",
+      "toolCalls": [
+        {
+          "name": "check",
+          "arguments": {
+            "source": "[ 1 2"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "check",
+      "arguments": {
+        "source": "[ 1 2"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "malformed-source",
+      "toolCalls": [
+        {
+          "name": "check",
+          "arguments": {
+            "source": "[ 1 2"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 1 2"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "check",
+      "arguments": {
+        "source": "[ 1 2"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "unique-word-contract",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "UNIQUE"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "UNIQUE"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "unique-word-contract",
+      "toolCalls": [
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "UNIQUE"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "word_contract",
+      "arguments": {
+        "word": "UNIQUE"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "irrelevant-weather",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-weather",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-writing",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-writing",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-translation",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-translation",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-history",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-history",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-recipe",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-recipe",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-opinion",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-opinion",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-sine",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-sine",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-logarithm",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-logarithm",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-pi-digits",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-pi-digits",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-currency",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-currency",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 140 145 150 155 160 ] 100 MUL"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 140 145 150 155 160 ] 100 MUL"
+      },
+      "observed": {
+        "toolCalls": 1,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "irrelevant-weekday",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "14 13 6 MUL 5 DIV FLOOR ADD 90 ADD 90 4 DIV FLOOR ADD 19 4 DIV FLOOR ADD 5 19 MUL ADD 7 MOD\n[ 'Saturday' 'Sunday' 'Monday' 'Tuesday' 'Wednesday' 'Thursday' 'Friday' ] SWAP GET"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "GET"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "14 13 6 MUL 5 DIV FLOOR ADD 90 ADD 90 4 DIV FLOOR ADD 19 4 DIV FLOOR ADD 5 19 MUL ADD 7 MOD\n[ 'Saturday' 'Sunday' 'Monday' 'Tuesday' 'Wednesday' 'Thursday' 'Friday' ] SWAP GET"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "irrelevant-weekday",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "14 13 6 MUL 5 DIV FLOOR ADD 90 ADD 90 4 DIV FLOOR ADD 19 4 DIV FLOOR ADD 5 19 MUL ADD 7 MOD"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ '土' '日' '月' '火' '水' '木' '金' ] 2 GET"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "14 13 6 MUL 5 DIV FLOOR ADD 90 ADD 90 4 DIV FLOOR ADD 19 4 DIV FLOOR ADD 5 19 MUL ADD 7 MOD"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "irrelevant-distance",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-distance",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-explain-rpn",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "3 4 ADD 2 MUL\n2 3 4 MUL ADD\n1 2 3"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "ADD"
+          }
+        }
+      ],
+      "language": "en",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "3 4 ADD 2 MUL\n2 3 4 MUL ADD\n1 2 3"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "irrelevant-explain-rpn",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "3 4 ADD 5 2 SUB MUL"
+          }
+        },
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "1 2 3 ADD MUL 10 20 ADD"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "3 4 ADD 5 2 SUB MUL"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "irrelevant-estimate",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-estimate",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "( 文庫1ページ約600字 → 500ページ = 300000字 )\n300000\n[ 400 500 700 ] [ 300000 SWAP DIV ] MAP\n( 上の書き方が通るか不明なので素直に )\n[ 750 600 429 ]\n[ 750 600 429 ] [ 60 DIV ] MAP"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "DIV"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "( 文庫1ページ約600字 → 500ページ = 300000字 )\n300000\n[ 400 500 700 ] [ 300000 SWAP DIV ] MAP\n( 上の書き方が通るか不明なので素直に )\n[ 750 600 429 ]\n[ 750 600 429 ] [ 60 DIV ] MAP"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "irrelevant-naming",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-naming",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-python",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-python",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-regex",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-regex",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-debug",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-debug",
+      "toolCalls": [
+        {
+          "name": "compute",
+          "arguments": {
+            "source": "[ 0 5 ] RANGE\n[ 0 4 ] RANGE\n[ 0 5 ] RANGE LENGTH\n[ 'a' 'b' 'c' 'd' 'e' ] LENGTH"
+          }
+        },
+        {
+          "name": "word_contract",
+          "arguments": {
+            "word": "RANGE"
+          }
+        }
+      ],
+      "language": "ja",
+      "selectedTool": "compute",
+      "arguments": {
+        "source": "[ 0 5 ] RANGE\n[ 0 4 ] RANGE\n[ 0 5 ] RANGE LENGTH\n[ 'a' 'b' 'c' 'd' 'e' ] LENGTH"
+      },
+      "observed": {
+        "toolCalls": 2,
+        "stopReason": "tool_use"
+      }
+    },
+    {
+      "caseId": "irrelevant-summary",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-summary",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-book",
+      "toolCalls": [],
+      "language": "en",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    },
+    {
+      "caseId": "irrelevant-book",
+      "toolCalls": [],
+      "language": "ja",
+      "selectedTool": null,
+      "arguments": {},
+      "observed": {
+        "toolCalls": 0,
+        "stopReason": "end_turn"
+      }
+    }
+  ]
+}

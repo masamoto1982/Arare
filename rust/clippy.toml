@@ -1,0 +1,3 @@
+# A tensor's `Ascending` memo is filled once and is part of neither its
+# equality nor its hash, so a `Value` holding one is a sound map key.
+ignore-interior-mutability = ["ajisai_core::types::tensor_storage::Ascending"]

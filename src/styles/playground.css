@@ -1,0 +1,1402 @@
+:root {
+    /* --- Families --------------------------------------------------------- */
+    --font-stack-primary: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+    --font-stack-mono: "SF Mono", Consolas, "Liberation Mono", Monaco, monospace;
+
+    /* --- Type scale (rem) ------------------------------------------------- */
+    --text-2xs: 0.75rem;
+    --text-xs: 0.8rem;
+    --text-sm: 0.875rem;
+    --text-base: 0.95rem;
+    --text-xl: 1.5rem;
+
+    /* --- Weights ---------------------------------------------------------- */
+    --weight-regular: 400;
+    --weight-medium: 500;
+    --weight-bold: 700;
+
+    /* --- Line heights ----------------------------------------------------- */
+    --leading-tight: 1.2;
+    --leading-snug: 1.5;
+    --leading-body: 1.6;
+
+    /* --- Spacing scale (rem) --------------------------------------------- */
+    --space-3xs: 0.125rem;
+    --space-2xs: 0.25rem;
+    --space-xs: 0.5rem;
+    --space-sm: 0.75rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+
+    /* --- Radii ------------------------------------------------------------ */
+    --radius-main: 2px;
+    --radius-button: 6px;
+    --radius-word-button: 4px;
+    --radius-panel: 8px;
+
+    /* --- Layout ----------------------------------------------------------- */
+    --col-left-flex: 1;
+    --col-right-flex: 1;
+    --golden: 1.618;
+
+    /* --- Brand / accent --------------------------------------------------- */
+    /* Muted hydrangea purple: the single brand accent (links, focus rings). */
+    --color-primary:   oklch(51.1% 0.091 295.7);
+
+    /* --- Ink / text ------------------------------------------------------- */
+    --color-text:       oklch(24.7% 0.002 247.9);   /* near-black warm ink    */
+    --color-text-light: oklch(46.1% 0.009 241.8);   /* secondary / captions   */
+
+    /* --- Surfaces --------------------------------------------------------- */
+    --color-white:  oklch(100% 0     0);
+    --color-light:  oklch(98.2% 0.002 247.8);   /* hover fills, nav rail  */
+    --color-medium: oklch(94.3% 0.006 264.5);   /* inline-code bg, scrollbar */
+
+    /* --- Border ----------------------------------------------------------- */
+    --color-border: oklch(73.2% 0.014 251.6);
+    --border-main: solid 1px var(--color-border);
+
+    /* Code-entry surface: a recessed "well" — faint cool gray, slightly
+       darker than the page white so the input reads as a depression. */
+    --color-symbol: oklch(97.5% 0.03 100);
+
+    /* Ink for inputs on the light symbol surface. */
+    --input-text:        var(--color-text);
+    /* Placeholder text in the editor and the Dictionary search box: faint on
+       purpose — present enough to read when looked at, never competing with
+       what is typed. A deliberate exception to 4.5:1, recorded with its floor
+       in scripts/check-contrast.mjs. */
+    --input-placeholder: oklch(80% 0.07 55);
+
+    /* --- Word-category semantics (CVD-safe) ------------------------------ */
+    /* Chip text on white (scripts/check-contrast.mjs). Dependency is a light
+       amber, well above Core's orange-red in lightness, which is what tells
+       the two warm colours apart at a glance; it is a recorded exception to
+       4.5:1 rather than darkened toward Core. */
+    --color-core:           oklch(57% 0.197 40.3);      /* orange  */
+    --color-dependency:     oklch(73.4% 0.158 71.0);    /* amber   */
+    --color-non-dependency: oklch(52.5% 0.135 161.2);   /* green   */
+    --color-stack:          oklch(47.9% 0.220 328.4);   /* magenta */
+    /* A NIL on the Stack: a cool slate, apart from the magenta of the values
+       around it and from every bracket depth, muted because it is an absence.
+       Reads at 4.5:1 on white and on --color-stack-top. */
+    --color-nil:            oklch(46% 0.06 240);        /* slate   */
+
+    /* --- Vector bracket depth colours (after Tol's muted palette) ------- */
+    /* Brackets are text, and the top of the stack sits on its fill, so each
+       depth reads at 4.5:1 on white and on --color-stack-top.
+       Darkening the light members of Tol's palette brought them to one
+       lightness, so neighbouring depths are told apart by hue. They are
+       ordered so that adjacent depths are far apart on the hue wheel (the
+       old blue -> teal -> green run at 2-4 looked alike): 2 is ochre against
+       1's indigo, 3 teal, 4 rose, 5 green, 6 steel blue, 7 magenta, 8 olive. */
+    --bracket-depth-1: oklch(34.7% 0.159 281.8);
+    --bracket-depth-2: oklch(52% 0.12 65);
+    --bracket-depth-3: oklch(50% 0.098 180.4);
+    --bracket-depth-4: oklch(53% 0.130 11.0);
+    --bracket-depth-5: oklch(49.9% 0.135 148.6);
+    --bracket-depth-6: oklch(51% 0.084 230.8);
+    --bracket-depth-7: oklch(53.5% 0.167 334.6);
+    --bracket-depth-8: oklch(51% 0.123 109.3);
+    --bracket-depth-9: oklch(43.2% 0.145 354.5);
+
+    /* --- Output text ------------------------------------------------------ */
+    --color-output-debug:   oklch(32.1% 0 0);
+    /* What the program printed, in blue — dark enough to read (4.5:1). */
+    --color-output-program: oklch(53.5% 0.134 234.0); /* blue */
+    --color-output-error:   oklch(57.5% 0.202 21.2);   /* red */
+    --color-output-info:    oklch(51% 0 0);
+
+    /* --- Stack top background -------------------------------------------- */
+    /* A Word consumes its operands (LANG.STACK.CONSUMPTION): the top item is
+       filled with a very pale warm red. A fill rather than a text colour leaves
+       the bracket depth-colours that show Vector nesting intact. The top is
+       also the last item in reading order and set in bold, so the fill is not
+       the only thing that marks it. (Once named `--color-consume-eat`, after a
+       consume/keep mode pair the language no longer has.) */
+    --color-stack-top: oklch(94% 0.035 25);
+
+    /* --- Effects ---------------------------------------------------------- */
+    --shadow-popover: 0 2px 6px oklch(0% 0 0 / 0.15);
+    --transition-fast: 0.15s ease;
+}
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html,
+body {
+    height: 100%;
+    overflow-x: hidden;
+}
+
+body {
+    font-family: var(--font-stack-primary);
+    background: var(--color-white);
+    color: var(--color-text);
+    line-height: var(--leading-body);
+}
+
+[hidden] {
+    display: none !important;
+}
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+
+    /* Hover marks the link with a line rather than a lighter colour, which
+       fell to 2.3:1. */
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* Visually hidden until focused. */
+.skip-link {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    background: var(--color-text);
+    color: var(--color-white);
+    padding: var(--space-xs) var(--space-md);
+    z-index: 1000;
+
+    &:focus {
+        width: auto;
+        height: auto;
+        overflow: visible;
+        clip-path: none;
+        white-space: normal;
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+    }
+}
+
+.container {
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    @media (width <= 768px) {
+        height: 100dvh;
+        min-height: 0;
+    }
+}
+
+@media (width <= 768px) {
+    html,
+    body {
+        height: 100%;
+        overflow: hidden;
+    }
+}
+
+
+/* ── 移ろい — header / footer ───────────────────────────────────────────────
+ * A slow OKLCH gradient cycling through the four hydrangea hues:
+ *   青紫 (blue-purple ~265) · 赤紫 (red-purple ~325)
+ *   淡水色 (pale aqua ~205) · 淡緑 (pale green ~155)
+ * Both endpoints animate as a matched pair; nearby hues at every keyframe
+ * prevent the interpolation from cutting through warm orange. The 100%
+ * keyframe repeats 0% to keep the infinite loop seamless. */
+@property --mv-h-a {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 265;
+}
+
+@property --mv-h-b {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 300;
+}
+
+@property --mv-l {
+    syntax: "<percentage>";
+    inherits: false;
+    initial-value: 90%;
+}
+
+@property --mv-c-a {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 0.085;
+}
+
+@property --mv-c-b {
+    syntax: "<number>";
+    inherits: false;
+    initial-value: 0.085;
+}
+
+@keyframes mv-hydrangea-hues {
+    0%,
+    100% {
+        --mv-h-a: 265;
+        --mv-h-b: 300;
+    }
+
+    25% {
+        --mv-h-a: 305;
+        --mv-h-b: 325;
+    }
+
+    50% {
+        --mv-h-a: 195;
+        --mv-h-b: 225;
+    }
+
+    75% {
+        --mv-h-a: 150;
+        --mv-h-b: 178;
+    }
+}
+
+@keyframes mv-chroma {
+    0%,
+    100% {
+        --mv-c-a: 0.085;
+        --mv-c-b: 0.085;
+    }
+
+    40% {
+        --mv-c-a: 0.095;
+        --mv-c-b: 0.095;
+    }
+
+    65% {
+        --mv-c-a: 0.065;
+        --mv-c-b: 0.065;
+    }
+}
+
+@keyframes mv-light {
+    0%,
+    100% { --mv-l: 90%; }
+    50%  { --mv-l: 93%; }
+}
+
+header,
+footer,
+.utsuroi {
+    background: linear-gradient(
+        to right in oklch,
+        oklch(var(--mv-l) var(--mv-c-a) var(--mv-h-a)) 0%,
+        oklch(calc(var(--mv-l) + 1%) var(--mv-c-b) var(--mv-h-b)) 100%
+    );
+    animation:
+        mv-hydrangea-hues 260s ease-in-out infinite,
+        mv-chroma 210s ease-in-out infinite,
+        mv-light 170s ease-in-out infinite;
+
+    @media (prefers-reduced-motion: reduce) {
+        animation: none;
+    }
+}
+
+
+header {
+    border-bottom: var(--border-main);
+    padding: var(--space-md) var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-xs);
+    flex-shrink: 0;
+    color: var(--color-text);
+
+    & h1 {
+        font-size: var(--text-xl);
+        font-weight: var(--weight-medium);
+        color: var(--color-text);
+    }
+
+    /* The header's badge carries the full build and resource-limit detail in
+       its tooltip (setPlaygroundBadgeTooltip() in src/entry/entry-common.ts);
+       the splash shows only a curated summary of it. */
+    & .version {
+        cursor: help;
+    }
+}
+
+.app-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    width: 100%;
+}
+
+.app-brand-block {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: inherit;
+}
+
+.app-brand-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.logo {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+}
+
+.version {
+    display: inline-block;
+    font-size: var(--text-2xs);
+    line-height: var(--leading-snug);
+    color: var(--color-white);
+    background: var(--color-primary);
+    border: 1px solid var(--color-primary);
+    border-radius: var(--radius-button);
+    padding: var(--space-3xs) var(--space-xs);
+}
+
+.header-actions {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-xs);
+}
+
+
+/* First-visit walkthrough — see initSplashScreen() in src/entry/entry-common.ts.
+   Reuses the header's moving hydrangea gradient (.utsuroi) so the splash reads
+   as the same surface. Sits above the skip-link's z-index; once dismissed it
+   fades out and stops intercepting pointer events before it is removed. */
+.splash-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--color-text);
+    opacity: 1;
+    transition: opacity 0.35s ease;
+
+    &.splash-dismissing {
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* The technical detail is revealed by a timer (splash-detail-visible); the
+       hint below it never waits on that timer. */
+    &.splash-detail-visible :is(.splash-version-line, .splash-note) {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        transition: none;
+    }
+}
+
+.splash-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-xl);
+    text-align: center;
+}
+
+.splash-logo {
+    width: 96px;
+    height: 96px;
+    object-fit: contain;
+    opacity: 0;
+    transform: scale(0.9);
+    animation: splash-logo-in 0.5s ease forwards;
+}
+
+/* The title and its "Playground" badge read as one identity, side by side,
+   the way the header pairs <h1>Ajisai</h1> with the same badge. */
+.splash-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    opacity: 0;
+    animation: splash-fade-in 0.5s ease 0.15s forwards;
+}
+
+.splash-title {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-medium);
+}
+
+/* Written out as plain text rather than a hover title: a touch device has no
+   hover to read it from. Kept to two short lines so the splash fits a phone. */
+.splash-version-line,
+.splash-note {
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.splash-version-line {
+    font-family: var(--font-stack-mono);
+    font-size: var(--text-xs);
+    color: var(--color-text);
+}
+
+.splash-note {
+    font-size: var(--text-2xs);
+    color: var(--color-text-light);
+    max-width: 32rem;
+}
+
+.splash-hint {
+    font-size: var(--text-2xs);
+    color: var(--color-text-light);
+}
+
+@keyframes splash-logo-in {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes splash-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* With the motion gone the splash says everything at once. */
+@media (prefers-reduced-motion: reduce) {
+    .splash-logo,
+    .splash-heading {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+
+    .splash-version-line,
+    .splash-note {
+        transition: none;
+        opacity: 1;
+        transform: none;
+    }
+}
+
+
+footer {
+    border-top: var(--border-main);
+    padding: var(--space-sm) var(--space-xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xl);
+    flex-shrink: 0;
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    text-align: center;
+
+    & a {
+        color: var(--color-text-light);
+
+        &:hover {
+            color: var(--color-text);
+        }
+    }
+}
+
+
+/* Every non-word button: header, output, dictionary actions, and the
+   generated JSON download link. */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-end;
+    justify-content: center;
+    gap: var(--space-xs);
+    min-height: 2.125rem;
+    padding: var(--space-xs) var(--space-md);
+    font-family: var(--font-stack-primary);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-tight);
+    border: var(--border-main);
+    border-radius: var(--radius-button);
+    cursor: pointer;
+    color: var(--color-text);
+    background: var(--color-white);
+
+    &:hover {
+        background: var(--color-light);
+        color: var(--color-text);
+    }
+}
+
+
+/* The three content boxes: Output, Stack, and the word lists. */
+.display-area,
+.state-display,
+.words-display {
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--space-sm);
+    border: var(--border-main);
+    background: var(--color-white);
+    font-family: var(--font-stack-mono);
+    font-size: 0.9rem;
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-medium) var(--color-light);
+
+    @media (width <= 768px) {
+        min-height: 80px;
+    }
+}
+/* ── Layout: two columns on desktop, one surface at a time on mobile ─────── */
+
+.main-layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    background: var(--color-white);
+
+    @media (width <= 768px) {
+        flex-direction: column;
+        overflow: hidden;
+    }
+}
+
+#editor-panel,
+#state-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    min-height: 0;
+    padding: var(--space-sm);
+    overflow: hidden;
+    background: var(--color-white);
+    position: relative;
+
+    /* A query container, so controls inside a column reflow when the column
+       is merely narrow, independently of the desktop/mobile mode switch. */
+    container: panel / inline-size;
+
+    /* Between the columns the seam is balanced by halving the inner padding. */
+    @media (769px <= width <= 1024px) {
+        padding-inline: var(--space-sm) calc(var(--space-sm) / 2);
+    }
+
+    @media (width <= 768px) {
+        flex: 1 1 auto;
+        width: 100%;
+        gap: 0;
+        /* On mobile the panel selector is a sibling above the panel, not a
+           child, so the seam below it is this padding-top: the 0.5rem that
+           separates two stacked things, not the 0.75rem page gutter. */
+        padding: var(--space-xs) var(--space-sm) var(--space-sm);
+    }
+}
+
+#editor-panel {
+    flex: var(--col-left-flex);
+    border-right: var(--border-main);
+
+    @media (width <= 768px) {
+        border-right: none;
+    }
+}
+
+#state-panel {
+    flex: var(--col-right-flex);
+
+    @media (769px <= width <= 1024px) {
+        padding-inline: calc(var(--space-sm) / 2) var(--space-sm);
+    }
+}
+
+/* Mobile shows one surface: the column that does not hold it is gone. */
+@media (width <= 768px) {
+    body:is([data-active-area="input"], [data-active-area="output"]) #state-panel,
+    body:is([data-active-area="stack"], [data-active-area="dictionary"]) #editor-panel {
+        display: none;
+    }
+}
+
+.input-area,
+.output-area,
+.stack-area,
+.dictionary-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    min-height: 0;
+    position: relative;
+}
+
+@media (width >= 769px) {
+    body[data-active-area] .main-layout section {
+        flex: 1;
+        min-height: 0;
+    }
+}
+
+
+/* ── Surface selectors ───────────────────────────────────────────────────── */
+
+.area-selector {
+    flex-shrink: 0;
+}
+
+.area-selector select,
+.dictionary-toolbar select {
+    /* Monospace metrics render slightly high in compact controls; asymmetric
+       block padding sits the label optically centred. */
+    --control-text-y-adjust: 0.0625rem;
+    font-family: var(--font-stack-mono);
+    font-size: var(--text-xs);
+    line-height: var(--leading-tight);
+    padding: calc(var(--space-2xs) + var(--control-text-y-adjust)) var(--space-xs) calc(var(--space-2xs) - var(--control-text-y-adjust));
+    border: var(--border-main);
+    border-radius: var(--radius-main);
+    background: var(--color-white);
+    color: var(--color-text);
+    width: 100%;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.area-selector select:focus,
+.dictionary-toolbar select:focus {
+    outline: none;
+    background: var(--color-light);
+}
+
+/* The Dictionary area's own toolbar: the Core/User select and the word search
+   side by side, the select taking the larger share. One of it, inside the
+   area, so the search is there whichever area selector brought the Dictionary
+   up — desktop's right column or mobile's single selector. */
+.dictionary-toolbar {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: var(--space-xs);
+
+    & select {
+        flex: var(--golden) 1 0%;
+    }
+
+    & .search-wrapper {
+        flex: 1 1 0%;
+        min-width: 0;
+    }
+
+    & .vocabulary-search-input {
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* Too narrow to seat the select and the word search side by side: stack
+       them. Keyed on the panel container, not the viewport, so a slim desktop
+       column reflows on its own. */
+    @container panel (width <= 18rem) {
+        flex-wrap: wrap;
+
+        & select,
+        & .search-wrapper {
+            flex-basis: 100%;
+        }
+    }
+}
+
+.area-selector-left {
+    @media (width <= 768px) {
+        display: none;
+    }
+}
+
+.area-selector-right {
+    @media (width <= 768px) {
+        display: none;
+    }
+}
+
+.area-selector-mobile {
+    display: none;
+
+    /* Outside the panel, so it carries the page gutter and surface colour
+       the panel gives its own children. */
+    @media (width <= 768px) {
+        display: flex;
+        padding: var(--space-sm) var(--space-sm) 0;
+        background: var(--color-white);
+    }
+}
+
+
+
+/* ── Input ───────────────────────────────────────────────────────────────── */
+
+#code-input {
+    width: 100%;
+    min-height: 0;
+    /* The editor counts taps of its own (triple-tap to Run); `manipulation`
+       gives up only the browser's double-tap zoom, keeping pinch and scroll. */
+    touch-action: manipulation;
+    padding: var(--space-sm);
+    border: var(--border-main);
+    font-family: var(--font-stack-mono);
+    font-size: var(--text-base);
+    resize: none;
+    flex: 1;
+    line-height: var(--leading-snug);
+    background-color: var(--color-symbol);
+    color: var(--input-text);
+    caret-color: var(--input-text);
+    transition: background-color var(--transition-fast);
+
+    &:focus {
+        outline: 2px solid var(--color-primary);
+        outline-offset: -2px;
+    }
+
+    /* The placeholder still holds the cheat sheet — for screen readers, for
+       :placeholder-shown, and for the scroll extent of the empty editor — but
+       #editor-hint draws it, with keycaps, on top. */
+    &::placeholder {
+        color: transparent;
+    }
+
+    /* iOS Safari zooms into a field under 16px and does not zoom back. */
+    @media (width <= 768px) {
+        font-size: 1rem;
+    }
+
+    /* The corner controls are not drawn while there is nothing to clear or
+       format. */
+    &:placeholder-shown ~ :is(#editor-clear-btn, #editor-format-btn) {
+        display: none;
+    }
+
+    &:not(:placeholder-shown) ~ .editor-hint {
+        display: none;
+    }
+}
+
+/* The empty editor's cheat sheet, laid over the textarea at its text inset.
+   It ignores the pointer, so every tap and click lands on the editor. */
+.editor-hint {
+    position: absolute;
+    inset: 0;
+    padding: calc(var(--space-sm) + 1px);
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+    font-family: var(--font-stack-mono);
+    font-size: var(--text-base);
+    line-height: var(--leading-snug);
+    color: var(--input-placeholder);
+
+    @media (width <= 768px) {
+        font-size: 1rem;
+    }
+
+    & p {
+        margin: 0;
+    }
+
+    & .editor-hint-heading {
+        margin-top: var(--space-sm);
+    }
+}
+
+/* One group: what it does, then how, in two aligned columns. */
+.editor-hint-group {
+    display: grid;
+    grid-template-columns: fit-content(26em) auto;
+    column-gap: var(--space-md);
+    row-gap: var(--space-2xs);
+    align-items: center;
+    margin: var(--space-sm) 0 0;
+
+    & dd {
+        margin: 0;
+    }
+
+    & .editor-hint-note {
+        grid-column: 1 / -1;
+    }
+
+    & .editor-hint-note + dd {
+        display: none;
+    }
+
+    @media (width <= 768px) {
+        column-gap: var(--space-sm);
+    }
+}
+
+.editor-hint-chord {
+    white-space: nowrap;
+}
+
+/* A key — or, on mobile, a touch control — drawn as a keycap: an outlined,
+   lettered tile, so a shortcut reads as the thing to press rather than as
+   prose. No fill, and outline and letters in the placeholder ink: the shape
+   alone marks a key, and anything darker outweighs the faint sheet it sits
+   in. */
+.editor-hint kbd {
+    display: inline-block;
+    min-width: 1.8em;
+    margin: 0 0.15em;
+    padding: 0 0.4em;
+    border: 1px solid var(--input-placeholder);
+    border-bottom-width: 2px;
+    border-radius: var(--radius-word-button);
+    background-color: transparent;
+    color: var(--input-placeholder);
+    font-family: var(--font-stack-mono);
+    font-size: var(--text-xs);
+    line-height: 1.6;
+    text-align: center;
+}
+
+.inline-clear-btn {
+    position: absolute;
+    width: 1.5rem;
+    height: 1.5rem;
+    touch-action: manipulation;
+    border: none;
+    background: none;
+    color: var(--input-text);
+    font-size: 1.15rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.6;
+    transition: opacity var(--transition-fast);
+
+    &:hover {
+        opacity: 1;
+    }
+}
+
+/* The three corner buttons. On mobile the glyph keeps its drawn size and the
+   padding around it becomes a 44px target. */
+#editor-clear-btn,
+#editor-format-btn,
+#stack-clear-btn {
+    z-index: 2;
+
+    @media (width <= 768px) {
+        width: 2.75rem;
+        height: 2.75rem;
+    }
+}
+
+#editor-clear-btn,
+#stack-clear-btn {
+    inset: var(--space-xs) var(--space-xs) auto auto;
+
+    @media (width <= 768px) {
+        inset: 0 0 auto auto;
+    }
+}
+
+#editor-format-btn {
+    inset: auto var(--space-xs) var(--space-xs) auto;
+
+    @media (width <= 768px) {
+        inset: auto 0 0 auto;
+    }
+}
+
+/* A run in progress, stated over the editor's lower-left corner — the one
+   corner no control holds — so it is on screen wherever the run was started. */
+.run-status {
+    position: absolute;
+    inset: auto auto var(--space-xs) var(--space-xs);
+    z-index: 2;
+    max-width: calc(100% - 4rem);
+    padding: var(--space-3xs) var(--space-xs);
+    border: var(--border-main);
+    border-radius: var(--radius-main);
+    background: var(--color-white);
+    color: var(--color-text-light);
+    font-size: var(--text-xs);
+    pointer-events: none;
+}
+
+/* Same gesture as clearing the editor, so the same control in the same corner. */
+#stack-clear-btn {
+    color: var(--color-text-light);
+}
+
+#stack-panel.is-empty-stack #stack-clear-btn {
+    display: none;
+}
+
+.editor-suggestions {
+    position: absolute;
+    touch-action: manipulation;
+    min-width: 180px;
+    max-width: calc(100% - 1rem);
+    max-height: 220px;
+    overflow-y: auto;
+    background: var(--color-white);
+    z-index: 20;
+}
+
+.editor-suggestion-item {
+    width: 100%;
+    border: none;
+    background: transparent;
+    text-align: left;
+    padding: 0.45rem 0.6rem;
+    font-family: var(--font-stack-mono);
+    font-size: 0.78rem;
+    cursor: pointer;
+
+    /* The item Tab accepts, moved with the arrow keys. */
+    &:hover,
+    &.is-selected {
+        background: var(--color-light);
+    }
+
+    @media (width <= 768px) {
+        min-height: 2.75rem;
+        font-size: var(--text-base);
+    }
+}
+
+
+/* ── Output ──────────────────────────────────────────────────────────────── */
+
+#output-display {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+}
+
+.output-debug   { color: var(--color-output-debug); }
+.output-program { color: var(--color-output-program); }
+.output-info    { color: var(--color-output-info); }
+
+.output-error {
+    color: var(--color-output-error);
+    font-weight: var(--weight-bold);
+}
+
+.output-area,
+.stack-area {
+    /* Both count double-taps to move to the next surface — the gesture the
+       browser reads as zoom. */
+    @media (width <= 768px) {
+        cursor: pointer;
+        touch-action: manipulation;
+    }
+}
+
+
+/* ── Stack ───────────────────────────────────────────────────────────────── */
+
+/* Opt-in KaTeX rendering of stack values; unchecked, the canonical display
+   strings (the conformance observation) render as-is. */
+.stack-latex-toggle {
+    align-self: flex-end;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0 var(--space-3xs) var(--space-3xs) 0;
+    font-family: var(--font-stack-primary);
+    font-size: var(--text-xs);
+    color: var(--color-text-light);
+    cursor: pointer;
+    user-select: none;
+
+    & input {
+        cursor: pointer;
+        accent-color: var(--color-primary);
+        touch-action: manipulation;
+    }
+
+    @media (width <= 768px) {
+        min-height: 2.75rem;
+        padding-right: var(--space-2xs);
+        font-size: 0.9rem;
+
+        & input {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+    }
+}
+
+#stack-display {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden auto;
+    /* Keeps the top-right corner free for the clear control drawn over it. */
+    padding-right: 1.75rem;
+
+    &.is-empty {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Reading order — top to bottom, left to right, the top of the stack
+       last — so the value the next Word takes is never reconstructed from
+       where the rows broke. */
+    & .stack-content-flow {
+        align-items: center;
+    }
+
+    /* A Word takes its operands from the top of the stack and consumes them
+       (LANG.STACK.CONSUMPTION): the top item is filled, not recoloured, so the
+       bracket depth-colours stay intact. Even padding on all four sides, in
+       both the canonical and LaTeX renderings. */
+    & .stack-item:last-child .stack-node[data-depth="1"] {
+        padding: 0.35rem;
+        border-radius: 0;
+        background-color: var(--color-stack-top);
+    }
+}
+
+.state-display {
+    color: var(--color-text);
+
+    &.is-empty {
+        color: var(--color-text-light);
+    }
+}
+
+.area-content-flow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    align-content: flex-start;
+    width: 100%;
+}
+
+.stack-item {
+    font-family: var(--font-stack-mono);
+    font-size: var(--text-2xs);
+    display: inline;
+    margin: 2px;
+    padding: 2px 4px;
+    border-radius: var(--radius-button);
+    color: var(--color-stack);
+    overflow-wrap: anywhere;
+
+    &:last-child {
+        font-weight: var(--weight-bold);
+    }
+}
+
+.stack-node {
+    display: inline;
+    border-radius: var(--radius-button);
+    line-height: var(--leading-body);
+}
+
+.stack-node-vector {
+    display: inline;
+    color: var(--color-stack);
+}
+
+.stack-node-math {
+    display: inline-block;
+    max-width: 100%;
+    overflow: auto hidden;
+    vertical-align: middle;
+    /* Trailing room so a wide rendering never touches the area's right edge. */
+    padding: 0.1rem 0.6rem 0.1rem 0.15rem;
+}
+
+.stack-bracket {
+    font-weight: var(--weight-bold);
+    font-size: 1.1em;
+    line-height: 1;
+    /* Nesting depth cycles no further than nine; deeper brackets keep depth 1. */
+    color: var(--bracket-depth-1);
+    &[data-depth="2"] { color: var(--bracket-depth-2); }
+    &[data-depth="3"] { color: var(--bracket-depth-3); }
+    &[data-depth="4"] { color: var(--bracket-depth-4); }
+    &[data-depth="5"] { color: var(--bracket-depth-5); }
+    &[data-depth="6"] { color: var(--bracket-depth-6); }
+    &[data-depth="7"] { color: var(--bracket-depth-7); }
+    &[data-depth="8"] { color: var(--bracket-depth-8); }
+    &[data-depth="9"] { color: var(--bracket-depth-9); }
+}
+
+/* A NIL in its own ink, apart from the magenta of the values around it. Its
+   reason (`domainMiss`) is the tooltip rather than text beside it: set
+   in the line, `NIL · domainMiss` read as two values. A reasoned NIL
+   carries the dotted underline and help cursor that say there is one. */
+.stack-node-nil {
+    color: var(--color-nil);
+    white-space: nowrap;
+}
+
+.stack-node-nil-reasoned {
+    cursor: help;
+    text-decoration: underline dotted;
+    text-underline-offset: 0.15em;
+}
+
+/* One of the three points over zero (`1/0`, `-1/0`, `0/0`, LANG.VALUES.EXACT).
+   It is a number and keeps the number's ink; the same dotted underline and
+   help cursor as a reasoned NIL say that the tooltip has something to add,
+   which is where the point stands (src/gui/output-display-renderer.ts,
+   `describePointNode`). */
+.stack-node-point {
+    cursor: help;
+    text-decoration: underline dotted;
+    text-underline-offset: 0.15em;
+}
+
+/* The undrawn tail of a large collection (the render budget in src/gui/output-display-renderer.ts),
+   styled as commentary so it cannot be read as part of the value. */
+.stack-elision {
+    font-style: italic;
+    font-weight: var(--weight-regular);
+    opacity: 0.65;
+    white-space: nowrap;
+}
+
+
+/* ── Dictionary ──────────────────────────────────────────────────────────── */
+
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.vocabulary-search-input {
+    padding: var(--space-2xs) 1.75rem var(--space-2xs) var(--space-xs);
+    border: var(--border-main);
+    border-radius: 0;
+    font-size: 0.85rem;
+    font-family: var(--font-stack-mono);
+    background-color: var(--color-symbol);
+    color: var(--input-text);
+    caret-color: var(--input-text);
+    transition: background-color var(--transition-fast);
+
+    &:focus {
+        outline: 2px solid var(--color-primary);
+        outline-offset: -2px;
+    }
+
+    &::placeholder {
+        color: var(--input-placeholder);
+    }
+
+    &:placeholder-shown ~ .vocabulary-search-clear-btn {
+        display: none;
+    }
+
+    @media (width <= 768px) {
+        font-size: 1rem;
+    }
+}
+
+.vocabulary-search-clear-btn {
+    inset: 50% var(--space-2xs) auto auto;
+    transform: translateY(-50%);
+    z-index: 2;
+}
+
+.dictionary-sheet {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    min-height: 0;
+    width: 100%;
+    overflow: hidden;
+
+    & .words-display {
+        flex: 1;
+        min-height: 7rem;
+    }
+}
+
+.words-display {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    align-content: flex-start;
+    border-radius: var(--radius-panel);
+    /* The space between the buttons is a control: a click writes a space. */
+    cursor: pointer;
+
+    &.is-empty {
+        align-items: center;
+        align-content: center;
+        justify-content: center;
+    }
+
+    @media (width <= 768px) {
+        cursor: default;
+    }
+}
+
+.no-results-message,
+.empty-words-message {
+    width: 100%;
+    text-align: center;
+    color: var(--color-text-light);
+    font-style: italic;
+}
+
+.no-results-message {
+    padding: var(--space-xs);
+}
+
+.empty-words-message {
+    padding: var(--space-sm);
+}
+
+.vocabulary-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-xs);
+
+    @media (width <= 768px) {
+        & .btn {
+            min-height: 2.75rem;
+        }
+    }
+}
+
+#copy-output-btn {
+    @media (width <= 768px) {
+        min-height: 2.75rem;
+    }
+}
+
+.word-button {
+    --control-text-y-adjust: 0.0625rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 2px;
+    padding: calc(0.2rem + var(--control-text-y-adjust)) 0.4rem calc(0.2rem - var(--control-text-y-adjust));
+    background: var(--color-white);
+    color: var(--color-text);
+    border: var(--border-main);
+    font-family: var(--font-stack-mono);
+    font-size: var(--text-2xs);
+    line-height: var(--leading-tight);
+    font-weight: var(--weight-regular);
+    cursor: pointer;
+    border-radius: var(--radius-word-button);
+
+    /* Chips scrolled out of the list are not rendered; `auto` remembers each
+       chip's real size once laid out, and the fallbacks are the estimate for
+       one not yet rendered. */
+    content-visibility: auto;
+    contain-intrinsic-width: auto 4rem;
+    contain-intrinsic-height: auto 1.75rem;
+
+    &.core {
+        border-color: var(--color-core);
+        color: var(--color-core);
+    }
+
+    &.dependency {
+        border-color: var(--color-dependency);
+        color: var(--color-dependency);
+    }
+
+    &.non-dependency {
+        border-color: var(--color-non-dependency);
+        color: var(--color-non-dependency);
+    }
+
+    /* In a slim desktop column a word button is a control that types its
+       name, so it grows into a comfortable click target. */
+    @container panel (width <= 26rem) {
+        margin: 3px;
+        padding: calc(0.4rem + var(--control-text-y-adjust)) 0.6rem calc(0.4rem - var(--control-text-y-adjust));
+        font-size: 0.85rem;
+    }
+
+    /* On a phone the list is a catalogue of the vocabulary, sized so the
+       Core Words fit in one glance: the box tightens, the type does not. All
+       three restated, because the container query above sets each of them. */
+    @media (width <= 768px) {
+        min-height: 0;
+        font-size: var(--text-2xs);
+        padding: 0.1rem var(--space-2xs);
+        margin: 1px;
+        contain-intrinsic-height: auto 1.25rem;
+        touch-action: manipulation;
+    }
+
+    /* 320px-class phones: the one place the type itself steps down. */
+    @media (width <= 340px) {
+        font-size: 0.65rem;
+    }
+}
+
+/* The Delete menu on a User Word: a native popover positioned at the cursor
+   (set in JS); only the UA centring and border are neutralised here. */
+.context-menu {
+    position: fixed;
+    inset: auto;
+    margin: 0;
+    border: 0;
+    min-width: 12rem;
+    padding: var(--space-3xs);
+    background: var(--color-white);
+    box-shadow: var(--shadow-popover);
+
+    & button {
+        display: block;
+        width: 100%;
+        padding: 0.375rem var(--space-sm);
+        background: transparent;
+        color: var(--color-text);
+        border: none;
+        text-align: left;
+        cursor: pointer;
+
+        &:hover {
+            background: var(--color-light);
+        }
+    }
+}

@@ -1,0 +1,83 @@
+{
+ "schemaVersion": 1,
+ "cases": [
+  {
+   "id": "repair-unknown-word",
+   "prompts": {
+    "en": "Repair `1 2 AD` using its error report.",
+    "ja": "`1 2 AD` を、そのエラー報告を使って直してください。"
+   },
+   "firstAttempt": {
+    "expect": {
+     "/status": "error",
+     "/error/category": "unknownWord",
+     "/error/word": "AD"
+    }
+   },
+   "repairedAttempt": {
+    "expect": {
+     "/status": "ok",
+     "/stackDisplay/0": "3/1"
+    }
+   }
+  },
+  {
+   "id": "repair-stack-underflow",
+   "prompts": {
+    "en": "Repair `1 ADD` using its error report.",
+    "ja": "`1 ADD` を、そのエラー報告を使って直してください。"
+   },
+   "firstAttempt": {
+    "expect": {
+     "/status": "error",
+     "/error/category": "stackUnderflow",
+     "/error/word": "ADD"
+    }
+   },
+   "repairedAttempt": {
+    "expect": {
+     "/status": "ok",
+     "/stackDisplay/0": "3/1"
+    }
+   }
+  },
+  {
+   "id": "repair-unclosed-vector",
+   "prompts": {
+    "en": "Repair malformed `[ 1 2` using its error report.",
+    "ja": "壊れたソース `[ 1 2` を、そのエラー報告を使って直してください。"
+   },
+   "firstAttempt": {
+    "expect": {
+     "/status": "error",
+     "/error/category": "malformedSource"
+    }
+   },
+   "repairedAttempt": {
+    "expect": {
+     "/status": "ok",
+     "/stackDisplay/0": "[ 1/1 2/1 ]"
+    }
+   }
+  },
+  {
+   "id": "repair-collection-ceiling",
+   "prompts": {
+    "en": "Run the Ajisai program `0 99998 RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH`. If Ajisai refuses it, read the error and retry within the limit it names.",
+    "ja": "Ajisai で `0 99998 RANGE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE UNIQUE LENGTH` を実行してください。拒否されたら、エラーを読んで、示された上限の内側で再試行してください。"
+   },
+   "firstAttempt": {
+    "expect": {
+     "/status": "error",
+     "/error/category": "resourceLimitExceeded",
+     "/error/resource": "collectionWork"
+    }
+   },
+   "repairedAttempt": {
+    "expect": {
+     "/status": "ok"
+    }
+   }
+  }
+ ]
+}

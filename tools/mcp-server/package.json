@@ -1,0 +1,74 @@
+{
+  "name": "ajisai-mcp-server",
+  "version": "0.9.0",
+  "private": false,
+  "type": "module",
+  "description": "Bounded Ajisai computation and contract tools for MCP-compatible AI agents.",
+  "mcpName": "io.github.masamoto1982/ajisai",
+  "license": "MIT",
+  "homepage": "https://github.com/masamoto1982/Ajisai/tree/main/tools/mcp-server#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/masamoto1982/Ajisai.git",
+    "directory": "tools/mcp-server"
+  },
+  "bugs": {
+    "url": "https://github.com/masamoto1982/Ajisai/issues"
+  },
+  "keywords": [
+    "mcp",
+    "modelcontextprotocol",
+    "ajisai",
+    "exact-arithmetic",
+    "rational",
+    "agent-tools"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "index.js",
+    "doctor.js",
+    "host-error.js",
+    "word-candidates.js",
+    "phrasebook.js",
+    "backend/native-cli.js",
+    "backend/wasm-worker.js",
+    "backend/wasm-worker-entry.js",
+    "result.schema.json",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "assets/*",
+    "wasm/generated/*"
+  ],
+  "bin": {
+    "ajisai-mcp-server": "index.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "sync:assets": "node sync-assets.js",
+    "check:assets": "node sync-assets.js --check",
+    "prepack": "node sync-assets.js --check",
+    "selftest": "node tool-description.test.js && node word-candidates.test.js && node tool-consistency.test.js && node selftest.js",
+    "test:pack": "node pack-smoke.js",
+    "eval:validate": "node validate-evaluation.js && node evaluation-contract.test.js && node capture-traces.test.js && node capture-repairs.test.js",
+    "eval:capture": "node capture-traces.js",
+    "eval:capture-repairs": "node capture-repairs.js",
+    "eval:performance": "node benchmark.js --require-budget",
+    "eval:number-baseline": "node number-baseline.js --require-ajisai-exact",
+    "eval:traces": "node score-traces.js --reference --require-perfect",
+    "eval:repairs": "node score-repairs.js eval/reference-repair-traces.json --require-perfect",
+    "test:backends": "node backend/parity-test.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0"
+  },
+  "devDependencies": {
+    "@anthropic-ai/sdk": "^0.116.0",
+    "ajv": "^8.18.0"
+  }
+}

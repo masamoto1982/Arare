@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ajisai": {
+      "command": "node",
+      "args": ["${CLAUDE_PROJECT_DIR:-.}/tools/mcp-server/index.js"]
+    }
+  }
+}
