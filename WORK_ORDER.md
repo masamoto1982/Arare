@@ -121,20 +121,20 @@ Ajisai の `spec/language-semantics.md` の LANG.VALUES.EXACT と同じ規則を
 | `src/`（Playground の GUI、約8,700行） | **改修** | エンジンとの境界である `src/wasm-interpreter-types.ts` を「差し替え口のインターフェース」に一般化する。Ajisai 用と Arare 用の2つの実装を持つ |
 | `src/wasm/generated/` | **改修** | Ajisai の WASM を `src/wasm/ajisai-oracle/` に移し、元の Ajisai のコミットの SHA を記録する。Arare の WASM は別の場所に生成する |
 | `src-tauri/` | **流用** | 名前の変更だけ行う |
-| `public/docs/`、`scripts/generate-word-reference.mjs` | **改修** | Reference を生成する仕組みは流用する。中身は Arare のものに差し替え、項目に「幅、スケール、誤差、field」を追加する |
-| `spec/` | **改修** | スキーマと生成の仕組み（`words.schema.json`、`generate-specification.mjs`）は流用する。中身は Arare の HLR に置き換える |
-| `rust/` | **置換** | `rust/src` は削除する。新しいクレート構成で作り直す（§8）。`Cargo.toml` の設定、`clippy.toml`、wasm-bindgen の境界の作り方、エージェント向け CLI の型は参考にする |
+| `public/docs/`、`scripts/generate-word-reference.mjs` | **改修** | Phase 0 では Ajisai の生成済み Reference をオラクル用にそのまま残し、生成器は削除した（PR-0008）。Phase 5 で `UPSTREAM.md` のコミットから生成器を移植し、項目に「幅、スケール、誤差、field」を追加する |
+| `spec/` | **改修** | Phase 0 では `host-protocol.schema.json`（Playground とエンジンの境界）だけを残し、Ajisai の仕様と生成器は削除した。生成の仕組み（`words.schema.json`、`generate-specification.mjs`）は Phase 1 で `UPSTREAM.md` のコミットから移植し、中身を Arare の HLR にする（PR-0008） |
+| `rust/` | **置換** | 済み：`rust/src` などを削除し、§8 のクレート構成の空のワークスペース（`rust/crates/`）にした。wasm-bindgen の境界の作り方とエージェント向け CLI の型は、`UPSTREAM.md` のコミットを参考にする |
 | `rust/src/**/*_proofs.rs`、`*_mcdc_tests.rs` | **型として流用** | 中身は削除するが、Kani のハーネスと MC/DC 表の書き方は Arare でも踏襲する |
 | `docs/quality/` | **改修** | DO-178C 風の計画書群に作り直す（§5.2） |
 | `docs/dev/`、`docs/showcase/`、`SPECIFICATION.html`、`SKILL.md`、`skill/` | **削除** | Ajisai の経緯資料と生成物なので持ち込まない。必要になれば Arare 用に再生成する |
 | `docs/i18n/` | **保留** | 日本語の要約を出す仕組みとして Phase 5 で判断する |
-| `tools/mcp-server/` | **保留** | Phase 6 まで CI から外す（ビルドも公開もしない）。`publish-mcp.yml` は無効にする |
+| `tools/mcp-server/` | **保留** | 済み：Ajisai の MCP サーバーをエージェント用のオラクルとして残し、CI から外した。`publish-mcp.yml` は削除した（PR-0007） |
 | `tools/lexicon-emergence/` | **削除** | |
-| `scripts/check-*.mjs` | **選別** | 流用するもの：traceability、coverage-ratchet、spec-citations、spec-version、version-sync、file-size-budget、contrast、reading-surfaces。Ajisai 固有のもの（nil-reason-lift、outcome-bijection、value-dependent-cost など）は削除し、必要になったら作り直す |
-| `scripts/bench/` | **改修** | ケースの形式（`speed-bench-cases.json`）を流用し、§6 の性能要件のケースを入れる |
+| `scripts/check-*.mjs` | **選別** | 済み：traceability、coverage-ratchet、version-sync、file-size-budget、contrast を Arare 用に改修して残した。spec-citations、spec-version、reading-surfaces は読む対象（Ajisai の仕様）がなくなったので削除し、Arare の仕様ができたら移植する。Ajisai 固有のものは削除した |
+| `scripts/bench/` | **改修** | Phase 0 では削除した（Ajisai のエンジンが前提だったため）。Phase 4 で、ケースの形式（`speed-bench-cases.json`）を `UPSTREAM.md` のコミットから移植し、§6 の性能要件のケースを入れる |
 | `.github/workflows/` | **改修** | `test.yml` の quality-gate（全ステップがマージを止める）と formal-verification ジョブの構造を流用する |
 | `.claude/hooks/session-start.sh` | **改修** | lexicon-emergence と MCP サーバーの手順を外し、Lean と Kani の準備を加える（§5.4） |
-| `.claude/skills/spec-impl-alignment/` | **改修** | Arare の spec と実装の照合用に書き換える |
+| `.claude/skills/spec-impl-alignment/` | **改修** | Phase 0 では削除した（Ajisai の仕様が前提だったため）。Arare の仕様ができたら（Phase 1 以降）、照合用に書き直す |
 | `public/images/Ajisai_QR_*`、バッジ類 | **削除・差し替え** | |
 | `LICENSE`（MIT） | **流用** | 著作権表示の年と名前を確認する。`THIRD-PARTY-LICENSES.md` は依存が変わるたびに更新する |
 | `.mcp.json` | **改修** | 当面は Ajisai の MCP サーバーをオラクル用に残してよい。Arare の MCP サーバーは Phase 6 で追加する |
@@ -277,13 +277,15 @@ oracle/            # Ajisai（固定したリビジョン）との差分試験
 
 ## 10. 最初のセッションで行う作業（Phase 0 の着手）
 
-1. ~~`UPSTREAM.md` を作り、`arare-baseline-0` のタグを付ける~~（ベースラインのコミットで済んでいる）。
-2. §4 の「削除」に当たるものを削除する。CI が壊れる箇所は一時的に無効にし、`docs/quality/` に問題報告として記録する。
-3. `src/wasm/generated/` を `src/wasm/ajisai-oracle/` に移し、Playground が Ajisai のエンジンで起動することを確かめる。
-4. `rust/` を空のワークスペース（§8 の骨組み）にし、`cargo fmt`、`clippy -D warnings`、`cargo test` が緑になるようにする。
-5. `formal/` に Lean 4 のプロジェクトを作り、ツールチェーンを固定する。空の定理を1つ CI で検査する。
-6. `docs/quality/` の計画書の骨子（§5.2）と、`CONFIGURATION_INDEX.md` の初版を書く。
-7. 名前を変える（`ajisai` → `arare`）。package.json、Cargo、Tauri の設定、README、`index.html`、バッジ。
+進捗（2026-10-28、ブランチ `claude/arare-phase-0`）：1〜7 は済み。8 はドラフトの PR として進行中。残した課題は `docs/quality/PROBLEM_REPORTS.md` にある。
+
+1. ~~`UPSTREAM.md` を作り、`arare-baseline-0` のタグを付ける~~（ベースラインのコミットで済んでいる。タグはリモートに未登録で、PR-0005）。
+2. ~~§4 の「削除」に当たるものを削除する~~。
+3. ~~`src/wasm/generated/` を `src/wasm/ajisai-oracle/` に移し、Playground が Ajisai のエンジンで起動することを確かめる~~。
+4. ~~`rust/` を空のワークスペース（§8 の骨組み）にする~~。
+5. ~~`formal/` に Lean 4 のプロジェクトを作り、ツールチェーンを固定する~~（Lean v4.34.0）。
+6. ~~`docs/quality/` の計画書の骨子と、`CONFIGURATION_INDEX.md` の初版を書く~~。
+7. ~~名前を変える~~。Playground 内部の識別子は Phase 5 で扱う（PR-0006）。
 8. 以上をドラフトの PR にまとめ、CI が緑になるまで直す。
 
 ---

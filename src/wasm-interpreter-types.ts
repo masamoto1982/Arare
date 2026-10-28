@@ -12,7 +12,8 @@ export type UserWordInfo = [name: string, hasDependents: boolean];
 /**
  * One entry of `collect_core_words_info`. `hoverSummary` is the button title
  * ("WORD — short verb phrase"); `hoverSyntax` is the shortest useful
- * invocation, operands included. See docs/dev/three-layer-documentation-model.md §4.
+ * invocation, operands included. See Ajisai's
+ * docs/dev/three-layer-documentation-model.md §4 (at the commit UPSTREAM.md names).
  */
 export type CoreWordInfo = [name: string, hoverSummary: string, hoverSyntax: string];
 
@@ -253,7 +254,7 @@ export interface TruncatedVector {
     digest: string;
 }
 
-// The shape of the generated wasm-bindgen module (`wasm/generated/ajisai_core.js`):
+// The shape of the generated wasm-bindgen module (`wasm/ajisai-oracle/ajisai_core.js`):
 // its exports are `initSync` and a `default` async initializer, plus the
 // interpreter class and the panic hook.
 export interface WasmModule {

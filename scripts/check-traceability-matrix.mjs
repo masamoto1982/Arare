@@ -1,16 +1,15 @@
 #!/usr/bin/env node
 // docs/quality/TRACEABILITY_MATRIX.md is the requirement -> implementation ->
-// verification link QUALITY_POLICY.md §2 requires and RELEASE_VERIFICATION_
-// CHECKLIST.md asks to be gap-free. Seven source files cite it by path.
+// verification link docs/quality/PLAN_OVERVIEW.md requires to be complete and
+// bidirectional (WORK_ORDER.md §5.1, principle 2).
 //
-// For most of the repository's history it did not exist: every one of those
-// citations was dangling, and nothing said so. Writing it down fixes that once.
-// This gate is what keeps it fixed, because a matrix drifts in two directions
-// and both had already happened by the time it was written:
+// Ajisai, which Arare started from, wrote its matrix years after its code and
+// had to reconstruct most requirement text from the suites. Arare writes the
+// matrix first, and this gate keeps it honest, because a matrix drifts in two
+// directions:
 //
 //   - a suite is deleted and its rows stay, leaving the matrix claiming
-//     coverage that is gone (AQ-VER-003-A, -003-B and -007-E were removed with
-//     their subjects, and no check noticed);
+//     coverage that is gone;
 //   - a suite is added with a fresh ID and no row, so the matrix silently
 //     stops being the whole picture.
 //
@@ -28,15 +27,17 @@ const matrixPath = 'docs/quality/TRACEABILITY_MATRIX.md';
 const RETIRED_HEADING = '## Retired verification IDs';
 const UNASSIGNED_HEADING = '## Unassigned requirement IDs';
 
-// Both shapes the repository writes: AQ-REQ-001, AQ-VER-001, AQ-VER-001-A.
-const ID_RE = /\bAQ-(?:REQ|VER)-\d{3}(?:-[A-Z]\d?)?\b/g;
+// The ID classes of docs/quality/STANDARDS.md: system, high-level, low-level,
+// inherited and performance requirements, and verification cases, each with an
+// optional case suffix (AR-HLR-001, AR-VER-001-A).
+const ID_RE = /\bAR-(?:SYS|HLR|LLR|INH|PERF|VER)-\d{3}(?:-[A-Z]\d?)?\b/g;
 
 // A backticked token counts as a path claim when it looks like one: it has a
 // separator and either an extension this repository uses or a trailing slash
 // (a directory). `LANG.FAILURE.PROJECT`, `safe_preview` and `npm run x` do not
 // match, which is the point.
 const PATH_RE = /`([A-Za-z0-9_.\-]+(?:\/[A-Za-z0-9_.\-]+)+\/?)`/g;
-const PATH_EXT = /\.(rs|ts|tsx|mjs|js|json|md|html|toml|yml)$/;
+const PATH_EXT = /\.(rs|ts|tsx|mjs|js|json|md|html|toml|yml|lean)$/;
 
 const report = reporter('traceability');
 function fail(message, detail) {
@@ -67,13 +68,17 @@ const closedText = matrixText.slice(firstCut);
 const liveIds = new Set(liveText.match(ID_RE) ?? []);
 const retiredIds = new Set((closedText.match(ID_RE) ?? []).filter((id) => !liveIds.has(id)));
 
-// The source corpus that may carry a verification ID. The matrix itself is
-// excluded so it cannot satisfy its own claims.
+// The corpus that may carry a requirement or verification ID: the
+// requirements themselves (spec/, docs/design/), the Rust crates, the Lean
+// model, the TypeScript shell and the scripts that gate performance. The
+// matrix itself is excluded so it cannot satisfy its own claims.
 const sourceFiles = [
-  ...walk(resolve(repoRoot, 'rust/src'), ['.rs']),
-  ...walk(resolve(repoRoot, 'rust/tests'), ['.rs']),
-  ...walk(resolve(repoRoot, 'rust/wasm-tests'), ['.rs']),
+  ...walk(resolve(repoRoot, 'spec'), ['.md', '.json']),
+  ...walk(resolve(repoRoot, 'docs/design'), ['.md']),
+  ...walk(resolve(repoRoot, 'rust/crates'), ['.rs']),
+  ...walk(resolve(repoRoot, 'formal'), ['.lean']),
   ...walk(resolve(repoRoot, 'src'), ['.ts', '.tsx']),
+  ...walk(resolve(repoRoot, 'scripts/bench'), ['.mjs', '.json']),
   resolve(repoRoot, 'vitest.config.ts'),
 ].filter((f) => existsSync(f));
 

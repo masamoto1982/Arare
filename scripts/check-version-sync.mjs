@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// The beta ships one version number. `package.json` is the source of truth and
-// every other manifest must repeat it exactly: the npm package, the
-// `ajisai-core` crate (which `ajisai version` prints through
+// Arare ships one version number. `package.json` is the source of truth and
+// every other manifest must repeat it exactly: the npm package, the Rust
+// workspace (every crate inherits it, and `arare` prints it through
 // `CARGO_PKG_VERSION`), the Tauri crate, and the Tauri application config.
 //
 // Distribution metadata that drifts is worse than no metadata: a bug report

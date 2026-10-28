@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 
-// AQ-REQ-004 / AQ-VER-004 — Vitest configuration for TypeScript-side
+// AR-INH-001 / AR-VER-001 — Vitest configuration for TypeScript-side
 // MC/DC tests. Kept intentionally minimal to mirror the Rust-side
 // `cargo test` ergonomics: no globals, no UI. Coverage is opt-in
 // (`npm run test:coverage`), measured with istanbul so the counts the

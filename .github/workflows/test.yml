@@ -1,32 +1,29 @@
-name: Test Ajisai
+name: Test Arare
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
+# Every step in every job is blocking (docs/quality/QUALITY_ASSURANCE_PLAN.md):
+# an advisory gate produces green checkmarks that certify nothing.
 jobs:
   quality-gate:
     name: Quality Gate
     runs-on: ubuntu-latest
-    # Every step here is blocking (R1-2). The staged rollout behind the
-    # AJISAI_STRICT_QUALITY repository variable served its purpose and was
-    # removed: an advisory-by-default gate produces green checkmarks that do
-    # not certify anything.
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
+      # rust/rust-toolchain.toml pins the stable toolchain; rustup installs it
+      # on the first cargo call, so the runner's own stable never builds Arare.
       - name: Install cargo-llvm-cov
         run: cargo install cargo-llvm-cov --locked
 
       - name: Rust format check
         working-directory: rust
-        run: cargo fmt --check
+        run: cargo fmt --all --check
 
       - name: Rust clippy (deny warnings)
         working-directory: rust
@@ -37,23 +34,9 @@ jobs:
         run: cargo test --all-targets --verbose
 
       - name: Rust branch coverage
-        # --branch expands to `-Z coverage-options=branch`, which only a
-        # nightly rustc accepts, so this step selects a nightly explicitly while
-        # the rest of the job stays on stable. Under the old advisory gate the
-        # step had been failing silently on stable since it was written; the
-        # blocking gate surfaced that on its first run.
-        #
-        # The instrumented run leaves its profiles in target/; the reports are
-        # read back from them without re-running the suite: JSON for the job
-        # summary below, LCOV and HTML as an artifact. No figure is a merge
-        # threshold (docs/quality/VERIFICATION_PLAN.md) — the numbers are
-        # evidence for a reviewer, not a gate.
-        #
-        # The QL-A / QL-B ratchet below compares these counts with a recorded
-        # baseline, so they must be reproducible: the nightly is pinned to the
-        # one docs/quality/coverage-baseline.json names (scripts/
-        # check-coverage-ratchet.mjs refuses a mismatch), and proptest's seed
-        # is fixed so property tests take the same inputs on every run.
+        # --branch needs a nightly rustc. The nightly is the one
+        # docs/quality/coverage-baseline.json names, and proptest's seed is
+        # fixed, so the counts the ratchet compares are reproducible.
         working-directory: rust
         env:
           PROPTEST_RNG_SEED: '20261010'
@@ -63,15 +46,12 @@ jobs:
           mkdir -p target/coverage
           cargo +nightly-2026-10-09 llvm-cov report --branch --json --summary-only --output-path target/coverage/coverage.json
           cargo +nightly-2026-10-09 llvm-cov report --branch --lcov --output-path target/coverage/lcov.info
-          cargo +nightly-2026-10-09 llvm-cov report --branch --html --output-dir target/coverage
 
       - name: Upload Rust coverage reports
         uses: actions/upload-artifact@v4
         with:
           name: rust-coverage
-          path: |
-            rust/target/coverage/lcov.info
-            rust/target/coverage/html/
+          path: rust/target/coverage/lcov.info
           if-no-files-found: error
           retention-days: 14
 
@@ -81,240 +61,19 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        # npm ci: reproducible install from the committed package-lock.json
-        # (R1-1); fails rather than silently re-resolving on lock drift.
         run: npm ci
 
-      - name: Install MCP adapter dependencies
-        # The adapter is an independently lockfile-pinned package. Installing
-        # it explicitly prevents a developer's nested node_modules directory
-        # from hiding lock drift or a missing runtime dependency.
-        run: npm ci --prefix tools/mcp-server
-
-      - name: Install ripgrep
-        # The semantic firewall greps the source with ripgrep. The runner does
-        # not ship it, and without it the firewall would pass without scanning
-        # (the script now hard-fails if rg is absent), so install it explicitly.
-        run: sudo apt-get update && sudo apt-get install -y ripgrep
-
-      - name: Semantic firewall
-        run: npm run check:semantic-firewall
-
-      - name: Rust file-size budget (§14.1)
-        # Enforces the SPECIFICATION §14.1 500-line budget mechanically: new or
-        # substantially-rewritten Rust files must stay at or under 500 lines, and
-        # the recorded over-budget baseline (docs/quality/file-size-baseline.json)
-        # may not grow by >=10%. See scripts/check-file-size-budget.mjs.
-        run: npm run check:file-size
-
-      - name: Reading surfaces describe the present language (LANG.AUTHORITY.PRESENT)
-        # The README, the Reference, and the Specification may name only Words the
-        # vocabulary registry still holds. Derived from the registry rather than a
-        # blocklist, so deleting a Word is enough to keep prose honest about it.
-        run: npm run check:reading-surfaces
-
-      - name: Reading surfaces restate the vocabulary counts of record (LANG.AUTHORITY.IDENTITY)
-        # Every count of Words a hand-written surface states (the Specification's
-        # count table, the Reference in both languages, the README) equals
-        # docs/word-manifest.json's. The Specification said 78 and 50 for a
-        # release after BOTH retired, because no gate read the prose.
-        run: npm run check:vocabulary-counts
-
-      - name: Playground colours meet WCAG contrast
-        # Every token the stylesheets use as text reaches 4.5:1 on the surfaces
-        # it is drawn on, and focus rings and the top-of-stack edge reach 3:1.
-        # A text colour the check does not measure fails it.
-        run: npm run check:contrast
-
-      - name: Reference samples produce the values printed beside them
-        # Every sample block in the Reference carries a "Playgroundで開く" button,
-        # so a reader runs it. Two COND examples dispatched on one-element
-        # Vectors, so their guards answered [ FALSE ] / [ TRUE ] instead of a
-        # bare Boolean and both raised nonTruthGuard — the language's two
-        # introductory examples of conditional dispatch, neither of which ran.
-        # SKILL.md and the MCP corpus were already gated this way; the
-        # Reference was the surface that was not.
-        run: npm run check:reference-samples
-
-      - name: Check the canonical lexical grammar
-        # spec/grammar.json is executed, not just read: the gate runs the
-        # grammar over its own numeric examples and over one witness per
-        # source-error condition, and closes it against spec/outcomes.json and
-        # the word manifest. The other half of the proof is the Rust side,
-        # rust/src/lexical_grammar_laws.rs, which holds the tokenizer to the
-        # same file and the same witnesses under `cargo test`.
-        run: npm run check:grammar
-
-      - name: Check the canonical termination argument
-        # spec/termination.json states why every evaluation is finite. This
-        # gate closes it both ways against spec/words.json's cost classes: a
-        # Word whose cost.steps.class is "unbounded" is one whose step count is
-        # decided by a block it is given, so it must be a declared recursion
-        # site, and a declared Word-shaped site must carry that cost class.
-        # Adding a block-evaluating Word therefore cannot silently escape the
-        # argument. The behavioural half is rust/tests/termination_laws.rs.
-        run: npm run check:termination
-
-      - name: Check the canonical identity law
-        # spec/identity.json states one law — identity is denotation — and what
-        # each of the three levels that decide it can deliver. This gate holds
-        # every partial level to saying how it is partial, so a procedure that
-        # cannot answer "different" cannot quietly be read as answering it.
-        # Content identity is the one that matters: the host deduplicates user
-        # words on import by it, which is sound only in the equal direction.
-        # The behavioural half is rust/src/identity_laws.rs.
-        run: npm run check:identity
-
-      - name: Verify generated specification surfaces are in sync
-        # The Word reference and Core hover contracts are generated from
-        # spec/words.json. None of these were gated in CI, which is how a stale
-        # generated surface and a broken word-schema checker both went unnoticed.
-        run: |
-          npm run semantic-kernel:check
-          npm run word-schema:check
-          npm run word:reference:check
-          npm run word-registry:check
-          npm run specification:check
-
-      - name: Verify committed word manifest is in sync
-        # Drift guard: the committed docs/word-manifest.json must match what the
-        # generator produces from the Rust sources. Checking (instead of silently
-        # regenerating) is what catches a missing word like SUPERVISE.
-        run: npm run word:manifest:check
-
-      - name: Conformance suite covers the vocabulary and the outcomes
-        # Every Core and Module word in docs/word-manifest.json must appear in
-        # at least one conformance case, so a word can't go untested silently;
-        # running every case must reach every NIL reason and every error
-        # category of spec/outcomes.json but the two exempted with a reason;
-        # and every case's data-category must be a Word family or `language`.
-        # See scripts/check-conformance-coverage.mjs.
-        run: npm run check:conformance-coverage
-
-      - name: Verify committed SKILL.md is in sync
-        # SKILL.md is generated (never hand-written): the generator executes
-        # every embedded snippet through the ajisai CLI, so this step both
-        # catches a stale committed copy and proves the guide still matches
-        # the implementation. The cargo target dir is already warm from the
-        # test steps above, so the CLI build is incremental.
-        run: |
-          cargo build --bin ajisai --manifest-path rust/Cargo.toml
-          npm run check:skill
-
-      - name: Outcome registry matches the Rust enums and spec/words.json
-        # spec/outcomes.json is the single declaration of every NIL reason and
-        # error category; this projects NilReason/ErrorCategory from it and
-        # checks every words.json projection.reason/errorWhen resolves into it.
-        # See scripts/check-outcome-registry.mjs.
-        run: npm run outcome-registry:check
-
-      - name: Exhaustive semantics table is in sync
-        # 65語 × 入力ドメイン組の全数表。契約（spec/words.json）と実装の乖離を
-        # 総当たりで検出し、同時に AI 向けの完全な意味論資産になる。
-        run: npm run semantics:table:check
-
-      - name: Outcome registry is a bijection with observed behavior
-        # Soundness (every outcome the table or a witness observes resolves
-        # into spec/outcomes.json) and non-vacuity (every declared id has at
-        # least one witness) — two properties the exhaustive table alone
-        # cannot establish, since it only ever runs one Word against one
-        # input-domain tuple. spec/outcome-witnesses.json supplies the
-        # multi-statement, resource-ceiling-dependent, and no-domain-reaches-
-        # it cases by hand, executed for real, not string-matched.
-        # See scripts/check-outcome-bijection.mjs.
-        run: npm run outcome-bijection:check
-
-      - name: Every Word's outcomes lie in its own declared repertoire
-        # LANG.MACHINE.WORD's "the executor must refine its contract", at the
-        # per-Word level the two gates above do not reach: they ask whether an
-        # observed outcome resolves to a registered id and whether every id is
-        # observed somewhere, both registry-wide. Neither asks whether ADD
-        # fails with a category ADD's own contract declares. MIN and MAX raised
-        # a length-mismatch category their contracts did not name, with
-        # every gate green.
-        run: npm run word-outcome-containment:check
-
-      - name: A NIL lane keeps its reason through the element-wise lift
-        # LANG.COLLECTIONS.LIFT: "each lane preserves the exactness, truth,
-        # NIL, and ERROR distinctions of the scalar law". The scalar law is
-        # passthrough with the reason intact (`-1 SQRT 1 ADD` is still
-        # NIL(domainMiss)); this executes the lifted law and checks it
-        # says the same thing lane for lane. Catches both ways a lane can
-        # lose: the reason going missing (a lane rebuilt from numbers only
-        # drops it, so the NIL re-reports as `literal`) and the absence
-        # itself going missing (a lift that read a NIL lane as some number
-        # would compute with it and answer an observable scalar).
-        run: npm run nil-reason-lift:check
-
-      - name: Check formalization coverage
-        run: npm run check:formalization-coverage
-
-      - name: Check Minimal Core closure
-        run: npm run check:minimal-core
-
-      - name: Contract fields are reachable, not declared and unread
-        run: npm run check:unreachable-contract
-
-      - name: docs/dev/ load-bearing memos name symbols that still exist
-        # `[設計根拠]`/`[方針記録]` memos (docs/dev/INDEX.md) are read as
-        # load-bearing rather than a point-in-time snapshot. This is the same
-        # question as the step above, run the other direction: a memo's
-        # claim about a Rust type/variant or function must still be true of
-        # rust/src, rust/tests, or src. See scripts/check-docs-dev-drift.mjs.
-        run: npm run check:docs-dev-drift
-
-      # docs/quality/TRACEABILITY_MATRIX.md is the requirement-to-verification
-      # link QUALITY_POLICY.md requires and seven source files cite by path. It
-      # was missing entirely until it was written, so every citation dangled;
-      # this keeps each end of every row reachable from the other.
-      - name: Check the traceability matrix against the source
+      - name: Traceability matrix against the source
         run: npm run check:traceability
-
-      - name: No citations to the retired numbered specification
-        # SPECIFICATION.md (17 numbered sections) was deleted in 3f21400c;
-        # the current specification publishes stable LANG.* clause IDs so a
-        # citation survives reorganization. See scripts/check-spec-citations.mjs.
-        run: npm run check:spec-citations
 
       - name: Package, crate and Tauri versions agree
         run: npm run check:version-sync
 
-      - name: The specification version moves with the specification (LANG.AUTHORITY.SOURCES)
-        # spec/version-lock.json records the specification version and the
-        # digests of the sources it covers. Measured against the pull
-        # request's base, or the push's previous head: a change to the
-        # machine-read specification under an unchanged version fails, and so
-        # does a change to the specification with no spec/CHANGELOG.md entry.
-        # The version stayed 1.0.0-beta.1 through a week of breaking changes
-        # before this step existed. The checkout is shallow, so the base
-        # commit is fetched first; a base that predates the lock checks only
-        # the tree's own consistency.
-        env:
-          SPEC_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: |
-          if [ -n "$SPEC_BASE" ] && ! [[ "$SPEC_BASE" =~ ^0+$ ]]; then
-            git fetch --no-tags --depth=1 origin "$SPEC_BASE"
-          fi
-          npm run check:spec-version -- --base "$SPEC_BASE"
+      - name: Rust file-size budget
+        run: npm run check:file-size
 
-      - name: The specification version rule's own tests
-        run: npm run test:scripts
-
-      - name: Cost axes say when they grow with an algebraic value
-        # `cost.<axis>.valueDependent` is set by measurement: every Word that
-        # can be handed a number runs on a rational, a 7-term and a 16-term
-        # algebraic operand, and the flag must be present exactly where the
-        # charge grows. See scripts/check-value-dependent-cost.mjs.
-        run: npm run check:value-dependent-cost
-
-      - name: Runtime Core Word metadata is the generated registry, not authored
-        # The runtime view reads the generated registry entry directly, never
-        # a copy of it and never a second place to write language facts down.
-        # A hand-authored table alongside it is what let two branches disagree
-        # about Core Word metadata and produce a tree that would not compile.
-        # This asserts the shape structurally, so a copy or a parallel table
-        # fails here whatever it is named — see scripts/check-runtime-metadata-source.mjs.
-        run: npm run check:runtime-metadata
+      - name: Playground colours meet WCAG contrast
+        run: npm run check:contrast
 
       - name: TypeScript check
         run: npm run check
@@ -322,10 +81,7 @@ jobs:
       - name: ESLint
         run: npm run lint
 
-      - name: TypeScript MC/DC tests (Vitest, with coverage)
-        # The same suite `npm test` runs, instrumented by istanbul (see
-        # vitest.config.ts). Istanbul counts from the source, so the figures do
-        # not move with the Node version, which the ratchet below relies on.
+      - name: TypeScript tests (Vitest, with coverage)
         run: npm run test:coverage
 
       - name: Upload TypeScript coverage reports
@@ -337,8 +93,6 @@ jobs:
           retention-days: 14
 
       - name: Coverage summary
-        # Rust and TypeScript totals, and every file the traceability matrix
-        # names as a requirement's implementation, into the job summary.
         run: >-
           node scripts/coverage-summary.mjs
           --rust rust/target/coverage/coverage.json
@@ -346,198 +100,24 @@ jobs:
           >> "$GITHUB_STEP_SUMMARY"
 
       - name: QL-A / QL-B coverage ratchet
-        # Blocking: no Rust or TypeScript file implementing a QL-A or QL-B
-        # requirement may lose branch or line coverage against
-        # docs/quality/coverage-baseline.json. A change that legitimately moves
-        # a figure re-records the baseline in the same diff — see
-        # scripts/check-coverage-ratchet.mjs.
         run: npm run check:coverage-ratchet
 
-      - name: MCP protocol and real-backend integration
-        # Blocking: builds the actual Rust CLI, drives the server through an
-        # in-memory MCP transport, and validates compute/diagnostic/contract
-        # results against the same published JSON Schema clients receive.
-        run: |
-          npm run check:agent-cli-contract
-          npm run check:mcp-assets
-          npm run check:mcp-evaluation
-          npm run test:mcp
-          npm run test:mcp-backends
-          npm run test:mcp-pack
-          npm run eval:mcp-performance
-          npm run eval:mcp-number-baseline
-          npm run eval:mcp-traces
-          npm run eval:mcp-repairs
+      - name: Playground builds
+        run: npm run build
 
-  rust-test:
-    name: Rust Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache cargo dependencies
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            rust/target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Rust native check (Core build, no wasm deps)
-        working-directory: rust
-        run: cargo check
-
-      # The Rust test suite itself runs once, in the quality-gate job
-      # (`cargo test --all-targets`); this job covers the wasm-feature builds
-      # and the committed-bundle checks the gate does not.
-      - name: Verify WASM build
-        working-directory: rust
-        run: |
-          rustup target add wasm32-unknown-unknown
-          cargo check --features wasm --target wasm32-unknown-unknown
-
-      # The step above builds the wasm target's *library* only. Test code
-      # behind `#[cfg(test)]` is not a library target, so nothing here
-      # compiled the test modules that the `wasm` feature gates — and one of
-      # them rotted unnoticed against a `types::Interpretation` variant that
-      # had been removed, for as long as it took someone to run
-      # `--all-targets` by hand.
-      #
-      # This closes that gap on the host target rather than on wasm32,
-      # because `--all-targets` there drags the dev-dependencies in too and
-      # `getrandom` has no wasm32 backend without extra configuration. The
-      # host target type-checks the same `#[cfg(feature = "wasm")]` code,
-      # which is what was going unchecked; wasm32-specific codegen stays the
-      # step above's job.
-      - name: Verify WASM-gated test code still compiles
-        working-directory: rust
-        run: cargo check --all-targets --features wasm
-
-      - name: Cache wasm-pack
-        uses: actions/cache@v5
-        with:
-          path: ~/.cargo/bin/wasm-pack
-          key: ${{ runner.os }}-wasm-pack-0.13.1
-
-      - name: Detect stale committed wasm bundle (advisory)
-        # Build the wasm bundle the same way the deploy workflow does and
-        # compare against the committed copy. This is advisory only: even
-        # if the committed bundle is stale, the deploy workflow rebuilds
-        # before publishing, so production stays fresh. The warning exists
-        # so reviewers know `npm run build:wasm` is needed for local dev to
-        # match production.
-        continue-on-error: true
-        run: |
-          set -e
-          if ! command -v wasm-pack >/dev/null 2>&1; then
-            bash ./scripts/install-wasm-pack.sh || {
-              echo "::warning::wasm-pack install failed during stale-bundle check; skipping diff."
-              exit 0
-            }
-          fi
-          bash ./scripts/rebuild-wasm.sh > /tmp/rebuild-wasm.log 2>&1 || {
-            cat /tmp/rebuild-wasm.log
-            echo "::warning::wasm rebuild failed during stale-bundle check; skipping diff."
-            exit 0
-          }
-          if ! git diff --quiet -- src/wasm/generated/; then
-            echo "::warning::Committed src/wasm/generated/ bundle is stale relative to the Rust source."
-            echo "::warning::Run \`npm run build:wasm\` and commit the result so local dev matches production."
-            git --no-pager diff --stat -- src/wasm/generated/
-          else
-            echo "Committed wasm bundle matches a fresh build."
-          fi
-
-      - name: Detect stale committed MCP wasm bundle (advisory)
-        # Same idea as the browser bundle above, for the Node worker_threads
-        # WASM backend (tools/mcp-server/wasm/generated/, `--target nodejs`).
-        # Advisory only: `backend/parity-test.js` (blocking, quality-gate job)
-        # already proves the committed bundle behaves identically to the
-        # native backend; this only flags that a rebuild would produce
-        # different bytes.
-        continue-on-error: true
-        run: |
-          set -e
-          if ! command -v wasm-pack >/dev/null 2>&1; then
-            bash ./scripts/install-wasm-pack.sh || {
-              echo "::warning::wasm-pack install failed during MCP stale-bundle check; skipping diff."
-              exit 0
-            }
-          fi
-          bash ./scripts/rebuild-mcp-wasm.sh > /tmp/rebuild-mcp-wasm.log 2>&1 || {
-            cat /tmp/rebuild-mcp-wasm.log
-            echo "::warning::MCP wasm rebuild failed during stale-bundle check; skipping diff."
-            exit 0
-          }
-          if ! git diff --quiet -- tools/mcp-server/wasm/generated/; then
-            echo "::warning::Committed tools/mcp-server/wasm/generated/ bundle is stale relative to the Rust source."
-            echo "::warning::Run \`npm run build:mcp-wasm\` and commit the result."
-            git --no-pager diff --stat -- tools/mcp-server/wasm/generated/
-          else
-            echo "Committed MCP wasm bundle matches a fresh build."
-          fi
-
-  # `npm run check` and `npm test` run once, as blocking steps of the
-  # quality-gate job above; the separate TypeScript Check job that repeated
-  # them was removed on 2026-09-30.
-  wasm-boundary-tests:
-    name: WASM Boundary Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Setup Rust (with wasm target)
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: '20'
-
-      - name: Cache wasm-pack
-        uses: actions/cache@v5
-        with:
-          path: ~/.cargo/bin/wasm-pack
-          key: ${{ runner.os }}-wasm-pack-0.13.1
-
-      - name: Install wasm-pack
-        run: bash ./scripts/install-wasm-pack.sh
-
-      # Drives the real wasm-bindgen boundary (AjisaiInterpreter -> collect_stack)
-      # in Node. Lives in a standalone crate so the main package's proptest
-      # dev-dep (which does not build for wasm32) never enters the graph.
-      - name: Run WASM boundary tests
-        working-directory: rust/wasm-tests
-        run: wasm-pack test --node
-
-  formal-verification:
+  formal-verification-kani:
     name: Formal Verification (Kani)
     runs-on: ubuntu-latest
     # A solver that does not finish should fail the run, not hold it for the
-    # six-hour default; every harness today is done in under fifteen minutes.
+    # six-hour default.
     timeout-minutes: 60
-    # Bounded model checking of the harnesses under `cfg(kani)`
-    # (docs/quality/FORMAL_VERIFICATION.md). Each passing harness is a proof
-    # over every input it names, which the sampled property tests are not.
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      # Kani pins its own nightly toolchain and solvers; the version is
-      # pinned here so a Kani release cannot change what is proved. The
-      # install builds from source and the setup downloads the toolchain, so
-      # both are cached under the pinned version.
+      # Kani pins its own nightly and solvers; its version is pinned here and
+      # in docs/quality/CONFIGURATION_INDEX.md so a Kani release cannot change
+      # what is proved.
       - name: Cache Kani
         id: kani-cache
         uses: actions/cache@v5
@@ -557,3 +137,30 @@ jobs:
       - name: Prove every harness
         working-directory: rust
         run: cargo kani --jobs --output-format terse
+
+  formal-verification-lean:
+    name: Formal Verification (Lean)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Cache the Lean toolchain
+        uses: actions/cache@v5
+        with:
+          path: ~/.elan
+          key: ${{ runner.os }}-elan-${{ hashFiles('formal/lean-toolchain') }}
+
+      # elan reads formal/lean-toolchain and installs exactly that toolchain.
+      - name: Install elan
+        run: |
+          if [ ! -x "$HOME/.elan/bin/elan" ]; then
+            curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh \
+              | sh -s -- -y --default-toolchain none
+          fi
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Check every proof
+        working-directory: formal
+        run: lake build
