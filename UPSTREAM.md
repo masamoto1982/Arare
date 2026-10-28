@@ -7,7 +7,7 @@ Arare starts from the content of Ajisai, not its history (WORK_ORDER.md D-17).
 | Upstream repository | https://github.com/masamoto1982/Ajisai |
 | Upstream commit | `4d5f693def073b303d7ede3a98b3e9fa15060601` (merge of masamoto1982/Ajisai#1917, 2026-10-23) |
 | Upstream version | implementation 1.0.0-beta.3, specification 1.0.0-beta.3 |
-| Imported | 2026-10-28, as the single commit tagged `arare-baseline-0` |
+| Imported | 2026-10-28, as the single commit `481dc6cac9e70df776b4cf0dec3b224bb1b47629` (untagged) |
 | License | MIT, carried over unchanged (`LICENSE`) |
 
 The baseline commit holds the upstream tree byte for byte, plus three files that
