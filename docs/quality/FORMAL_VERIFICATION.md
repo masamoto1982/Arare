@@ -18,20 +18,47 @@ exactly where it is stated, and nowhere else.
 
 ## Status
 
-**Phase 0: nothing about Arare's semantics is proved yet.**
+**Phase 1: the value model is proved; no implementation exists yet to hold
+to it.** 80 theorems in `formal/Arare/`, each resting only on `propext`,
+`Classical.choice` and `Quot.sound` (`npm run check:formal` runs
+`scripts/check-formal-axioms.mjs` after `lake build`, because `lake build`
+alone accepts `sorry`). Every theorem is cited by a requirement in
+`spec/requirements.json`, and every QL-A requirement on values cites at least
+one (`npm run check:requirements`).
 
-- `formal/Arare/Basic.lean` holds one placeholder theorem,
-  `Arare.toolchain_live`, so the Lean CI job has something to check. It proves
-  nothing about Arare.
-- The Rust workspace has no Kani harness. `cargo kani` exits successfully when
-  it finds none, so the Kani CI job is green without proving anything; the
-  first harnesses arrive with the kernels in Phase 2
-  (`PROBLEM_REPORTS.md`, PR-0003).
+| File | Verification ID | What is proved | Requirements |
+|---|---|---|---|
+| `formal/Arare/Codes.lean` | AR-VER-101 | The code layout for every half-range M ≥ 2: values and codes are in bijection apart from the one unused code, negation stays in range; `fit` (NARROW and the widest-width limit) answers the exact value or 1/0, never a wrapped one | AR-HLR-001, 002, 004, 009 |
+| `formal/Arare/Wheel.lean` | AR-VER-102 | The exact domain ℤ ∪ {1/0, 0/0}: the reciprocal-free wheel axioms (both commutative monoids, Carlström's distributive law, `0·0 = 0`, `(x + 0y)z = xz + 0y`, `0/0` absorbing); the ring laws that fail at the points; finite arithmetic is ℤ's; a point never turns finite under `+ − ·` and negation; the division rules and the half-unit bound of DIV | AR-HLR-003, 005, 006, 007 |
+| `formal/Arare/Rounding.lean` | AR-VER-103 | Round half to even as an integer quotient: within half a unit, ties to even, exact quotients unchanged; RESCALE within half an ulp, RESCALE by 0 the identity; DIV's bound for either sign of divisor | AR-HLR-007, 008 |
+| `formal/Arare/Truth.lean` | AR-VER-104 | Strong Kleene: AND the meet and OR the join of FALSE < UNKNOWN < TRUE, NOT the reversing involution; commutative, associative, idempotent, absorptive, distributive, De Morgan, Kleene's law; excluded middle fails at UNKNOWN | AR-HLR-012 |
+| `formal/Arare/Closed.lean` | AR-VER-105 | Over an expression language of literals, points, `+ − ·`, negation and DIV: closed code computes the exact integer; a machine that fits every intermediate into the widest width answers that integer or a point, never another finite number, and the exact integer when nothing overflows; associativity does not survive an intermediate overflow | AR-HLR-003, 004, 017 |
+| `formal/Arare/Sql.lean` | AR-VER-106 | NIL in truth position is UNKNOWN; EQ always decided; order of a point UNKNOWN; FILTER keeps exactly the TRUE elements; a branch takes THEN only on TRUE; SUM skips NIL and is NIL when nothing is left | AR-HLR-010, 011, 013, 014, 015, 016 |
 
-The theorems Phase 1 and Phase 3 owe are listed in WORK_ORDER.md §5.4:
-the wheel axioms over the value codes, the strong Kleene truth lattice,
-agreement with ℤ inside `field=closed` code, the half-ulp bound on RESCALE,
-and the soundness of error-budget inference.
+### What is not proved
+
+Read these as open, not as proved by implication:
+
+- **Scales and width selection.** The model computes on codes at one common
+  scale. Aligning scales before ADD and SUB, adding exponents in MUL, choosing
+  DIV's result scale and choosing the narrowest width are tested from Phase 2,
+  not proved (AR-HLR-001, 003, 007).
+- **Equality across widths and scales**, and MIN, MAX and SORT on points, are
+  not modelled (AR-HLR-010, 011).
+- **Agreement with Ajisai.** The model does not contain Ajisai's wheel of
+  fractions, so that Arare's rules are Ajisai's restricted to fixed point is
+  argued in ADR-0003, not proved; the oracle comparison of Phase 2 checks it
+  empirically.
+- **The reciprocal wheel axioms** do not hold for fixed point and are not
+  claimed (ADR-0003).
+- **NARROW inside expressions.** `Closed.lean`'s language has no NARROW; its
+  `fit` is the widest-width limit. NARROW on its own is AR-VER-101.
+- **The static range proof** that makes code `field=closed` (AR-HLR-017) and
+  the error budget are Phase 3.
+- **Aggregates other than SUM** and the Arrow layout (AR-HLR-019, exempt from
+  proof by its nature) are Phase 2 tests.
+- **The implementation.** No Rust code exists yet; there is no Kani harness
+  and `cargo kani` passes when it finds none (PR-0003).
 
 ## Running
 

@@ -30,8 +30,10 @@
     "check:version-sync": "node scripts/check-version-sync.mjs",
     "vendor:katex": "rm -rf public/vendor/katex && mkdir -p public/vendor/katex/contrib public/vendor/katex/fonts && cp node_modules/katex/dist/katex.min.css node_modules/katex/dist/katex.min.js public/vendor/katex/ && cp node_modules/katex/dist/contrib/auto-render.min.js public/vendor/katex/contrib/ && cp node_modules/katex/dist/fonts/*.woff2 public/vendor/katex/fonts/ && cp node_modules/katex/LICENSE public/vendor/katex/LICENSE && node scripts/vendor-katex-banner.mjs",
     "check:rust": "cargo fmt --manifest-path rust/Cargo.toml --all --check && cargo clippy --manifest-path rust/Cargo.toml --all-targets -- -D warnings && cargo test --manifest-path rust/Cargo.toml --all-targets",
-    "check:formal": "cd formal && lake build",
-    "check:gates": "npm run check:traceability && npm run check:version-sync && npm run check:file-size && npm run check:contrast"
+    "check:formal": "cd formal && lake build && cd .. && node scripts/check-formal-axioms.mjs",
+    "check:gates": "npm run check:requirements && npm run check:traceability && npm run check:version-sync && npm run check:file-size && npm run check:contrast",
+    "check:requirements": "node scripts/check-requirements.mjs && node scripts/generate-requirements.mjs --check",
+    "requirements:generate": "node scripts/generate-requirements.mjs"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

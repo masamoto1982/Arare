@@ -1,0 +1,579 @@
+{
+  "_comment": [
+    "Arare's requirements registry (docs/quality/STANDARDS.md). spec/REQUIREMENTS.md and the generated",
+    "block of docs/quality/TRACEABILITY_MATRIX.md are produced from this file by",
+    "scripts/generate-requirements.mjs; scripts/check-requirements.mjs checks it. Lean theorem names",
+    "are fully qualified."
+  ],
+  "requirements": [
+    {
+      "id": "AR-SYS-001",
+      "title": "Stack syntax",
+      "statement": "Arare programs are sequences of Words on a stack, as in Ajisai, so that one source text runs in both languages and the Playground's stack view, step execution, vocabulary panel and Reference apply unchanged.",
+      "source": "WORK_ORDER.md D-01"
+    },
+    {
+      "id": "AR-SYS-002",
+      "title": "Fixed-point numbers",
+      "statement": "Numbers are fixed-width fixed-point values; the default storage widths are int8, int16 and int32. Arare does not represent numbers as residues over primes by default.",
+      "source": "WORK_ORDER.md D-02"
+    },
+    {
+      "id": "AR-SYS-003",
+      "title": "Primes with cheap reduction",
+      "statement": "Where Arare computes modulo a prime, the prime is one whose reduction is cheap: Mersenne31, Goldilocks or BabyBear. Such primes serve a wide-precision mode, NTT convolution and Halton dither only.",
+      "source": "WORK_ORDER.md D-03"
+    },
+    {
+      "id": "AR-SYS-004",
+      "title": "Two execution routes",
+      "statement": "Arare has a reference interpreter, slow and step-through, and an ahead-of-time compiler to native code and WASM SIMD128. Performance requirements bind the compiled route.",
+      "source": "WORK_ORDER.md D-04"
+    },
+    {
+      "id": "AR-SYS-005",
+      "title": "Strong Kleene truth",
+      "statement": "Truth is the strong Kleene logic of SQL, as in Ajisai: TRUE, FALSE and UNKNOWN, where UNKNOWN is NIL read in truth position.",
+      "source": "WORK_ORDER.md D-05"
+    },
+    {
+      "id": "AR-SYS-006",
+      "title": "Arrow layout",
+      "statement": "Truth values and NIL are laid out in memory as Apache Arrow lays them out, so that data crosses into Arrow-based SQL engines without a copy.",
+      "source": "WORK_ORDER.md D-06"
+    },
+    {
+      "id": "AR-SYS-007",
+      "title": "SQL branch on UNKNOWN",
+      "statement": "A branch whose condition is UNKNOWN takes its ELSE side, as SQL's CASE does. This departs from Ajisai's SELECT on purpose.",
+      "source": "WORK_ORDER.md D-07"
+    },
+    {
+      "id": "AR-SYS-008",
+      "title": "SQL aggregation",
+      "statement": "An aggregate skips NIL, as SQL's aggregates do; an aggregate with nothing left to aggregate is NIL.",
+      "source": "WORK_ORDER.md D-08"
+    },
+    {
+      "id": "AR-SYS-009",
+      "title": "Wheel points",
+      "statement": "Arare keeps the wheel's two points, 0/0 and 1/0. 1/0 marks a value outside the representable range, so overflow is never silent.",
+      "source": "WORK_ORDER.md D-09"
+    },
+    {
+      "id": "AR-SYS-010",
+      "title": "Numbers are not absence",
+      "statement": "0/0 and 1/0 are numbers; NIL is absence. Asking the order of a wheel point is UNKNOWN.",
+      "source": "WORK_ORDER.md D-10"
+    },
+    {
+      "id": "AR-SYS-011",
+      "title": "Where NIL keeps its reason",
+      "statement": "The reference interpreter keeps the reason a NIL carries; the compiled route keeps the validity bit only.",
+      "source": "WORK_ORDER.md D-11"
+    },
+    {
+      "id": "AR-SYS-012",
+      "title": "The field contract",
+      "statement": "A contract says field=closed exactly when it is statically proved that the code neither overflows nor divides by zero.",
+      "source": "WORK_ORDER.md D-12"
+    },
+    {
+      "id": "AR-SYS-013",
+      "title": "One Playground shell",
+      "statement": "The Playground is one shell with an engine adapter; Ajisai runs in it as the oracle beside Arare.",
+      "source": "WORK_ORDER.md D-13"
+    },
+    {
+      "id": "AR-SYS-014",
+      "title": "Faster than Ajisai",
+      "statement": "Arare exists to be fast where Ajisai is slow; a build that misses a performance requirement (AR-PERF) is not complete.",
+      "source": "WORK_ORDER.md §1.2"
+    },
+    {
+      "id": "AR-HLR-001",
+      "title": "Widths and scales",
+      "statement": "A number has a width of 8, 16, 32 or 64 bits and a scale exponent e; its value is its code times 2^e. Widths 8, 16 and 32 are storage widths; 64 is the widest width arithmetic widens into and is never a storage default. A width of N bits has half-range M = 2^(N−1).",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-002"
+      ],
+      "derived": true,
+      "rationale": "The 64-bit width is not in WORK_ORDER.md D-02; it exists so that widening has a fixed ceiling (ADR-0001, Q-06).",
+      "verification": {
+        "lean": [
+          "Arare.encode_range"
+        ],
+        "planned": "Phase 2: width and scale bookkeeping in arare-kernel, by requirements-based tests against arare-spec."
+      }
+    },
+    {
+      "id": "AR-HLR-002",
+      "title": "Value codes",
+      "statement": "For a width with half-range M, code −M is 0/0, code M−1 is 1/0, the finite numbers are the codes in [−(M−2), M−2], and code −(M−1) is never produced. Every value has exactly one code and every code but −(M−1) is the code of exactly one value. Negation keeps a finite number inside the finite range.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-009",
+        "AR-SYS-010"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.decode_encode",
+          "Arare.encode_range",
+          "Arare.encode_decode",
+          "Arare.neg_valid"
+        ]
+      }
+    },
+    {
+      "id": "AR-HLR-003",
+      "title": "Exact integer arithmetic",
+      "statement": "ADD, SUB, MUL and NEG of finite numbers compute the exact result. Before ADD and SUB the operand with the larger scale exponent is shifted to the smaller one, which is exact; MUL adds the exponents. The result takes the narrowest of the four widths whose finite range holds the result's statically inferred range. A wheel point that enters ADD, SUB, MUL or NEG never comes out as a finite number.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-002",
+        "AR-SYS-009"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.W.fin_add",
+          "Arare.W.fin_sub",
+          "Arare.W.fin_mul",
+          "Arare.W.fin_neg",
+          "Arare.W.add_point_left",
+          "Arare.W.add_point_right",
+          "Arare.W.mul_point_left",
+          "Arare.W.mul_point_right",
+          "Arare.W.neg_point",
+          "Arare.Expr.closed_evalW"
+        ],
+        "planned": "Phase 2: scale alignment and width selection, by tests against arare-spec; the static range inference behind width selection is Phase 3."
+      }
+    },
+    {
+      "id": "AR-HLR-004",
+      "title": "Overflow is 1/0",
+      "statement": "An arithmetic result outside the finite range of the widest width is 1/0. No arithmetic result wraps around: whatever a machine answers is either the exact value or a wheel point. Associativity of addition holds for the exact values but not across an intermediate overflow.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-009"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.fit_valid",
+          "Arare.fit_exact_or_inf",
+          "Arare.Expr.closed_evalM_of_fits",
+          "Arare.Expr.closed_evalM_sound",
+          "Arare.Expr.machine_add_not_assoc"
+        ]
+      }
+    },
+    {
+      "id": "AR-HLR-005",
+      "title": "The wheel points under addition",
+      "statement": "0/0 plus anything is 0/0; 1/0 plus a finite number is 1/0; 1/0 plus 1/0 is 0/0; 1/0 is its own negation. Addition is commutative and associative with identity 0 over the exact values, wheel points included. x − x is 0 for every finite x but not for 1/0, and an implementation does not restore it by special case.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-009"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.W.add_comm",
+          "Arare.W.add_assoc",
+          "Arare.W.add_zero",
+          "Arare.W.bot_add",
+          "Arare.W.neg_neg",
+          "Arare.W.inf_sub_inf",
+          "Arare.W.not_sub_self"
+        ]
+      }
+    },
+    {
+      "id": "AR-HLR-006",
+      "title": "The wheel points under multiplication",
+      "statement": "0/0 times anything is 0/0; 1/0 times a nonzero finite number or 1/0 is 1/0; 1/0 times 0 is 0/0. Multiplication is commutative and associative with identity 1, and the exact values satisfy the wheel axioms that do not mention the reciprocal: (x+y)z + 0z = xz + yz, 0·0 = 0, (x + 0y)z = xz + 0y. 0·x is 0 for every finite x but not for 1/0.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-009"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.W.mul_comm",
+          "Arare.W.mul_assoc",
+          "Arare.W.mul_one",
+          "Arare.W.wheel_distrib",
+          "Arare.W.zero_mul_zero",
+          "Arare.W.wheel_zero_term",
+          "Arare.W.bot_mul",
+          "Arare.W.zero_mul_inf",
+          "Arare.W.not_mul_zero"
+        ]
+      }
+    },
+    {
+      "id": "AR-HLR-007",
+      "title": "Division",
+      "statement": "DIV of a nonzero finite number by 0 is 1/0 and of 0 by 0 is 0/0; a finite number over 1/0 is 0; 1/0 over 1/0 is 0/0; 1/0 over anything else is 1/0; 0/0 absorbs. DIV of two finite numbers, the divisor nonzero, is the quotient at the result's scale rounded half to even, within half an ulp of the exact quotient. DIV is therefore a rounding point.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-009"
+      ],
+      "derived": true,
+      "rationale": "WORK_ORDER.md §3.3 named RESCALE and NARROW as the only rounding points; a fixed-point quotient is in general not on the grid, so DIV must round too (ADR-0002).",
+      "verification": {
+        "lean": [
+          "Arare.W.div_by_zero",
+          "Arare.W.zero_div_zero",
+          "Arare.W.fin_div_inf",
+          "Arare.W.inf_div_inf",
+          "Arare.W.div_error",
+          "Arare.roundDiv_error"
+        ],
+        "planned": "Phase 2: how the result scale is chosen is fixed with the surface syntax (AR-HLR-018) and tested then."
+      }
+    },
+    {
+      "id": "AR-HLR-008",
+      "title": "RESCALE",
+      "statement": "RESCALE by s ≥ 0 bits raises a number's scale exponent by s and rounds its code half to even: the error is at most half an ulp of the new scale, a tie goes to the even code, a code already on the new grid is unchanged, and s = 0 changes nothing. The wheel points pass through unchanged.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-002"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.rescale_error",
+          "Arare.rescale_zero",
+          "Arare.roundDivPos_error",
+          "Arare.roundDivPos_tie_even",
+          "Arare.roundDivPos_exact",
+          "Arare.two_pow_pos_int"
+        ]
+      }
+    },
+    {
+      "id": "AR-HLR-009",
+      "title": "NARROW",
+      "statement": "NARROW to a width keeps a finite number inside that width's finite range and turns any other finite number into 1/0; the wheel points pass through unchanged. NARROW twice is NARROW once.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-009"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.fit_of_valid",
+          "Arare.fit_valid",
+          "Arare.fit_exact_or_inf",
+          "Arare.fit_idem"
+        ]
+      }
+    },
+    {
+      "id": "AR-HLR-010",
+      "title": "Equality",
+      "statement": "EQ compares what numbers denote: two finite numbers are equal when their values are equal, whatever their widths and scales; 1/0 equals 1/0; 0/0 equals 0/0; a wheel point never equals a finite number. EQ always answers TRUE or FALSE.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-010"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.eqT_bot",
+          "Arare.eqT_inf",
+          "Arare.eqT_decided"
+        ],
+        "planned": "Phase 2: equality across widths and scales, by tests against arare-spec."
+      }
+    },
+    {
+      "id": "AR-HLR-011",
+      "title": "Order",
+      "statement": "LT and GT order finite numbers by value and always answer TRUE or FALSE for them; when either operand is a wheel point they answer UNKNOWN. MIN, MAX and SORT, asked to order a wheel point, answer NIL.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-009",
+        "AR-SYS-010"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.ltT_point_left",
+          "Arare.ltT_point_right",
+          "Arare.ltT_fin_decided"
+        ],
+        "planned": "Phase 2: MIN, MAX and SORT on wheel points, by tests."
+      }
+    },
+    {
+      "id": "AR-HLR-012",
+      "title": "Strong Kleene connectives",
+      "statement": "AND is the meet and OR the join of the truth order FALSE < UNKNOWN < TRUE, and NOT reverses it. AND and OR are commutative, associative and idempotent, absorb and distribute over each other, and satisfy De Morgan's laws and Kleene's law a ∧ ¬a ≤ b ∨ ¬b; excluded middle fails exactly at UNKNOWN.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-005"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.Truth.and_rank",
+          "Arare.Truth.or_rank",
+          "Arare.Truth.not_rank",
+          "Arare.Truth.and_comm",
+          "Arare.Truth.and_assoc",
+          "Arare.Truth.and_idem",
+          "Arare.Truth.and_true",
+          "Arare.Truth.and_false",
+          "Arare.Truth.or_comm",
+          "Arare.Truth.or_assoc",
+          "Arare.Truth.not_not",
+          "Arare.Truth.de_morgan_and",
+          "Arare.Truth.absorb",
+          "Arare.Truth.distrib",
+          "Arare.Truth.kleene",
+          "Arare.Truth.excluded_middle_fails"
+        ]
+      }
+    },
+    {
+      "id": "AR-HLR-013",
+      "title": "UNKNOWN is NIL in truth position",
+      "statement": "A NIL read where a truth value is expected is UNKNOWN, and it is still that NIL: it keeps its reason where reasons are kept (AR-HLR-020).",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-005",
+        "AR-SYS-010"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.truthOf_nil"
+        ]
+      }
+    },
+    {
+      "id": "AR-HLR-014",
+      "title": "FILTER",
+      "statement": "FILTER keeps exactly the elements its predicate calls TRUE; an element whose predicate is FALSE, UNKNOWN or NIL is dropped, as SQL's WHERE drops a row.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-005"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.mem_filterT"
+        ]
+      }
+    },
+    {
+      "id": "AR-HLR-015",
+      "title": "Branching on UNKNOWN",
+      "statement": "A branch takes its THEN side only when its condition is TRUE; on FALSE, UNKNOWN or NIL it takes its ELSE side.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-007"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.selectT_true",
+          "Arare.selectT_false",
+          "Arare.selectT_unknown",
+          "Arare.selectT_nil"
+        ]
+      }
+    },
+    {
+      "id": "AR-HLR-016",
+      "title": "Aggregates skip NIL",
+      "statement": "SUM, and every aggregate, skips the NIL elements of its input; an aggregate whose input holds no element that is not NIL is NIL.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-008"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.sumT_all_nil",
+          "Arare.sumT_skip_nil",
+          "Arare.sumT_two"
+        ],
+        "planned": "Phase 2: the other aggregates, by tests."
+      }
+    },
+    {
+      "id": "AR-HLR-017",
+      "title": "What field=closed guarantees",
+      "statement": "Code that calls neither DIV nor NARROW and writes no wheel point computes the exact integer its arithmetic denotes; run by a machine it answers that integer or a wheel point, never another finite number. When it is moreover proved that every intermediate result fits the widest width, its contract is field=closed and the machine answers the exact integer.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-012",
+        "AR-SYS-009"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.Expr.closed_evalW",
+          "Arare.Expr.closed_evalM_of_fits",
+          "Arare.Expr.closed_evalM_sound"
+        ],
+        "planned": "Phase 3: soundness of the static range inference that establishes the fit, and the error budget beyond it."
+      }
+    },
+    {
+      "id": "AR-HLR-018",
+      "title": "Where widths and scales are written",
+      "statement": "A number's width and scale are fixed where it enters a program — by the form of its literal or by QUANTIZE — and are inferred everywhere else. No other place in a program states a width or a scale.",
+      "level": "QL-B",
+      "refines": [
+        "AR-SYS-001",
+        "AR-SYS-002"
+      ],
+      "derived": true,
+      "rationale": "Decides Q-01 (ADR-0004): Ajisai has nowhere to write a type, and Arare keeps that, except where a value is created.",
+      "verification": {
+        "lean": [],
+        "planned": "Phase 2: front-end tests over every literal form and QUANTIZE."
+      }
+    },
+    {
+      "id": "AR-HLR-019",
+      "title": "Arrow layout of truth and NIL",
+      "statement": "A vector whose lanes may be NIL carries a validity bitmap in which a cleared bit marks a NIL lane; a vector of truth values carries, besides it, a value bitmap. UNKNOWN is a lane whose validity bit is cleared. Bit order, alignment and padding are Apache Arrow's.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-006"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [],
+        "planned": "Phase 2: kernel tests of the bitmaps; Phase 6: a round trip through the Arrow C Data Interface.",
+        "formalExempt": "A memory layout is not a law about values; it is verified by tests against the Arrow specification, not by a Lean theorem."
+      }
+    },
+    {
+      "id": "AR-HLR-020",
+      "title": "Reasons for NIL",
+      "statement": "The reference interpreter keeps, with each NIL, the reason it arose; the compiled route keeps only the validity bit. A reason never changes a value or a truth value.",
+      "level": "QL-B",
+      "refines": [
+        "AR-SYS-011"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [],
+        "planned": "Phase 2: interpreter tests; Phase 4: the compiled route drops reasons and nothing else, by translation validation."
+      }
+    },
+    {
+      "id": "AR-PERF-001",
+      "title": "int8 dot product",
+      "statement": "The compiled int8 dot product over 1,000,000 elements takes at most 1.5 times a hand-written Rust int8 loop, and is at least 20 times faster than Ajisai's native build on the same case.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-014",
+        "AR-SYS-004"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [],
+        "planned": "Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI."
+      }
+    },
+    {
+      "id": "AR-PERF-002",
+      "title": "Fixed-point dot product",
+      "statement": "The compiled fixed-point counterpart of Ajisai's small-rational dot product is at least 300 times faster than Ajisai.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-014"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [],
+        "planned": "Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI."
+      }
+    },
+    {
+      "id": "AR-PERF-003",
+      "title": "Logistic map",
+      "statement": "Twenty steps of the logistic map take at most 1 µs, with the error against Ajisai's exact result inside the inferred budget.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-014"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [],
+        "planned": "Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI."
+      }
+    },
+    {
+      "id": "AR-PERF-004",
+      "title": "Harmonic sum",
+      "statement": "The harmonic sum to k = 20,000 is at least 1,000 times faster than Ajisai.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-014"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [],
+        "planned": "Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI."
+      }
+    },
+    {
+      "id": "AR-PERF-005",
+      "title": "Top-level scalar Words",
+      "statement": "A top-level scalar Word takes at most 2 ns on the compiled route.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-014",
+        "AR-SYS-004"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [],
+        "planned": "Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI."
+      }
+    },
+    {
+      "id": "AR-PERF-006",
+      "title": "Cost of wheel points and NIL",
+      "statement": "Carrying the wheel-point codes and NIL validity costs at most 1.1 times the same kernel without them, measured on a memory-bound and a compute-bound kernel.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-014",
+        "AR-SYS-009"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [],
+        "planned": "Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI."
+      }
+    },
+    {
+      "id": "AR-PERF-007",
+      "title": "WebAssembly",
+      "statement": "The WASM SIMD128 build is within 3 times the native build. The figure is a target to be re-measured in Phase 4.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-014",
+        "AR-SYS-004"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [],
+        "planned": "Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI."
+      }
+    }
+  ]
+}

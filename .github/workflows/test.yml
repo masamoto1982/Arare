@@ -19,7 +19,9 @@ jobs:
       # rust/rust-toolchain.toml pins the stable toolchain; rustup installs it
       # on the first cargo call, so the runner's own stable never builds Arare.
       - name: Install cargo-llvm-cov
-        run: cargo install cargo-llvm-cov --locked
+        # Pinned (docs/quality/CONFIGURATION_INDEX.md) so a release cannot
+        # change the counts the coverage ratchet compares.
+        run: cargo install cargo-llvm-cov --locked --version 0.9.1
 
       - name: Rust format check
         working-directory: rust
@@ -62,6 +64,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Requirements registry and its generated surfaces
+        run: npm run check:requirements
 
       - name: Traceability matrix against the source
         run: npm run check:traceability
@@ -164,3 +169,13 @@ jobs:
       - name: Check every proof
         working-directory: formal
         run: lake build
+
+      # lake build accepts `sorry` with a warning; this asks Lean what every
+      # theorem rests on and fails on anything beyond the standard axioms.
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Every theorem rests only on the standard axioms
+        run: node scripts/check-formal-axioms.mjs

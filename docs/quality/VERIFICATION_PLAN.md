@@ -9,13 +9,19 @@ enforce it. Every gate listed as blocking fails the `quality-gate`,
 
 - `npm run check:rust`: `cargo fmt --check`, `cargo clippy --all-targets -- -D warnings`
   and `cargo test --all-targets` over the Rust workspace.
-- `npm run check:formal`: `lake build` in `formal/`, which checks every proof.
+- `npm run check:formal`: `lake build` in `formal/`, which checks every proof,
+  then `scripts/check-formal-axioms.mjs`, which fails when any theorem rests
+  on more than Lean's three standard axioms (`sorry` among them: `lake build`
+  only warns on it).
+- `npm run check:requirements`: the registry `spec/requirements.json` is well
+  formed, reaches `formal/` in both directions, and its generated surfaces
+  (`spec/REQUIREMENTS.md`, the matrix block) are current.
 - `cargo kani` in `rust/`: every bounded-model-checking harness
   (`FORMAL_VERIFICATION.md`).
 - `npm run check`, `npm run lint`, `npm run test:coverage`: the TypeScript
   shell's type check, lint and tests.
-- `npm run check:gates`: traceability, version sync, the Rust file-size budget
-  and the Playground's WCAG contrast.
+- `npm run check:gates`: the requirements registry, traceability, version
+  sync, the Rust file-size budget and the Playground's WCAG contrast.
 - `npm run check:coverage-ratchet`: no QL-A or QL-B file loses branch or line
   coverage against `docs/quality/coverage-baseline.json`.
 

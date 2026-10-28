@@ -18,7 +18,7 @@ Arare は、量子化を前提とし、失った精度を数字で管理する�
 
 ## 意味論の要点（詳しくは spec/）
 
-- 既定の数は int8／int16／int32 の固定小数点。算術演算は結果が収まる幅まで広げ、丸めるのは `RESCALE` と `NARROW` のときだけ。
+- 既定の数は int8／int16／int32 の固定小数点（int64 は拡幅の上限）。算術演算は結果が収まる幅まで広げ、丸めの場所は `RESCALE`、`NARROW`、`DIV` だけ（ADR-0002）。
 - 輪の2点：⊥（0/0）は吸収元、1/0 は範囲外（オーバーフロー）を表す。どちらも数であり NIL ではない。大小を問うと UNKNOWN になる。
 - 三値論理は strong Kleene。UNKNOWN は真偽の位置に現れた NIL。`FILTER` は TRUE の要素だけを残す。分岐が UNKNOWN のときは ELSE 側に進み、集約は NIL を飛ばす（SQL と同じ）。
 - 真偽値と NIL のメモリ配置は Apache Arrow と同じ（有効ビット列と値ビット列）。
@@ -27,9 +27,10 @@ Arare は、量子化を前提とし、失った精度を数字で管理する�
 ## 検証で使うコマンド
 
 - `npm run check:rust`：`rust/` で fmt、clippy（`-D warnings`）、テスト
-- `npm run check:formal`：`formal/` で `lake build`（elan が要る。入れ方は `docs/quality/FORMAL_VERIFICATION.md`）
+- `npm run check:formal`：`formal/` で `lake build` のあと、全定理が標準の公理だけに依ることを確かめる（`lake build` だけでは `sorry` が通る）。elan が要る。入れ方は `docs/quality/FORMAL_VERIFICATION.md`
 - `cargo kani`（`rust/` で）：Kani 0.68.0 が要る
-- `npm run check:gates`：トレーサビリティ、版の一致、Rust のファイルサイズ、Playground のコントラスト
+- `npm run check:gates`：要求の登録簿、トレーサビリティ、版の一致、Rust のファイルサイズ、Playground のコントラスト
+- `npm run requirements:generate`：`spec/requirements.json` を変えたら、`spec/REQUIREMENTS.md` と追跡表の生成部分を作り直す
 - `npm run check`、`npm run lint`、`npm test`：TypeScript
 - 性能（Phase 4 から）：AR-PERF の要件を割っていないか、ベンチマークで確かめる
 
