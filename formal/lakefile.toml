@@ -7,3 +7,9 @@ defaultTargets = ["Arare"]
 
 [[lean_lib]]
 name = "Arare"
+
+# The model printed as a table, diffed against the Rust executable
+# specification in CI (formal/Table.lean).
+[[lean_exe]]
+name = "arare-table"
+root = "Table"
