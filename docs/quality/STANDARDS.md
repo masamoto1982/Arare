@@ -9,7 +9,7 @@ of DO-178C's SRS, SDS and SCS.
 |---|---|---|---|
 | System requirement | `AR-SYS-nnn` | `spec/requirements.json` | A decision about what Arare is for, from WORK_ORDER.md §2 |
 | High-level requirement | `AR-HLR-nnn` | `spec/requirements.json` | What the language does, observable from a program |
-| Low-level requirement | `AR-LLR-nnn` | `docs/design/` | How a component does it, precise enough to code from |
+| Low-level requirement | `AR-LLR-nnn` | `spec/requirements.json`, with its design in `docs/design/` | How a component does it, precise enough to code from; names its implementation files, tests and Kani harnesses |
 | Performance requirement | `AR-PERF-nnn` | `spec/requirements.json` | A speed the compiled route must reach, relative to a baseline measured in the same run |
 | Inherited requirement | `AR-INH-nnn` | `docs/quality/TRACEABILITY_MATRIX.md` | Playground behavior taken over from Ajisai with its tests, pending a Phase 5 requirement |
 | Verification case | `AR-VER-nnn`, optionally `AR-VER-nnn-X` | the test, harness or proof | One verification suite, and a case within it |

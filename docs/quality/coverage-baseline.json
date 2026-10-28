@@ -9,5 +9,106 @@
     "change that moves a figure, with: npm run check:coverage-ratchet -- --update"
   ],
   "toolchain": "nightly-2026-10-09",
-  "files": {}
+  "files": {
+    "rust/crates/arare-spec/src/rounding.rs": {
+      "branches": {
+        "covered": 9,
+        "count": 10
+      },
+      "lines": {
+        "covered": 21,
+        "count": 22
+      }
+    },
+    "rust/crates/arare-spec/src/wheel.rs": {
+      "branches": {
+        "covered": 16,
+        "count": 16
+      },
+      "lines": {
+        "covered": 66,
+        "count": 69
+      }
+    },
+    "rust/crates/arare-spec/src/truth.rs": {
+      "branches": {
+        "covered": 0,
+        "count": 0
+      },
+      "lines": {
+        "covered": 27,
+        "count": 27
+      }
+    },
+    "rust/crates/arare-spec/src/sql.rs": {
+      "branches": {
+        "covered": 6,
+        "count": 6
+      },
+      "lines": {
+        "covered": 29,
+        "count": 29
+      }
+    },
+    "rust/crates/arare-spec/src/table.rs": {
+      "branches": {
+        "covered": 0,
+        "count": 0
+      },
+      "lines": {
+        "covered": 93,
+        "count": 96
+      }
+    },
+    "rust/crates/arare-kernel/src/width.rs": {
+      "branches": {
+        "covered": 2,
+        "count": 2
+      },
+      "lines": {
+        "covered": 26,
+        "count": 26
+      }
+    },
+    "rust/crates/arare-kernel/src/codes.rs": {
+      "branches": {
+        "covered": 12,
+        "count": 12
+      },
+      "lines": {
+        "covered": 29,
+        "count": 29
+      }
+    },
+    "rust/crates/arare-kernel/src/num.rs": {
+      "branches": {
+        "covered": 34,
+        "count": 34
+      },
+      "lines": {
+        "covered": 149,
+        "count": 149
+      }
+    },
+    "rust/crates/arare-kernel/src/truth.rs": {
+      "branches": {
+        "covered": 2,
+        "count": 2
+      },
+      "lines": {
+        "covered": 28,
+        "count": 28
+      }
+    },
+    "rust/crates/arare-kernel/src/column.rs": {
+      "branches": {
+        "covered": 2,
+        "count": 2
+      },
+      "lines": {
+        "covered": 81,
+        "count": 81
+      }
+    }
+  }
 }

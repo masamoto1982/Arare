@@ -44,8 +44,8 @@ These start in the phase named and are blocking from then on.
 
 | Method | What it shows | From |
 |---|---|---|
-| Lean model vs Rust executable specification | `arare-spec` computes what the Lean definitions compute, on every int8 operand pair | Phase 2 |
-| Kani over int16 and int32 kernels | Each kernel agrees with `arare-spec` over its whole range and reaches no overflow, out-of-bounds index or panic | Phase 2 |
+| Lean model vs Rust executable specification | `arare-spec` computes what the Lean definitions compute, on every int8 operand pair and the rest of the grid of `formal/Table.lean` (AR-VER-201, in the Lean job) | Phase 2a — active |
+| Kani over the kernels | Each kernel meets its law over its whole range, or a stated scope, and reaches no overflow, out-of-bounds index or panic (AR-VER-207; the job fails when fewer harnesses are verified than declared) | Phase 2a — active |
 | Oracle comparison | `|Arare − Ajisai| ≤ the inferred budget` on generated programs; Ajisai pinned to the commit `UPSTREAM.md` names | Phase 2 (harness), Phase 3 (budget) |
 | Translation validation | Compiled code (native and WASM SIMD128) agrees with the reference interpreter: exhaustively for int8, by boundary and random cases for int16 and int32 | Phase 4 |
 | Performance | Every `AR-PERF-*` requirement, measured against a baseline loop in the same run (WORK_ORDER.md §6) | Phase 4 |
