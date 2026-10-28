@@ -1,0 +1,12 @@
+[package]
+name = "arare-codegen"
+description = "Arare's lowering from the intermediate representation to WASM SIMD128 and native code"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+
+[lints]
+workspace = true

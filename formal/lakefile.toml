@@ -1,0 +1,9 @@
+# Lean model of Arare's semantics (WORK_ORDER.md §5.4). The toolchain is pinned
+# in lean-toolchain and recorded in docs/quality/CONFIGURATION_INDEX.md; a
+# dependency added here (Mathlib, when Phase 1 needs it) is pinned the same way,
+# by the lake-manifest.json committed beside this file.
+name = "arare-formal"
+defaultTargets = ["Arare"]
+
+[[lean_lib]]
+name = "Arare"
