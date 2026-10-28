@@ -7,10 +7,10 @@ of DO-178C's SRS, SDS and SCS.
 
 | Class | Form | Lives in | Meaning |
 |---|---|---|---|
-| System requirement | `AR-SYS-nnn` | `WORK_ORDER.md` §2, then `spec/` | A decision about what Arare is for (D-01..D-17 become these in Phase 1) |
-| High-level requirement | `AR-HLR-nnn` | `spec/` | What the language does, observable from a program |
+| System requirement | `AR-SYS-nnn` | `spec/requirements.json` | A decision about what Arare is for, from WORK_ORDER.md §2 |
+| High-level requirement | `AR-HLR-nnn` | `spec/requirements.json` | What the language does, observable from a program |
 | Low-level requirement | `AR-LLR-nnn` | `docs/design/` | How a component does it, precise enough to code from |
-| Performance requirement | `AR-PERF-nnn` | `spec/` (WORK_ORDER.md §6 until then) | A speed the compiled route must reach, relative to a baseline measured in the same run |
+| Performance requirement | `AR-PERF-nnn` | `spec/requirements.json` | A speed the compiled route must reach, relative to a baseline measured in the same run |
 | Inherited requirement | `AR-INH-nnn` | `docs/quality/TRACEABILITY_MATRIX.md` | Playground behavior taken over from Ajisai with its tests, pending a Phase 5 requirement |
 | Verification case | `AR-VER-nnn`, optionally `AR-VER-nnn-X` | the test, harness or proof | One verification suite, and a case within it |
 
@@ -19,15 +19,19 @@ moved to the matrix's retired section.
 
 ## Requirements standard
 
-A requirement:
+Requirements are records in `spec/requirements.json` (ADR-0006); its readable
+form, `spec/REQUIREMENTS.md`, and the requirement rows of the traceability
+matrix are generated from it (`npm run requirements:generate`). A requirement:
 
 - states one thing, observable at its level, in the present tense;
 - is verifiable: it says what result would show it is not met;
 - names the quality level of the component that implements it;
 - carries `derived: true` and a reason when it does not follow from a higher
   requirement;
-- for QL-A, has a Lean statement in `formal/` that the requirement and the
-  theorem both cite.
+- for a QL-A requirement on values, cites the Lean theorems that prove it, and
+  each theorem's file names the requirement; a QL-A requirement for which a
+  proof is not the right evidence says why in `verification.formalExempt`;
+- names what is planned beyond its proofs in `verification.planned`.
 
 ## Design standard
 

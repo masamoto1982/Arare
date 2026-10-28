@@ -49,7 +49,7 @@ held to the standard of the QL-A requirements it proves.
 
 | Data | Where it lives |
 |---|---|
-| High-level requirements (`AR-HLR-*`) | `spec/` (from Phase 1) |
+| System, high-level and performance requirements (`AR-SYS-*`, `AR-HLR-*`, `AR-PERF-*`) | `spec/requirements.json`, readable as the generated `spec/REQUIREMENTS.md` |
 | Low-level requirements and design (`AR-LLR-*`) | `docs/design/` (from Phase 1) |
 | Decisions | `docs/adr/` |
 | Source and executable object code | `rust/`, `src/`, built by CI |
