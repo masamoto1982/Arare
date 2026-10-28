@@ -1,7 +1,0 @@
-# Seeds for failure cases proptest has generated in the past. It is
-# automatically read and these particular cases re-run before any
-# novel cases are generated.
-#
-# It is recommended to check this file in to source control so that
-# everyone who runs the test benefits from these saved cases.
-cc 62b65da55e4f31cbe52cb3289a37b6ab82fe46c23ae90015abcbea3d01ab3bf6 # shrinks to run_word = ["[ 1 COLLECT [ 0 0 ] GET EXEC EXEC ]"], program = ["[ 1 COLLECT [ 0 0 ] GET EXEC EXEC ]", "1 COLLECT [ 0 0 ] GET EXEC EXEC"]

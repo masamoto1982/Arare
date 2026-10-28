@@ -5,11 +5,11 @@
 
 import { readFileSync } from 'node:fs';
 import { expect, it } from 'vitest';
-import * as wasm from '../wasm/generated/ajisai_core.js';
+import * as wasm from '../wasm/ajisai-oracle/ajisai_core.js';
 import type { AjisaiInterpreter } from '../wasm-interpreter-types';
 import { deleteUserWord } from './vocabulary-state-controller';
 
-wasm.initSync({ module: readFileSync(new URL('../wasm/generated/ajisai_core_bg.wasm', import.meta.url)) });
+wasm.initSync({ module: readFileSync(new URL('../wasm/ajisai-oracle/ajisai_core_bg.wasm', import.meta.url)) });
 
 const createInterpreter = (): AjisaiInterpreter => new wasm.AjisaiInterpreter() as unknown as AjisaiInterpreter;
 

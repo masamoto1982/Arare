@@ -78,7 +78,7 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    exclude: ['./src/wasm/generated/ajisai_core.js']
+    exclude: ['./src/wasm/ajisai-oracle/ajisai_core.js']
   },
   resolve: {
     alias: {
