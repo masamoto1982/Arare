@@ -18,3 +18,5 @@ workspace = true
 [dependencies]
 arare-interp = { path = "../arare-interp" }
 arare-kernel = { path = "../arare-kernel" }
+arare-budget = { path = "../arare-budget" }
+arare-front = { path = "../arare-front" }
