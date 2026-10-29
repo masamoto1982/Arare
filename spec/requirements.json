@@ -149,7 +149,7 @@
           "Arare.W.neg_point",
           "Arare.Expr.closed_evalW"
         ],
-        "planned": "Phase 2: scale alignment and width selection, by tests against arare-spec; the static range inference behind width selection is Phase 3."
+        "planned": "Scale alignment and width selection are tested against arare-spec (AR-VER-203, AR-VER-204); the width rule reads the operands' widths, a static range, and is not proved in Lean. The error-budget checker (AR-HLR-027) models arithmetic fitted into the widest width only."
       }
     },
     {
@@ -425,7 +425,7 @@
           "Arare.Expr.closed_evalM_of_fits",
           "Arare.Expr.closed_evalM_sound"
         ],
-        "planned": "Phase 3: soundness of the static range inference that establishes the fit, and the error budget beyond it."
+        "planned": "The static inference that establishes the fit is the error-budget checker's: AR-HLR-028 (Arare.Budget.closed_safe) proves that code it calls field=closed has no wheel point anywhere."
       }
     },
     {
@@ -561,6 +561,94 @@
           "Arare.rescale_error",
           "Arare.fit_exact_or_inf"
         ]
+      }
+    },
+    {
+      "id": "AR-HLR-027",
+      "title": "The error budget is sound",
+      "statement": "For every number a program leaves, the error-budget checker infers, from the program text alone and without running it, either nothing or what both meanings of the number share: the same wheel point, or a range holding the exact value Ajisai computes on the same source and an error budget bounding the distance of Arare's value from it. Whenever it infers a budget, the exact value lies in the range and Arare's value is within the budget of it; a result it cannot bound — one that may overflow, divide by zero or meet a wheel point — gets no budget, never a wrong one. Quantized literals, DIV, RESCALE and QUANTIZE add their rounding; ADD, SUB, MUL and NEG carry their operands' errors exactly as the operations propagate them.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-002",
+        "AR-SYS-009"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.Budget.two_ne_zero",
+          "Arare.Budget.pow2_pos",
+          "Arare.Budget.pow2_add",
+          "Arare.Budget.pow2_nat",
+          "Arare.Budget.pow2_mono",
+          "Arare.Budget.shift_val",
+          "Arare.Budget.mul_between",
+          "Arare.Budget.imul_mem",
+          "Arare.Budget.mul_abs_le",
+          "Arare.Budget.X.add_bot",
+          "Arare.Budget.X.mul_bot",
+          "Arare.Budget.X.div_bot",
+          "Arare.Budget.W_add_bot",
+          "Arare.Budget.W_mul_bot",
+          "Arare.Budget.W_div_bot",
+          "Arare.Budget.mmag_bound",
+          "Arare.Budget.guard_sound",
+          "Arare.Budget.aneg_sound",
+          "Arare.Budget.padd_sound",
+          "Arare.Budget.nonzero_ne",
+          "Arare.Budget.isZero_eq",
+          "Arare.Budget.pmul_sound",
+          "Arare.Budget.inv_abs_le",
+          "Arare.Budget.inv_between",
+          "Arare.Budget.low_bound",
+          "Arare.Budget.half_unit",
+          "Arare.Budget.div_round",
+          "Arare.Budget.div_prop",
+          "Arare.Budget.pdiv_sound",
+          "Arare.Budget.rescale_val",
+          "Arare.Budget.arescale_sound",
+          "Arare.Budget.aquantize_sound",
+          "Arare.Budget.alit_sound",
+          "Arare.Budget.budget_sound"
+        ],
+        "planned": "Empirically, against Ajisai: the oracle corpus (AR-VER-209) and at least 10,000 generated programs (AR-VER-217)."
+      }
+    },
+    {
+      "id": "AR-HLR-028",
+      "title": "The checker decides field=closed",
+      "statement": "A program's contract is field=closed exactly when the error-budget checker bounds every numeric result in it as a number; otherwise it is field=open, with each Word whose result it cannot bound and why: a wheel point written or flowing in, a result that may overflow the widest width or the width NARROW or QUANTIZE names, a divisor that may be zero, or an operand it cannot bound. Code that is field=closed has no wheel point anywhere, so nothing in it overflows, and no DIV in it divides by zero, in either meaning; each of its results is within its budget.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-012",
+        "AR-SYS-009"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.Budget.closed_safe",
+          "Arare.Budget.finite_of_isNum",
+          "Arare.Budget.div_divisor_nonzero"
+        ]
+      }
+    },
+    {
+      "id": "AR-HLR-029",
+      "title": "The budget through truth values, SELECT and vectors",
+      "statement": "The checker says of a truth value only whether both meanings answer the same one: an order or equality of numbers agrees when both are exact or their ranges, widened by their budgets, are apart, and AND, NOT and EQ of agreeing values agree. A SELECT whose condition agrees takes the same branch in both meanings, so its budget is the larger of the two branches'; one whose condition may differ is bounded across the branches, within the hull of the two ranges. A FILTER whose predicate agrees keeps the same lanes in both meanings, of a length the checker no longer knows; then the checker carries what it knows of any lane through MAP, FOLD and SUM over every length the vector may have. A vector's budget is its largest lane's.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-027",
+        "AR-SYS-005",
+        "AR-SYS-007",
+        "AR-SYS-008"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [
+          "Arare.Budget.join_sound_left",
+          "Arare.Budget.join_sound_right"
+        ],
+        "planned": "The agreement of truth values, the bound across SELECT's branches and the run over a program's stack are tested (AR-VER-216-C) and compared with Ajisai (AR-VER-217), not proved."
       }
     },
     {
@@ -1045,13 +1133,14 @@
     {
       "id": "AR-LLR-012",
       "title": "Parsing and the static checks",
-      "statement": "The parser nests quotes by brackets, maps names to the twenty Words of the Phase 2 vocabulary, keeps an integer literal within the widest finite range, and folds every decimal, fraction or wheel point with the integer width (8, 16, 32 or 64), integer exponent (within ±31) and QUANTIZE that must follow it into one number, reduced to lowest terms within 64 bits. Anything else is refused with the token's position.",
+      "statement": "The parser nests quotes by brackets, maps names to the twenty Words of the Phase 2 vocabulary, keeps an integer literal within the widest finite range, and folds every decimal, fraction or wheel point with the integer width (8, 16, 32 or 64), integer exponent (within ±31) and QUANTIZE that must follow it into one number, reduced to lowest terms within 64 bits; the folded number keeps the exact rational it was written as, for the error-budget checker. Anything else is refused with the token's position.",
       "level": "QL-B",
       "refines": [
         "AR-HLR-018",
         "AR-HLR-021",
         "AR-HLR-025",
-        "AR-HLR-026"
+        "AR-HLR-026",
+        "AR-HLR-027"
       ],
       "derived": false,
       "implementation": [
@@ -1213,6 +1302,149 @@
         "tests": [
           {
             "id": "AR-VER-214",
+            "file": "rust/crates/arare-cli/tests/cli.rs"
+          },
+          {
+            "id": "AR-VER-209",
+            "file": "tests/oracle/corpus.json"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-018",
+      "title": "Checked rationals",
+      "statement": "Q is a rational n/d in lowest terms with d > 0 and n ≠ i128::MIN. Its addition, subtraction, multiplication and halving answer the exact result, or None when it does not fit in 128 bits; the reciprocal of zero is zero, as in Lean; its order is exact for every pair, compared by integer parts and the reciprocals of the remainders so that it never overflows; Q::pow2(s) is 2^s for |s| ≤ 126.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-027"
+      ],
+      "derived": true,
+      "rationale": "The Lean checker's rationals are unbounded; computing them exactly in 128 bits and knowing nothing where they do not fit is a design decision (ADR-0008).",
+      "implementation": [
+        "rust/crates/arare-budget/src/rat.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-216-R",
+            "file": "rust/crates/arare-budget/tests/rat.rs"
+          }
+        ],
+        "planned": "No Kani harness: symbolic 128-bit division is beyond the solver in the time CI allows (a harness for Q::new over 8-bit operands took 13 minutes locally, and over 10 with CaDiCaL); the grid tests (AR-VER-216-R), the soundness tests against the kernel (AR-VER-216) and the Lean–Rust table (AR-VER-215) exercise the rationals instead."
+      }
+    },
+    {
+      "id": "AR-LLR-019",
+      "title": "The checker on one number",
+      "statement": "Info is Lean's Info: nothing, 1/0 or 0/0 in both meanings, or a range [lo, hi] for the exact value, an error err and a scale range [smin, smax]. guard, lit, neg, add, sub, mul, div, rescale, narrow, quantize and join compute Lean's guard, alit, aneg, padd, pmul, pdiv, arescale and aquantize (each fitted into the widest width, of half-range 2^63, where Lean's analyze fits) and join with checked rationals, answering nothing where a rational would not fit or a scale would leave ±31. Over the grid of formal/BudgetTable.lean their output is byte for byte the Lean checker's. cross bounds a value each meaning may take from a different one of two; lt_agrees and eq_agrees say when an order or equality is the same in both meanings; budget is err, 0 for a shared point and nothing for nothing.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-027",
+        "AR-HLR-028",
+        "AR-HLR-029"
+      ],
+      "derived": false,
+      "implementation": [
+        "rust/crates/arare-budget/src/info.rs",
+        "rust/crates/arare-budget/src/table.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-215",
+            "file": "rust/crates/arare-budget/tests/table.rs"
+          },
+          {
+            "id": "AR-VER-215",
+            "file": "formal/BudgetTable.lean"
+          },
+          {
+            "id": "AR-VER-216",
+            "file": "rust/crates/arare-budget/tests/sound.rs"
+          },
+          {
+            "id": "AR-VER-216-I",
+            "file": "rust/crates/arare-budget/tests/info.rs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-020",
+      "title": "The checker over a program",
+      "statement": "analyze runs a parsed program as the reference interpreter does, item by item and Word by Word, on what is known of each value — nothing; NIL in both meanings; a number (possibly NIL in both instead) with its Info; a truth value or NIL, agreeing or not; a vector of known length lane by lane, or of a length at most max shared by both meanings with one description of every lane; or a quote — and never on a value a Word computes. Numeric Words apply AR-LLR-019's functions lane by lane under the interpreter's lifting; a RESCALE shift, NARROW width or QUANTIZE exponent must be an integer exact in both meanings; LT of a wheel point is NIL in both; SELECT joins its branches when its condition agrees and bounds them across otherwise; FILTER with an agreeing predicate keeps a vector of unknown length; MAP, FOLD and SUM over such a vector run once per length it may have, joined, a FOLD stopping when an iteration changes nothing. It leaves as many values as the interpreter and takes the same steps on every run.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-027",
+        "AR-HLR-029"
+      ],
+      "derived": false,
+      "implementation": [
+        "rust/crates/arare-budget/src/value.rs",
+        "rust/crates/arare-budget/src/check.rs",
+        "rust/crates/arare-budget/src/words.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-216-C",
+            "file": "rust/crates/arare-budget/tests/check.rs"
+          },
+          {
+            "id": "AR-VER-209",
+            "file": "tests/oracle/corpus.json"
+          },
+          {
+            "id": "AR-VER-217",
+            "file": "scripts/check-oracle-random.mjs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-021",
+      "title": "The field contract in the checker",
+      "statement": "While it runs, the checker notes every literal and every numeric Word's result that it does not bound as a number, with why: wheelPoint when the result or an operand is a wheel point, unbounded when an operand is bounded by nothing, divisorMayBeZero for a DIV, mayOverflow otherwise. Analysis::closed is true exactly when there is no note; the notes are sorted and without repeats.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-028"
+      ],
+      "derived": false,
+      "implementation": [
+        "rust/crates/arare-budget/src/check.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-216-C",
+            "file": "rust/crates/arare-budget/tests/check.rs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-022",
+      "title": "arare check",
+      "statement": "`arare check [--json] [--lines] [FILE | -]` runs a program as `arare run` does and then the checker: each value is printed with its budget (`± p/q`, or `± ?` when there is none), then `field=closed` or `field=open:` with the notes. With --json, each value node of `run --json` carries \"budget\", a rational string or null, and the document carries \"field\" and \"open\". With --lines, every input line is a program of its own and gets a JSON document of its own, and the exit status is 0 unless the input cannot be read; otherwise it is `run`'s.",
+      "level": "QL-C",
+      "refines": [
+        "AR-HLR-027",
+        "AR-HLR-028"
+      ],
+      "derived": false,
+      "implementation": [
+        "rust/crates/arare-cli/src/main.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-218",
             "file": "rust/crates/arare-cli/tests/cli.rs"
           },
           {

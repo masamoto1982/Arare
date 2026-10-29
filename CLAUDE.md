@@ -30,6 +30,7 @@ Arare は、量子化を前提とし、失った精度を数字で管理する�
 - `npm run check:formal`：`formal/` で `lake build` のあと、全定理が標準の公理だけに依ることを確かめる（`lake build` だけでは `sorry` が通る）。elan が要る。入れ方は `docs/quality/FORMAL_VERIFICATION.md`
 - `cargo kani`（`rust/` で）：Kani 0.68.0 が要る
 - `npm run check:gates`：要求の登録簿、トレーサビリティ、版の一致、Rust のファイルサイズ、Playground のコントラスト
+- `npm run check:oracle`、`npm run check:oracle-random`：Ajisai との比較。Arare の値が、検査器の推論した誤差予算の中に収まるか（コーパスと、生成した 1 万本のプログラム）
 - `npm run requirements:generate`：`spec/requirements.json` を変えたら、`spec/REQUIREMENTS.md` と追跡表の生成部分を作り直す
 - `npm run check`、`npm run lint`、`npm test`：TypeScript
 - 性能（Phase 4 から）：AR-PERF の要件を割っていないか、ベンチマークで確かめる

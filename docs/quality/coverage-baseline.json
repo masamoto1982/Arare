@@ -110,6 +110,16 @@
         "count": 81
       }
     },
+    "rust/crates/arare-kernel/src/quantize.rs": {
+      "branches": {
+        "covered": 18,
+        "count": 18
+      },
+      "lines": {
+        "covered": 36,
+        "count": 36
+      }
+    },
     "rust/crates/arare-front/src/lexer.rs": {
       "branches": {
         "covered": 32,
@@ -136,8 +146,8 @@
         "count": 18
       },
       "lines": {
-        "covered": 129,
-        "count": 129
+        "covered": 130,
+        "count": 130
       }
     },
     "rust/crates/arare-interp/src/machine.rs": {
@@ -178,6 +188,66 @@
       "lines": {
         "covered": 31,
         "count": 31
+      }
+    },
+    "rust/crates/arare-budget/src/rat.rs": {
+      "branches": {
+        "covered": 18,
+        "count": 18
+      },
+      "lines": {
+        "covered": 98,
+        "count": 98
+      }
+    },
+    "rust/crates/arare-budget/src/info.rs": {
+      "branches": {
+        "covered": 56,
+        "count": 56
+      },
+      "lines": {
+        "covered": 245,
+        "count": 245
+      }
+    },
+    "rust/crates/arare-budget/src/table.rs": {
+      "branches": {
+        "covered": 0,
+        "count": 0
+      },
+      "lines": {
+        "covered": 43,
+        "count": 43
+      }
+    },
+    "rust/crates/arare-budget/src/value.rs": {
+      "branches": {
+        "covered": 20,
+        "count": 20
+      },
+      "lines": {
+        "covered": 82,
+        "count": 82
+      }
+    },
+    "rust/crates/arare-budget/src/check.rs": {
+      "branches": {
+        "covered": 20,
+        "count": 20
+      },
+      "lines": {
+        "covered": 227,
+        "count": 227
+      }
+    },
+    "rust/crates/arare-budget/src/words.rs": {
+      "branches": {
+        "covered": 36,
+        "count": 36
+      },
+      "lines": {
+        "covered": 161,
+        "count": 161
       }
     }
   }

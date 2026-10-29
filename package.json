@@ -34,7 +34,8 @@
     "check:gates": "npm run check:requirements && npm run check:traceability && npm run check:version-sync && npm run check:file-size && npm run check:contrast",
     "check:requirements": "node scripts/check-requirements.mjs && node scripts/generate-requirements.mjs --check",
     "requirements:generate": "node scripts/generate-requirements.mjs",
-    "check:oracle": "cargo build --quiet --manifest-path rust/Cargo.toml -p arare-cli && node scripts/check-oracle.mjs"
+    "check:oracle": "cargo build --quiet --manifest-path rust/Cargo.toml -p arare-cli && node scripts/check-oracle.mjs",
+    "check:oracle-random": "cargo build --quiet --manifest-path rust/Cargo.toml -p arare-cli && node scripts/check-oracle-random.mjs"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
