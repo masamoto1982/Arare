@@ -10,9 +10,10 @@ from the first commit that has them.
 | PR-0001 | The inherited Playground (`src/`) has no Arare requirement; only `detectRuntimeKind` is traced (AR-INH-001) | The shell is taken over as-is so it keeps running on the Ajisai oracle | Phase 5 |
 | PR-0002 | The Playground and its Reference (`public/docs/`) describe Ajisai, not Arare, and run the Ajisai engine | Arare has no engine until Phase 2 and no Playground adapter until Phase 5 | Phase 5 |
 | PR-0006 | The Playground keeps Ajisai's internal identifiers (`__AJISAI_TARGET__`, `AJISAI_BUILD_TARGET`, storage keys such as `ajisai-state.json`) | Renaming them is part of making the shell engine-neutral, not a rename for its own sake | Phase 5 |
-| PR-0007 | `tools/mcp-server/` is Ajisai's server, kept only as the oracle for agent sessions, and is outside CI | Arare's own server is Phase 6 work | Phase 6 |
+| PR-0007 | `tools/mcp-server/` is Ajisai's server, kept as the oracle for agent sessions; the server is outside CI, though its committed Node build of Ajisai is what the oracle comparison runs (ADR-0007) | Arare's own server is Phase 6 work | Phase 6 |
 | PR-0008 | Ajisai's Reference generator (`scripts/generate-word-reference.mjs`) was removed with Ajisai's spec | The Reference comes with the Playground; the specification half of this report closed in Phase 1 (see Closed) | Phase 5 |
 | PR-0009 | Inherited comments in `src/`, `index.html`, `tests/formatter-corpus.json` and `spec/host-protocol.schema.json` cite Ajisai paths (`rust/src/...`, `spec/...`, `docs/dev/...`) that are not in this repository; they name files at the commit `UPSTREAM.md` records | They describe the Ajisai engine the Playground still drives; rewriting them before the shell is engine-neutral would only move the problem | Phase 5 |
+| PR-0010 | The oracle corpus's tolerances are worked out by hand, case by case | Error budgets are inferred only in Phase 3 (ADR-0007) | Phase 3 |
 
 ## Closed
 

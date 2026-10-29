@@ -109,6 +109,76 @@
         "covered": 81,
         "count": 81
       }
+    },
+    "rust/crates/arare-front/src/lexer.rs": {
+      "branches": {
+        "covered": 32,
+        "count": 32
+      },
+      "lines": {
+        "covered": 55,
+        "count": 55
+      }
+    },
+    "rust/crates/arare-front/src/lib.rs": {
+      "branches": {
+        "covered": 0,
+        "count": 0
+      },
+      "lines": {
+        "covered": 12,
+        "count": 12
+      }
+    },
+    "rust/crates/arare-front/src/parser.rs": {
+      "branches": {
+        "covered": 18,
+        "count": 18
+      },
+      "lines": {
+        "covered": 129,
+        "count": 129
+      }
+    },
+    "rust/crates/arare-interp/src/machine.rs": {
+      "branches": {
+        "covered": 4,
+        "count": 4
+      },
+      "lines": {
+        "covered": 66,
+        "count": 67
+      }
+    },
+    "rust/crates/arare-interp/src/lift.rs": {
+      "branches": {
+        "covered": 4,
+        "count": 4
+      },
+      "lines": {
+        "covered": 74,
+        "count": 75
+      }
+    },
+    "rust/crates/arare-interp/src/words.rs": {
+      "branches": {
+        "covered": 10,
+        "count": 10
+      },
+      "lines": {
+        "covered": 176,
+        "count": 177
+      }
+    },
+    "rust/crates/arare-interp/src/value.rs": {
+      "branches": {
+        "covered": 2,
+        "count": 2
+      },
+      "lines": {
+        "covered": 31,
+        "count": 31
+      }
     }
   }
 }

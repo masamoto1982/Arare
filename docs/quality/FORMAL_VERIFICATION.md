@@ -18,9 +18,10 @@ exactly where it is stated, and nowhere else.
 
 ## Status
 
-**Phase 2a: the value model is proved in Lean, mirrored in Rust and diffed
-against it, and the kernel is proved against laws in Kani.** The interpreter
-(Phase 2b) is not yet verified.
+**Phase 2b: the value model is proved in Lean, mirrored in Rust and diffed
+against it, and the kernel is proved against laws in Kani.** The front end and
+the interpreter are QL-B: tested, compared with the Ajisai oracle
+(AR-VER-209), not proved.
 
 ### Lean
 
@@ -87,8 +88,9 @@ Read these as open, not as proved by implication:
 - **MUL beyond int16, DIV beyond int16 at scale 0, EQ and LT across scales**
   are tested, not proved: identities between products of two wide words are
   out of the solvers' reach.
-- **Agreement with Ajisai.** Argued in ADR-0003, not proved; the oracle
-  comparison arrives with the interpreter in Phase 2b.
+- **Agreement with Ajisai.** Argued in ADR-0003, not proved. The oracle
+  comparison (AR-VER-209) checks it on a corpus, within hand-written
+  tolerances, which is evidence on those programs, not a proof.
 - **The reciprocal wheel axioms** do not hold for fixed point and are not
   claimed (ADR-0003).
 - **NARROW inside expressions.** `Closed.lean`'s language has no NARROW; its
@@ -98,7 +100,10 @@ Read these as open, not as proved by implication:
 - **Aggregates other than SUM**, numeric columns, and 64-byte buffer alignment
   (AR-HLR-019 is exempt from proof by its nature; its bitmaps are tested and
   proved lane-wise).
-- **The interpreter** (Phase 2b).
+- **The front end and the interpreter** (QL-B): tested and compared with the
+  oracle, not proved. QUANTIZE's rounding is the proved `roundDiv` and
+  `rescale` (AR-HLR-026); its kernel implementation is tested over a grid
+  (AR-VER-208), with no Kani harness.
 
 ## Running
 
