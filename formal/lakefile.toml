@@ -13,3 +13,9 @@ name = "Arare"
 [[lean_exe]]
 name = "arare-table"
 root = "Table"
+
+# The checker printed as a table, diffed against the Rust checker in CI
+# (formal/BudgetTable.lean).
+[[lean_exe]]
+name = "arare-budget-table"
+root = "BudgetTable"
