@@ -23,7 +23,8 @@ export function tracedFiles() {
   const traced = new Map();
   // Requirement rows: | **AR-HLR-00N** | statement | implementation | verification | QL |
   for (const line of readText('docs/quality/TRACEABILITY_MATRIX.md').split('\n')) {
-    const cells = line.split('|').map((cell) => cell.trim());
+    // A `\|` inside a cell (an absolute value in a statement) is not a cell boundary.
+    const cells = line.split(/(?<!\\)\|/).map((cell) => cell.trim());
     const requirement = cells[1]?.match(/AR-(?:SYS|HLR|LLR|INH|PERF)-\d{3}/)?.[0];
     if (!requirement || cells.length < 6) continue;
     const level = cells[5];

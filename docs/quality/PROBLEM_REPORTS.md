@@ -13,7 +13,6 @@ from the first commit that has them.
 | PR-0007 | `tools/mcp-server/` is Ajisai's server, kept as the oracle for agent sessions; the server is outside CI, though its committed Node build of Ajisai is what the oracle comparison runs (ADR-0007) | Arare's own server is Phase 6 work | Phase 6 |
 | PR-0008 | Ajisai's Reference generator (`scripts/generate-word-reference.mjs`) was removed with Ajisai's spec | The Reference comes with the Playground; the specification half of this report closed in Phase 1 (see Closed) | Phase 5 |
 | PR-0009 | Inherited comments in `src/`, `index.html`, `tests/formatter-corpus.json` and `spec/host-protocol.schema.json` cite Ajisai paths (`rust/src/...`, `spec/...`, `docs/dev/...`) that are not in this repository; they name files at the commit `UPSTREAM.md` records | They describe the Ajisai engine the Playground still drives; rewriting them before the shell is engine-neutral would only move the problem | Phase 5 |
-| PR-0010 | The oracle corpus's tolerances are worked out by hand, case by case | Error budgets are inferred only in Phase 3 (ADR-0007) | Phase 3 |
 
 ## Closed
 
@@ -24,3 +23,4 @@ from the first commit that has them.
 | PR-0004 | `cargo-llvm-cov` was installed at its latest version in CI | Closed 2026-10-28 (Phase 1): pinned to 0.9.1 in `.github/workflows/test.yml` and `CONFIGURATION_INDEX.md` |
 | PR-0008 (spec) | Ajisai's specification generator was removed with Ajisai's spec | Closed 2026-10-28 (Phase 1): replaced, not ported — `spec/requirements.json` and `scripts/generate-requirements.mjs` (ADR-0006) |
 | PR-0003 (Kani) | No Kani harness existed, and `cargo kani` passed when it found none | Closed 2026-10-28 (Phase 2a): nine harnesses in `rust/crates/arare-kernel/src/proofs.rs`, and the Kani job fails when fewer are verified than the source declares |
+| PR-0010 | The oracle corpus's tolerances were worked out by hand, case by case | Closed 2026-10-29 (Phase 3): the comparison uses the budget `arare-budget` infers (ADR-0008); each case's hand-derived figure stays as the largest budget the checker may infer |

@@ -29,7 +29,9 @@ are inferred only in Phase 3.
 - **Tolerances are written by hand until Phase 3.** Each case states the
   largest absolute error allowed, worked out from the rounding points it passes
   through; Phase 3 replaces them with the inferred budget, and the corpus then
-  checks the budget checker's soundness empirically.
+  checks the budget checker's soundness empirically. (Done in Phase 3,
+  ADR-0008: the comparison uses the inferred budget, and the hand-written
+  figure, renamed `budget`, is the largest the checker may infer.)
 - **The oracle is the committed Node build** in `tools/mcp-server/wasm/
   generated/`, from the commit `UPSTREAM.md` records, so the comparison needs no
   network and no Ajisai build.

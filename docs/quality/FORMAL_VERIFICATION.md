@@ -14,18 +14,21 @@ exactly where it is stated, and nowhere else.
 | Model to code | Differential tests | `rust/crates/arare-spec` against the Lean model, on every int8 operand pair |
 | Implementation | Kani, `rust/` | Each kernel against `arare-spec`, over its whole range or a stated small scope |
 | Compiled code | Translation validation | Native and WASM output against the reference interpreter |
-| Error budget, empirically | The Ajisai oracle | `|Arare − Ajisai| ≤` the inferred budget on generated programs |
+| Error budget | Lean 4, `formal/`; differential tests; the Ajisai oracle | The checker's soundness, proved over the numeric Words; the Rust checker against the Lean one; `|Arare − Ajisai| ≤` the inferred budget on the corpus and on generated programs |
 
 ## Status
 
-**Phase 2b: the value model is proved in Lean, mirrored in Rust and diffed
-against it, and the kernel is proved against laws in Kani.** The front end and
-the interpreter are QL-B: tested, compared with the Ajisai oracle
-(AR-VER-209), not proved.
+**Phase 3: the value model is proved in Lean, mirrored in Rust and diffed
+against it, and the kernel is proved against laws in Kani. The error-budget
+checker is proved sound in Lean over the numeric Words, computed in Rust as
+the same functions and diffed against Lean, and held to Ajisai on the corpus
+and on at least 10,000 generated programs.** The front end and the
+interpreter are QL-B: tested, compared with the Ajisai oracle (AR-VER-209),
+not proved.
 
 ### Lean
 
-80 theorems in `formal/Arare/`, each resting only on `propext`,
+119 theorems in `formal/Arare/`, each resting only on `propext`,
 `Classical.choice` and `Quot.sound` (`npm run check:formal` runs
 `scripts/check-formal-axioms.mjs` after `lake build`, because `lake build`
 alone accepts `sorry`). Every theorem is cited by a requirement in
@@ -40,6 +43,7 @@ one (`npm run check:requirements`).
 | `formal/Arare/Truth.lean` | AR-VER-104 | Strong Kleene: AND the meet and OR the join of FALSE < UNKNOWN < TRUE, NOT the reversing involution; commutative, associative, idempotent, absorptive, distributive, De Morgan, Kleene's law; excluded middle fails at UNKNOWN | AR-HLR-012 |
 | `formal/Arare/Closed.lean` | AR-VER-105 | Over an expression language of literals, points, `+ − ·`, negation and DIV: closed code computes the exact integer; a machine that fits every intermediate into the widest width answers that integer or a point, never another finite number, and the exact integer when nothing overflows; associativity does not survive an intermediate overflow | AR-HLR-003, 004, 017 |
 | `formal/Arare/Sql.lean` | AR-VER-106 | NIL in truth position is UNKNOWN; EQ always decided; order of a point UNKNOWN; FILTER keeps exactly the TRUE elements; a branch takes THEN only on TRUE; SUM skips NIL and is NIL when nothing is left | AR-HLR-010, 011, 013, 014, 015, 016 |
+| `formal/Arare/Budget.lean` | AR-VER-107 | Over an expression language of quantized literals, the wheel points, ADD, SUB, MUL, NEG, DIV, RESCALE, NARROW and QUANTIZE, with an exact meaning on rationals (Ajisai's) and a machine meaning on codes at static scales (Arare's kernel, fitted into the widest width): the checker `analyze` is sound — every wheel point it names both meanings reach, every range it gives holds the exact value, and every error it gives bounds the machine's distance from it (`budget_sound`); code it bounds everywhere has no wheel point at any node and no DIV by zero in either meaning (`closed_safe`); a join is right about either side (`join_sound_left`, `join_sound_right`) | AR-HLR-027, 028, 029 |
 
 ### Model to code (AR-VER-201)
 
@@ -51,6 +55,21 @@ same grid from the Rust executable specification. The Lean job of CI diffs
 the two and fails on any difference. This ties `arare-spec` to the model on
 that grid, not beyond it: the theorems cover every input, the diff covers the
 grid.
+
+### The checker, model to code (AR-VER-215)
+
+`formal/BudgetTable.lean` runs the Lean checker over a grid — 17 literals
+(integers, rationals that round and that do not, one out of its width, the two
+wheel points) under seven unary Words, and every pair of those under ADD, SUB,
+MUL, DIV and the join — and prints 14,280 lines;
+`rust/crates/arare-budget/src/table.rs` prints the same grid from the Rust
+checker. The Lean job of CI diffs the two. The Rust checker computes Lean's
+functions with checked 128-bit rationals and answers nothing where one would
+not fit (ADR-0008), so beyond the grid it answers Lean's result or nothing —
+an argument from the code's structure, not a proof. The Rust checker is also
+held to the kernel directly: every Word over a grid of literals, two levels
+deep on part of it, with the claim `Sound` checked against exact rationals
+(AR-VER-216).
 
 ### Kani (AR-VER-207)
 
@@ -89,14 +108,34 @@ Read these as open, not as proved by implication:
   are tested, not proved: identities between products of two wide words are
   out of the solvers' reach.
 - **Agreement with Ajisai.** Argued in ADR-0003, not proved. The oracle
-  comparison (AR-VER-209) checks it on a corpus, within hand-written
-  tolerances, which is evidence on those programs, not a proof.
+  comparison checks it within the inferred budget on a corpus (AR-VER-209) and
+  on generated programs (AR-VER-217), which is evidence on those programs, not
+  a proof.
 - **The reciprocal wheel axioms** do not hold for fixed point and are not
   claimed (ADR-0003).
 - **NARROW inside expressions.** `Closed.lean`'s language has no NARROW; its
   `fit` is the widest-width limit. NARROW on its own is AR-VER-101.
-- **The static range proof** that makes code `field=closed` (AR-HLR-017) and
-  the error budget are Phase 3.
+- **The checker beyond the numeric Words.** `Budget.lean`'s language has no
+  vectors, truth values or stack. That a truth value agrees between the two
+  meanings (an order or equality of exact or separated numbers), the bound
+  across a SELECT whose condition may differ (`info::cross`), and the run of
+  the checker over a program's stack, vectors and loops (`check.rs`,
+  `words.rs`) are tested (AR-VER-216-C) and compared with Ajisai on the corpus
+  and on at least 10,000 generated programs (AR-VER-209, AR-VER-217), not
+  proved (AR-HLR-029). Only `join`, which lanes and loop iterations go
+  through, is proved.
+- **The checked rationals** (`rat.rs`, AR-LLR-018) have no Kani harness:
+  symbolic 128-bit division is beyond the solver in the time CI allows (a
+  harness for `Q::new` over 8-bit operands took 13 minutes locally, and over
+  10 with CaDiCaL). They are tested on a grid and across overflow
+  (AR-VER-216-R) and through the soundness tests and the Lean–Rust table.
+- **The Rust checker beyond the grid.** That it computes Lean's functions or
+  nothing rests on its structure (each function written after the Lean one,
+  every rational operation checked) and the 14,280-line diff, not on a proof
+  (AR-LLR-019).
+- **The exact meaning is Ajisai's only where the oracle shows it.** The
+  model's exact meaning is written from ADR-0007's prelude; that Ajisai
+  computes it is what the oracle comparison checks, on its programs.
 - **Aggregates other than SUM**, numeric columns, and 64-byte buffer alignment
   (AR-HLR-019 is exempt from proof by its nature; its bitmaps are tested and
   proved lane-wise).
@@ -104,6 +143,10 @@ Read these as open, not as proved by implication:
   oracle, not proved. QUANTIZE's rounding is the proved `roundDiv` and
   `rescale` (AR-HLR-026); its kernel implementation is tested over a grid
   (AR-VER-208), with no Kani harness.
+- **Widths in the budget model.** Like `Closed.lean`, `Budget.lean` fits
+  arithmetic results into the widest width only; that the kernel's narrower
+  result widths never change a value is tested (AR-VER-203, AR-VER-204), not
+  proved.
 
 ## Running
 

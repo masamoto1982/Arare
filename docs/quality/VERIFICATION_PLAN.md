@@ -22,6 +22,9 @@ enforce it. Every gate listed as blocking fails the `quality-gate`,
   shell's type check, lint and tests.
 - `npm run check:gates`: the requirements registry, traceability, version
   sync, the Rust file-size budget and the Playground's WCAG contrast.
+- `npm run check:oracle` and `npm run check:oracle-random`: Arare against the
+  pinned Ajisai build within the inferred error budget (AR-VER-209,
+  AR-VER-217).
 - `npm run check:coverage-ratchet`: no QL-A or QL-B file loses branch or line
   coverage against `docs/quality/coverage-baseline.json`.
 
@@ -46,7 +49,9 @@ These start in the phase named and are blocking from then on.
 |---|---|---|
 | Lean model vs Rust executable specification | `arare-spec` computes what the Lean definitions compute, on every int8 operand pair and the rest of the grid of `formal/Table.lean` (AR-VER-201, in the Lean job) | Phase 2a — active |
 | Kani over the kernels | Each kernel meets its law over its whole range, or a stated scope, and reaches no overflow, out-of-bounds index or panic (AR-VER-207; the job fails when fewer harnesses are verified than declared) | Phase 2a — active |
-| Oracle comparison | `|Arare − Ajisai| ≤` the case's tolerance over `tests/oracle/corpus.json`, the deliberate divergences recorded as cases (AR-VER-209, ADR-0007, `npm run check:oracle`); Ajisai pinned to the commit `UPSTREAM.md` names | Phase 2b — active; Phase 3 replaces hand-written tolerances with the inferred budget |
+| Oracle comparison | `|Arare − Ajisai| ≤` the inferred error budget over `tests/oracle/corpus.json`, each case's budget no looser than its hand-derived figure, the deliberate divergences recorded as cases (AR-VER-209, ADR-0007, `npm run check:oracle`); Ajisai pinned to the commit `UPSTREAM.md` names | Phase 2b — active; inferred budgets from Phase 3 |
+| Error budget against the model | The Rust checker infers what the Lean checker does over the grid of `formal/BudgetTable.lean` (AR-VER-215, in the Lean job) | Phase 3 — active |
+| Error budget against Ajisai | `|Arare − Ajisai| ≤` the inferred budget on at least 10,000 seeded, generated programs, with no violation and at least half the values bounded (AR-VER-217, `npm run check:oracle-random`) | Phase 3 — active |
 | Translation validation | Compiled code (native and WASM SIMD128) agrees with the reference interpreter: exhaustively for int8, by boundary and random cases for int16 and int32 | Phase 4 |
 | Performance | Every `AR-PERF-*` requirement, measured against a baseline loop in the same run (WORK_ORDER.md §6) | Phase 4 |
 

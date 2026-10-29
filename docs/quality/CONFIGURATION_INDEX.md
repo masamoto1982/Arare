@@ -14,7 +14,7 @@ change that updates this file in the same diff
 | cargo-llvm-cov | 0.9.1 | `.github/workflows/test.yml` |
 | Kani | 0.68.0 | `.github/workflows/test.yml` |
 | Lean 4 | v4.34.0 | `formal/lean-toolchain` |
-| Lean dependencies | none | `formal/lake-manifest.json` |
+| Lean dependencies | none (the budget proofs use core Lean's `Rat` and `grind`) | `formal/lake-manifest.json` |
 | Node.js | 20 | `.github/workflows/test.yml`, `.github/workflows/build.yml` |
 | npm dependencies | as locked | `package-lock.json` |
 | Tauri crates | as locked | `src-tauri/Cargo.lock` |
@@ -35,4 +35,5 @@ change that updates this file in the same diff
 | 0. Initialization | Merged | `02a8f32ebd5c6b28c8c748b10b4d0b8af754ea9b` (masamoto1982/Arare#1) | WORK_ORDER.md §10. Open gaps: `docs/quality/PROBLEM_REPORTS.md` |
 | 1. Requirements and formal model | Merged | `4c12a6e` (masamoto1982/Arare#3) | Requirements registry, ADR-0001 to ADR-0006, Lean model (AR-VER-101 to 106) |
 | 2a. Executable specification and kernel | Merged | `1b0afab` (masamoto1982/Arare#4) | `arare-spec`, `arare-kernel`, AR-LLR-001 to 009, AR-VER-201 to 207 |
-| 2b. Front end and interpreter | In review | — | Literals and QUANTIZE, the Words, NIL reasons, the CLI, the Ajisai oracle; AR-HLR-021 to 026, AR-LLR-010 to 017, AR-VER-208 to 214 |
+| 2b. Front end and interpreter | Merged | `f3e3ea3` (masamoto1982/Arare#5) | Literals and QUANTIZE, the Words, NIL reasons, the CLI, the Ajisai oracle; AR-HLR-021 to 026, AR-LLR-010 to 017, AR-VER-208 to 214 |
+| 3. Error-budget checker | In review | — | `arare-budget`, `arare check`, ADR-0008; the soundness theorem (AR-VER-107); AR-HLR-027 to 029, AR-LLR-018 to 022, AR-VER-215 to 218; the oracle against inferred budgets and 10,000 generated programs |
