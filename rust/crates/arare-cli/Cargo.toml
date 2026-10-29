@@ -8,5 +8,13 @@ repository.workspace = true
 rust-version.workspace = true
 publish = false
 
+[[bin]]
+name = "arare"
+path = "src/main.rs"
+
 [lints]
 workspace = true
+
+[dependencies]
+arare-interp = { path = "../arare-interp" }
+arare-kernel = { path = "../arare-kernel" }
