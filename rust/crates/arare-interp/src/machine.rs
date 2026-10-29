@@ -76,7 +76,7 @@ pub(crate) fn exec(stack: &mut Vec<Value>, item: &Item) -> Result<(), Error> {
         Item::Int(k) => stack.push(Value::Num(
             Num::int(*k).expect("the front end checked the range"),
         )),
-        Item::Num(n) => stack.push(Value::Num(*n)),
+        Item::Num { num, .. } => stack.push(Value::Num(*num)),
         Item::Quote(items) => stack.push(Value::Quote(Rc::new(items.clone()))),
         Item::Word(w) => apply(*w, stack).map_err(|kind| Error { word: *w, kind })?,
     }

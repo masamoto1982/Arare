@@ -73,10 +73,16 @@ fn ar_ver_210_items() {
 
 #[test]
 fn ar_ver_210_quantized_literals() {
-    let folded = |src: &str| match &parse(src).unwrap().items[..] {
-        [Item::Num(n)] => *n,
+    let item = |src: &str| match &parse(src).unwrap().items[..] {
+        [Item::Num { num, exact }] => (*num, *exact),
         other => panic!("{src}: {other:?}"),
     };
+    let folded = |src: &str| item(src).0;
+    // The exact rational is kept, in lowest terms, for the budget checker.
+    assert_eq!(item("0.75 8 -4 QUANTIZE").1, (3, 4));
+    assert_eq!(item("2/6 32 -3 QUANTIZE").1, (1, 3));
+    assert_eq!(item("-1.5 16 -1 QUANTIZE").1, (-3, 2));
+    assert_eq!(item("0/0 64 0 QUANTIZE").1, (0, 0));
     assert_eq!(
         folded("0.75 8 -4 QUANTIZE"),
         Num::from_ratio(3, 4, Width::W8, -4).unwrap()

@@ -5,11 +5,18 @@ version = 4
 [[package]]
 name = "arare-budget"
 version = "0.1.0-alpha.0"
+dependencies = [
+ "arare-front",
+ "arare-interp",
+ "arare-kernel",
+]
 
 [[package]]
 name = "arare-cli"
 version = "0.1.0-alpha.0"
 dependencies = [
+ "arare-budget",
+ "arare-front",
  "arare-interp",
  "arare-kernel",
 ]

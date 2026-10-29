@@ -8,7 +8,7 @@ use crate::{FrontError, FrontErrorKind};
 use arare_kernel::{Num, Width, MAX_SCALE};
 
 /// The vocabulary of Phase 2 (WORK_ORDER.md §7).
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
 pub enum Word {
     Quantize,
     Add,
@@ -90,8 +90,13 @@ impl Word {
 pub enum Item {
     /// An integer literal: scale 0, the narrowest width that holds it.
     Int(i64),
-    /// A quantized literal, already folded.
-    Num(Num),
+    /// A quantized literal, already folded, with the exact rational `p/q`
+    /// it was written as (`q ≥ 0`; `q = 0` for a wheel point), which the
+    /// error-budget checker measures the quantization against (AR-LLR-020).
+    Num {
+        num: Num,
+        exact: (i64, i64),
+    },
     Word(Word),
     /// A bracketed sequence: data or code, by what consumes it.
     Quote(Vec<Item>),
@@ -222,9 +227,10 @@ fn quantized(tokens: &[Token], at: &mut usize, t: &Token) -> Result<Item, FrontE
     let scale = e.text.parse::<i32>().ok().filter(|s| s.abs() <= MAX_SCALE);
     let scale = scale.ok_or_else(|| error(e, FrontErrorKind::BadQuantize(shown)))?;
     *at += 3;
-    Ok(Item::Num(
-        Num::from_ratio(p, q, width, scale).expect("the exponent was checked"),
-    ))
+    Ok(Item::Num {
+        num: Num::from_ratio(p, q, width, scale).expect("the exponent was checked"),
+        exact: (p, q),
+    })
 }
 
 /// Parse a source text.
