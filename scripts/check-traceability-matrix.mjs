@@ -70,7 +70,8 @@ const retiredIds = new Set((closedText.match(ID_RE) ?? []).filter((id) => !liveI
 
 // The corpus that may carry a requirement or verification ID: the
 // requirements themselves (spec/, docs/design/), the Rust crates, the Lean
-// model, the TypeScript shell and the scripts that gate performance. The
+// model, the TypeScript shell, the oracle corpus and harness, and the scripts
+// that gate performance. The
 // matrix itself is excluded so it cannot satisfy its own claims.
 const sourceFiles = [
   ...walk(resolve(repoRoot, 'spec'), ['.md', '.json']),
@@ -79,6 +80,8 @@ const sourceFiles = [
   ...walk(resolve(repoRoot, 'formal'), ['.lean']),
   ...walk(resolve(repoRoot, 'src'), ['.ts', '.tsx']),
   ...walk(resolve(repoRoot, 'scripts/bench'), ['.mjs', '.json']),
+  ...walk(resolve(repoRoot, 'tests/oracle'), ['.json']),
+  resolve(repoRoot, 'scripts/check-oracle.mjs'),
   resolve(repoRoot, 'vitest.config.ts'),
 ].filter((f) => existsSync(f));
 

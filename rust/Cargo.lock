@@ -9,6 +9,10 @@ version = "0.1.0-alpha.0"
 [[package]]
 name = "arare-cli"
 version = "0.1.0-alpha.0"
+dependencies = [
+ "arare-interp",
+ "arare-kernel",
+]
 
 [[package]]
 name = "arare-codegen"
@@ -17,10 +21,17 @@ version = "0.1.0-alpha.0"
 [[package]]
 name = "arare-front"
 version = "0.1.0-alpha.0"
+dependencies = [
+ "arare-kernel",
+]
 
 [[package]]
 name = "arare-interp"
 version = "0.1.0-alpha.0"
+dependencies = [
+ "arare-front",
+ "arare-kernel",
+]
 
 [[package]]
 name = "arare-kernel"

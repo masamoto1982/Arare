@@ -71,6 +71,10 @@ jobs:
       - name: Traceability matrix against the source
         run: npm run check:traceability
 
+      # AR-VER-209: the oracle corpus against the pinned Ajisai build (ADR-0007).
+      - name: Arare agrees with the Ajisai oracle
+        run: npm run check:oracle
+
       - name: Package, crate and Tauri versions agree
         run: npm run check:version-sync
 

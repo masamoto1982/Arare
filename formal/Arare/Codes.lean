@@ -92,7 +92,7 @@ theorem fit_of_valid (M : Int) (x : W) (hx : valid M x) : fit M x = x := by
 theorem fit_idem (M : Int) (x : W) : fit M (fit M x) = fit M x :=
   fit_of_valid M _ (fit_valid M x)
 
-/-- AR-HLR-004: overflow is never silent. Whatever `fit` answers is either the
+/-- AR-HLR-004, AR-HLR-026: overflow is never silent. Whatever `fit` answers is either the
 exact value or `1/0`. -/
 theorem fit_exact_or_inf (M : Int) (x : W) : fit M x = x ∨ fit M x = .inf := by
   cases x with

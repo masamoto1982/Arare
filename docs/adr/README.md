@@ -13,3 +13,4 @@ record supersedes it and says so.
 | [0004](0004-where-widths-and-scales-are-written.md) | Widths and scales are written where a value enters, inferred elsewhere | Accepted |
 | [0005](0005-sql-export-of-wheel-points.md) | Exporting 1/0 and 0/0 to SQL | Accepted |
 | [0006](0006-requirements-registry.md) | The requirements registry and its generated surfaces | Accepted |
+| [0007](0007-oracle-comparison.md) | Comparing Arare with the Ajisai oracle, divergences recorded as cases | Accepted |

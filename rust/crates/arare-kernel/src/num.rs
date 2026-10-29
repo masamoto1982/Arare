@@ -13,7 +13,7 @@ use core::cmp::Ordering;
 /// The largest scale exponent magnitude (AR-LLR-004).
 pub const MAX_SCALE: i32 = 31;
 
-const SCALES: core::ops::RangeInclusive<i32> = -MAX_SCALE..=MAX_SCALE;
+pub(crate) const SCALES: core::ops::RangeInclusive<i32> = -MAX_SCALE..=MAX_SCALE;
 
 /// An operation whose result scale would leave ±[`MAX_SCALE`]: an error in
 /// the program, not a value.
@@ -22,9 +22,9 @@ pub struct ScaleOverflow;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Hash)]
 pub struct Num {
-    val: Val,
-    width: Width,
-    scale: i32,
+    pub(crate) val: Val,
+    pub(crate) width: Width,
+    pub(crate) scale: i32,
 }
 
 /// `max · 2^d` as a bound on magnitudes; `d ≤ 62` keeps it below `2^125`.
@@ -35,7 +35,7 @@ fn shifted_bound(w: Width, d: u32) -> u128 {
 /// Round half to even of `n / d`, `d ≠ 0` (AR-LLR-005). Written on the
 /// truncating quotient, a second formulation beside the specification's
 /// Euclidean one.
-fn round_div(n: i128, d: i128) -> i128 {
+pub(crate) fn round_div(n: i128, d: i128) -> i128 {
     let (n, d) = if d < 0 { (-n, -d) } else { (n, d) };
     let q = n / d;
     let twice = 2 * (n % d).abs();
