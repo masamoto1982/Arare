@@ -15,12 +15,13 @@ extern crate alloc;
 mod codes;
 mod column;
 mod num;
+mod quantize;
 mod truth;
 mod width;
 
 pub use codes::{decode, encode, fit, fit_val, is_code, Val};
 pub use column::TruthColumn;
-pub use num::{Num, ScaleOverflow};
+pub use num::{Num, ScaleOverflow, MAX_SCALE};
 pub use truth::Truth;
 pub use width::Width;
 

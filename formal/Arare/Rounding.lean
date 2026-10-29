@@ -55,7 +55,7 @@ def roundDiv (n d : Int) : Int :=
   else if d < 0 then roundDivPos (-n) (-d)
   else 0
 
-/-- AR-HLR-007: `DIV` of two finite numbers, the divisor nonzero, is within
+/-- AR-HLR-007, AR-HLR-026: `DIV` of two finite numbers, and a quantized literal, the divisor nonzero, are within
 half a unit of the exact quotient: `2·|n − d·q| ≤ |d|`. -/
 theorem roundDiv_error (n d : Int) (hd : d ≠ 0) :
     -(if 0 < d then d else -d) ≤ 2 * (n - d * roundDiv n d) ∧
@@ -80,7 +80,7 @@ theorem two_pow_pos_int (s : Nat) : (0 : Int) < ((2 ^ s : Nat) : Int) := by
   have := Nat.two_pow_pos s
   omega
 
-/-- AR-HLR-008: `RESCALE` errs by at most half an ulp of the new scale. With
+/-- AR-HLR-008, AR-HLR-026: `RESCALE`, and `QUANTIZE` raising an exponent, err by at most half an ulp of the new scale. With
 `u = 2^s` the new ulp in units of the old one, `2·|k − u·r| ≤ u`. -/
 theorem rescale_error (k : Int) (s : Nat) :
     -((2 ^ s : Nat) : Int) ≤ 2 * (k - ((2 ^ s : Nat) : Int) * rescale k s) ∧
