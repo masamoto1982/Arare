@@ -75,6 +75,11 @@ jobs:
       - name: Arare agrees with the Ajisai oracle
         run: npm run check:oracle
 
+      # AR-VER-217: the inferred error budget holds against Ajisai on at least
+      # 10,000 generated programs (WORK_ORDER.md §7, Phase 3's exit criterion).
+      - name: The error budget holds on generated programs
+        run: npm run check:oracle-random
+
       - name: Package, crate and Tauri versions agree
         run: npm run check:version-sync
 
@@ -208,3 +213,16 @@ jobs:
             exit 1
           fi
           echo "Lean and Rust agree on all $(wc -l < "$RUNNER_TEMP/lean-table.txt") lines."
+
+      # AR-VER-215: the Lean checker and the Rust checker infer the same over
+      # the same grid of expressions; any difference fails the job.
+      - name: The Rust checker agrees with the Lean checker
+        run: |
+          (cd formal && lake build arare-budget-table && lake exe arare-budget-table > "$RUNNER_TEMP/lean-budget.txt")
+          (cd rust && cargo run --quiet --release -p arare-budget --example budget_table > "$RUNNER_TEMP/rust-budget.txt")
+          if ! diff -u "$RUNNER_TEMP/lean-budget.txt" "$RUNNER_TEMP/rust-budget.txt" > "$RUNNER_TEMP/budget.diff"; then
+            head -40 "$RUNNER_TEMP/budget.diff"
+            echo "::error::The Rust checker and the Lean checker disagree ($(grep -c '^[-+][^-+]' "$RUNNER_TEMP/budget.diff") lines)."
+            exit 1
+          fi
+          echo "Lean and Rust agree on all $(wc -l < "$RUNNER_TEMP/lean-budget.txt") lines."
