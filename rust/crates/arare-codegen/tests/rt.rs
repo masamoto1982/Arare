@@ -82,6 +82,15 @@ fn ar_ver_224_values() {
             Value::Num(Num::new(Val::Inf, Width::W8, 0).unwrap())
         ])
     );
+    // Every width's codes are made from values.
+    for w in [Width::W8, Width::W16, Width::W32, Width::W64] {
+        let c = Column::of_values(w, 0, &[Some(Val::Fin(-3)), None]).unwrap();
+        assert_eq!(
+            (c.width(), c.lane(0), c.lane(1)),
+            (w, Some(Val::Fin(-3)), None)
+        );
+        assert_eq!(Arg::Column(c.clone()).to_value(), c.to_value());
+    }
     let a = Arg::Num(Num::int(5).unwrap());
     assert_eq!(a.to_value(), Value::Num(Num::int(5).unwrap()));
     assert_eq!(a.plain_num(Width::W8, 0), Some(5));
