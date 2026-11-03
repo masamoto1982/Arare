@@ -1,5 +1,6 @@
 # Rust/WASM関連
 rust/target/
+rust/bench/target/
 
 # Tauri
 src-tauri/target/
