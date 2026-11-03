@@ -18,6 +18,8 @@ change that updates this file in the same diff
 | Node.js | 20 | `.github/workflows/test.yml`, `.github/workflows/build.yml` |
 | npm dependencies | as locked | `package-lock.json` |
 | Tauri crates | as locked | `src-tauri/Cargo.lock` |
+| Benchmark build target | `-C target-cpu=x86-64-v3` | `.github/workflows/test.yml` (performance job), ADR-0009 |
+| Benchmark crates | as locked | `rust/bench/Cargo.lock` |
 
 ## The Ajisai oracle
 
@@ -26,6 +28,7 @@ change that updates this file in the same diff
 | Playground WebAssembly bundle | Ajisai `4d5f693def073b303d7ede3a98b3e9fa15060601`, in `src/wasm/ajisai-oracle/` (`src/wasm/ajisai-oracle/ORACLE.md`) |
 | MCP server for agent sessions | Ajisai MCP server 0.9.0 with engine 1.0.0-beta.3, in `tools/mcp-server/`, from the same commit |
 | Node build for the oracle comparison | Ajisai `4d5f693`, in `tools/mcp-server/wasm/generated/`, read by `scripts/check-oracle.mjs` (ADR-0007) |
+| Native build for the benchmarks | `ajisai-core` at `4d5f693def073b303d7ede3a98b3e9fa15060601`, a Git dependency of `rust/bench` (AR-VER-221) |
 
 ## Phase record
 
@@ -36,4 +39,5 @@ change that updates this file in the same diff
 | 1. Requirements and formal model | Merged | `4c12a6e` (masamoto1982/Arare#3) | Requirements registry, ADR-0001 to ADR-0006, Lean model (AR-VER-101 to 106) |
 | 2a. Executable specification and kernel | Merged | `1b0afab` (masamoto1982/Arare#4) | `arare-spec`, `arare-kernel`, AR-LLR-001 to 009, AR-VER-201 to 207 |
 | 2b. Front end and interpreter | Merged | `f3e3ea3` (masamoto1982/Arare#5) | Literals and QUANTIZE, the Words, NIL reasons, the CLI, the Ajisai oracle; AR-HLR-021 to 026, AR-LLR-010 to 017, AR-VER-208 to 214 |
-| 3. Error-budget checker | In review | — | `arare-budget`, `arare check`, ADR-0008; the soundness theorem (AR-VER-107); AR-HLR-027 to 029, AR-LLR-018 to 022, AR-VER-215 to 218; the oracle against inferred budgets and 10,000 generated programs |
+| 3. Error-budget checker | Merged | `c4e2ab2` (masamoto1982/Arare#6) | `arare-budget`, `arare check`, ADR-0008; the soundness theorem (AR-VER-107); AR-HLR-027 to 029, AR-LLR-018 to 022, AR-VER-215 to 218; the oracle against inferred budgets and 10,000 generated programs |
+| 4a. Compiled route, native | In review | — | `arare-codegen`, `arare-compiled`, `arare compile`, `rust/bench`, ADR-0009; AR-HLR-030 and 031, AR-LLR-023 to 027, AR-VER-220 to 225; AR-PERF-001, 002, 004, 005 and 006 measured. Phase 4b: BIND and FOLD compiled, the logistic map (AR-PERF-003), the WASM SIMD128 build (AR-PERF-007) |

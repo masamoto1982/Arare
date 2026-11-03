@@ -652,6 +652,40 @@
       }
     },
     {
+      "id": "AR-HLR-030",
+      "title": "The compiled route answers what the interpreter answers",
+      "statement": "A program compiled for a signature — the width and scale of each input, a scalar or a vector, bottom of the stack first — answers, on any inputs, exactly what the reference interpreter answers when the same inputs are on its stack before the program runs: the same values, widths, scales, NIL lanes and wheel points, and the same errors. Compiling never changes a result; a program, or a run of one, that the compiled code does not cover is answered by the interpreter.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-004",
+        "AR-SYS-014"
+      ],
+      "derived": false,
+      "verification": {
+        "lean": [],
+        "formalExempt": "Compiled code is held to the interpreter by translation validation, the layer docs/quality/FORMAL_VERIFICATION.md assigns to it, not by a Lean theorem: the code is generated per program and compiled by rustc.",
+        "planned": "Phase 4b: the WASM SIMD128 build, by the same validation."
+      }
+    },
+    {
+      "id": "AR-HLR-031",
+      "title": "Columns know their wheel points and NIL lanes",
+      "statement": "A vector handed to compiled code is a column of one width and scale: codes and, when some lane is NIL, an Arrow validity bitmap. Whether it holds a wheel point and whether it holds a NIL lane are decided once, when the column is made, as Arrow records a null count; a code no width produces is refused then.",
+      "level": "QL-A",
+      "refines": [
+        "AR-SYS-006",
+        "AR-SYS-009",
+        "AR-SYS-014"
+      ],
+      "derived": true,
+      "rationale": "Recording the two facts per column is what lets compiled code skip every per-lane check on finite, valid data (AR-PERF-006); it is a design decision of ADR-0009, not a consequence of a system requirement.",
+      "verification": {
+        "lean": [],
+        "formalExempt": "A memory layout and its metadata are verified by tests, not by a theorem about values.",
+        "planned": "Verified through AR-LLR-023 (AR-VER-224) and the translation validation (AR-VER-220)."
+      }
+    },
+    {
       "id": "AR-PERF-001",
       "title": "int8 dot product",
       "statement": "The compiled int8 dot product over 1,000,000 elements takes at most 1.5 times a hand-written Rust int8 loop, and is at least 20 times faster than Ajisai's native build on the same case.",
@@ -663,7 +697,13 @@
       "derived": false,
       "verification": {
         "lean": [],
-        "planned": "Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI."
+        "planned": "Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; Phase 4b adds the WASM SIMD128 build.",
+        "tests": [
+          {
+            "id": "AR-VER-221",
+            "file": "rust/bench/src/main.rs"
+          }
+        ]
       }
     },
     {
@@ -677,7 +717,13 @@
       "derived": false,
       "verification": {
         "lean": [],
-        "planned": "Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI."
+        "planned": "Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; Phase 4b adds the WASM SIMD128 build.",
+        "tests": [
+          {
+            "id": "AR-VER-221",
+            "file": "rust/bench/src/main.rs"
+          }
+        ]
       }
     },
     {
@@ -691,7 +737,7 @@
       "derived": false,
       "verification": {
         "lean": [],
-        "planned": "Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI."
+        "planned": "Phase 4b: the logistic map needs BIND and FOLD on the compiled route (AR-PERF-003); the WASM SIMD128 build is measured against the native one (AR-PERF-007)."
       }
     },
     {
@@ -705,7 +751,13 @@
       "derived": false,
       "verification": {
         "lean": [],
-        "planned": "Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI."
+        "planned": "Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; Phase 4b adds the WASM SIMD128 build.",
+        "tests": [
+          {
+            "id": "AR-VER-221",
+            "file": "rust/bench/src/main.rs"
+          }
+        ]
       }
     },
     {
@@ -720,7 +772,13 @@
       "derived": false,
       "verification": {
         "lean": [],
-        "planned": "Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI."
+        "planned": "Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; Phase 4b adds the WASM SIMD128 build.",
+        "tests": [
+          {
+            "id": "AR-VER-221",
+            "file": "rust/bench/src/main.rs"
+          }
+        ]
       }
     },
     {
@@ -735,7 +793,13 @@
       "derived": false,
       "verification": {
         "lean": [],
-        "planned": "Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI."
+        "planned": "Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; Phase 4b adds the WASM SIMD128 build.",
+        "tests": [
+          {
+            "id": "AR-VER-221",
+            "file": "rust/bench/src/main.rs"
+          }
+        ]
       }
     },
     {
@@ -750,7 +814,7 @@
       "derived": false,
       "verification": {
         "lean": [],
-        "planned": "Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI."
+        "planned": "Phase 4b: the logistic map needs BIND and FOLD on the compiled route (AR-PERF-003); the WASM SIMD128 build is measured against the native one (AR-PERF-007)."
       }
     },
     {
@@ -1160,7 +1224,7 @@
     {
       "id": "AR-LLR-013",
       "title": "The machine",
-      "statement": "A Machine holds a stack and a program and executes one top-level item per step: a literal pushes a number, a quote pushes itself, a Word pops its operands in the order they were pushed and pushes its result. A quote consumed as data is evaluated on a stack of its own, nested quotes included; a block runs on a stack holding only its inputs and must leave one value. An ERROR stops the machine and names the Word.",
+      "statement": "A Machine holds a stack and a program and executes one top-level item per step, from an empty stack or from inputs already on it (how the compiled route hands a program its inputs): a literal pushes a number, a quote pushes itself, a Word pops its operands in the order they were pushed and pushes its result. A quote consumed as data is evaluated on a stack of its own, nested quotes included; a block runs on a stack holding only its inputs and must leave one value. An ERROR stops the machine and names the Word.",
       "level": "QL-B",
       "refines": [
         "AR-HLR-021",
@@ -1450,6 +1514,139 @@
           {
             "id": "AR-VER-209",
             "file": "tests/oracle/corpus.json"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-023",
+      "title": "Columns, inputs, outputs and the fallback",
+      "statement": "Column::new checks every non-NIL code with is_code for its width and records has_points and has_nils; a full validity bitmap is dropped. The fast path reads a column's codes only through plain_i8 to plain_i64, which answer None unless the width and scale are the ones asked and the column has no point and no NIL. Arg is a scalar Num or a Column; Out is a computed column, a vector of truth values or any interpreter value; fallback runs the program in the reference interpreter on the inputs. sum gives a SUM of count finite lanes the width the interpreter's running sum has after count lanes, NIL for none.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-030",
+        "AR-HLR-031",
+        "AR-HLR-016"
+      ],
+      "derived": false,
+      "implementation": [
+        "rust/crates/arare-codegen/src/rt.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-224",
+            "file": "rust/crates/arare-codegen/tests/rt.rs"
+          },
+          {
+            "id": "AR-VER-220",
+            "file": "rust/crates/arare-compiled/tests/translation.rs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-024",
+      "title": "The intermediate representation and lowering",
+      "statement": "lower runs a program once on a stack of symbols — a scalar node, a vector whose lanes are a node, a quote — the way the interpreter runs it, adding one node per Word: a node's width and scale are what the kernel's own operation gives placeholder numbers of its operands' widths and scales; its bound is the largest code magnitude on finite inputs, and it is checked when the bound exceeds its width or it is a DIV. ADD, SUB, MUL, DIV, NEG, RESCALE, NARROW, QUANTIZE, LT, AND, NOT and SELECT lower lane by lane, EQ on scalars, MAP by running its block on the lane, SUM to a reduction whose width is the one the running sum settles at. A literal point or NIL, a quote as data, FILTER, FOLD, a lane value computed from a reduction, and an operand that is not a literal integer where one is required are refused with the reason.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-030"
+      ],
+      "derived": false,
+      "implementation": [
+        "rust/crates/arare-codegen/src/ir.rs",
+        "rust/crates/arare-codegen/src/lower.rs",
+        "rust/crates/arare-codegen/src/lower_words.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-223",
+            "file": "rust/crates/arare-codegen/tests/lower.rs"
+          },
+          {
+            "id": "AR-VER-220",
+            "file": "rust/crates/arare-compiled/tests/translation.rs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-025",
+      "title": "Emitting Rust",
+      "statement": "emit writes, for a program and a signature, a function that runs the fast path and otherwise calls fallback with the source, and the fast path alone. The fast path takes the plain codes of every input, requires equal lengths and, for each SUM, enough lanes for its settled width and lanes × bound within int64; it computes uniform nodes before one loop over the lanes in chunks of 4096, lane nodes inside it in the integer type each bound needs, each SUM in a per-chunk partial of a type that holds the chunk, and reductions' dependents after it; a failed check sets trap and a trapped run answers None. One vector output with no reduction is written straight into the output, others through a chunk buffer. The text is deterministic. arare-compiled builds the programs of programs.txt this way at build time.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-030",
+        "AR-HLR-031"
+      ],
+      "derived": false,
+      "implementation": [
+        "rust/crates/arare-codegen/src/emit.rs",
+        "rust/crates/arare-codegen/src/node.rs",
+        "rust/crates/arare-compiled/src/lib.rs",
+        "rust/crates/arare-compiled/build.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-223",
+            "file": "rust/crates/arare-codegen/tests/lower.rs"
+          },
+          {
+            "id": "AR-VER-220",
+            "file": "rust/crates/arare-compiled/tests/translation.rs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-026",
+      "title": "Fast-path arithmetic",
+      "statement": "div_f64 rounds the f64 quotient of two integers half to even; for a dividend below 2^52 and a nonzero divisor below 2^53 in magnitude it is the kernel's round_div, and emit uses it then and round_div otherwise. rescale_i32 is the kernel's rescale_code on an i32 code, and emit uses it for codes that fit i32.",
+      "level": "QL-A",
+      "refines": [
+        "AR-HLR-007",
+        "AR-HLR-008",
+        "AR-HLR-030"
+      ],
+      "derived": true,
+      "rationale": "Floating-point division and 32-bit shifts are how the fast path vectorizes DIV and RESCALE (AR-PERF-004); they are implementation choices, held to the kernel's integer definitions.",
+      "implementation": [
+        "rust/crates/arare-codegen/src/rt.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-222",
+            "file": "rust/crates/arare-codegen/tests/div.rs"
+          }
+        ]
+      }
+    },
+    {
+      "id": "AR-LLR-027",
+      "title": "arare compile",
+      "statement": "`arare compile --inputs SIGNATURE [--name NAME] [FILE | -]` writes the program compiled for the signature (`v` or `s`, the width in bits, `:` and the scale exponent, for each input bottom first) as Rust source: arare-codegen's prelude and a function NAME, default `kernel`. It exits 2 on a bad signature or an unreadable file, 1 on a program the front end refuses.",
+      "level": "QL-C",
+      "refines": [
+        "AR-HLR-030"
+      ],
+      "derived": false,
+      "implementation": [
+        "rust/crates/arare-cli/src/main.rs"
+      ],
+      "verification": {
+        "lean": [],
+        "tests": [
+          {
+            "id": "AR-VER-225",
+            "file": "rust/crates/arare-cli/tests/cli.rs"
           }
         ]
       }

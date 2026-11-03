@@ -159,7 +159,7 @@ DIV of a nonzero finite number by 0 is 1/0 and of 0 by 0 is 0/0; a finite number
 - Derived: WORK_ORDER.md §3.3 named RESCALE and NARROW as the only rounding points; a fixed-point quotient is in general not on the grid, so DIV must round too (ADR-0002).
 - Proved in `formal/Arare/Wheel.lean` (AR-VER-102): `W.div_by_zero`, `W.zero_div_zero`, `W.fin_div_inf`, `W.inf_div_inf`, `W.div_error`
 - Proved in `formal/Arare/Rounding.lean` (AR-VER-103): `roundDiv_error`
-- Refined by: AR-LLR-001, AR-LLR-005, AR-LLR-015
+- Refined by: AR-LLR-001, AR-LLR-005, AR-LLR-015, AR-LLR-026
 - Planned: Phase 2: how the result scale is chosen is fixed with the surface syntax (AR-HLR-018) and tested then.
 
 ### AR-HLR-008 — RESCALE
@@ -169,7 +169,7 @@ RESCALE by s ≥ 0 bits raises a number's scale exponent by s and rounds its cod
 - Level: QL-A
 - Refines: AR-SYS-002
 - Proved in `formal/Arare/Rounding.lean` (AR-VER-103): `rescale_error`, `rescale_zero`, `roundDivPos_error`, `roundDivPos_tie_even`, `roundDivPos_exact`, `two_pow_pos_int`
-- Refined by: AR-LLR-001, AR-LLR-006, AR-LLR-015
+- Refined by: AR-LLR-001, AR-LLR-006, AR-LLR-015, AR-LLR-026
 
 ### AR-HLR-009 — NARROW
 
@@ -243,7 +243,7 @@ SUM, and every aggregate, skips the NIL elements of its input; an aggregate whos
 - Level: QL-A
 - Refines: AR-SYS-008
 - Proved in `formal/Arare/Sql.lean` (AR-VER-106): `sumT_all_nil`, `sumT_skip_nil`, `sumT_two`
-- Refined by: AR-LLR-001, AR-LLR-015
+- Refined by: AR-LLR-001, AR-LLR-015, AR-LLR-023
 - Planned: Phase 2: the other aggregates, by tests.
 
 ### AR-HLR-017 — What field=closed guarantees
@@ -367,6 +367,27 @@ The checker says of a truth value only whether both meanings answer the same one
 - Proved in `formal/Arare/Budget.lean` (AR-VER-107): `Budget.join_sound_left`, `Budget.join_sound_right`
 - Refined by: AR-LLR-019, AR-LLR-020
 - Planned: The agreement of truth values, the bound across SELECT's branches and the run over a program's stack are tested (AR-VER-216-C) and compared with Ajisai (AR-VER-217), not proved.
+
+### AR-HLR-030 — The compiled route answers what the interpreter answers
+
+A program compiled for a signature — the width and scale of each input, a scalar or a vector, bottom of the stack first — answers, on any inputs, exactly what the reference interpreter answers when the same inputs are on its stack before the program runs: the same values, widths, scales, NIL lanes and wheel points, and the same errors. Compiling never changes a result; a program, or a run of one, that the compiled code does not cover is answered by the interpreter.
+
+- Level: QL-A
+- Refines: AR-SYS-004, AR-SYS-014
+- Refined by: AR-LLR-023, AR-LLR-024, AR-LLR-025, AR-LLR-026, AR-LLR-027
+- Not proved formally: Compiled code is held to the interpreter by translation validation, the layer docs/quality/FORMAL_VERIFICATION.md assigns to it, not by a Lean theorem: the code is generated per program and compiled by rustc.
+- Planned: Phase 4b: the WASM SIMD128 build, by the same validation.
+
+### AR-HLR-031 — Columns know their wheel points and NIL lanes
+
+A vector handed to compiled code is a column of one width and scale: codes and, when some lane is NIL, an Arrow validity bitmap. Whether it holds a wheel point and whether it holds a NIL lane are decided once, when the column is made, as Arrow records a null count; a code no width produces is refused then.
+
+- Level: QL-A
+- Refines: AR-SYS-006, AR-SYS-009, AR-SYS-014
+- Derived: Recording the two facts per column is what lets compiled code skip every per-lane check on finite, valid data (AR-PERF-006); it is a design decision of ADR-0009, not a consequence of a system requirement.
+- Refined by: AR-LLR-023, AR-LLR-025
+- Not proved formally: A memory layout and its metadata are verified by tests, not by a theorem about values.
+- Planned: Verified through AR-LLR-023 (AR-VER-224) and the translation validation (AR-VER-220).
 
 ## Low-level requirements
 
@@ -501,7 +522,7 @@ The parser nests quotes by brackets, maps names to the twenty Words of the Phase
 
 ### AR-LLR-013 — The machine
 
-A Machine holds a stack and a program and executes one top-level item per step: a literal pushes a number, a quote pushes itself, a Word pops its operands in the order they were pushed and pushes its result. A quote consumed as data is evaluated on a stack of its own, nested quotes included; a block runs on a stack holding only its inputs and must leave one value. An ERROR stops the machine and names the Word.
+A Machine holds a stack and a program and executes one top-level item per step, from an empty stack or from inputs already on it (how the compiled route hands a program its inputs): a literal pushes a number, a quote pushes itself, a Word pops its operands in the order they were pushed and pushes its result. A quote consumed as data is evaluated on a stack of its own, nested quotes included; a block runs on a stack holding only its inputs and must leave one value. An ERROR stops the machine and names the Word.
 
 - Level: QL-B
 - Refines: AR-HLR-021, AR-HLR-024, AR-HLR-025
@@ -603,6 +624,55 @@ While it runs, the checker notes every literal and every numeric Word's result t
 - Tested in `rust/crates/arare-cli/tests/cli.rs` — **AR-VER-218**
 - Tested in `tests/oracle/corpus.json` — **AR-VER-209**
 
+### AR-LLR-023 — Columns, inputs, outputs and the fallback
+
+Column::new checks every non-NIL code with is_code for its width and records has_points and has_nils; a full validity bitmap is dropped. The fast path reads a column's codes only through plain_i8 to plain_i64, which answer None unless the width and scale are the ones asked and the column has no point and no NIL. Arg is a scalar Num or a Column; Out is a computed column, a vector of truth values or any interpreter value; fallback runs the program in the reference interpreter on the inputs. sum gives a SUM of count finite lanes the width the interpreter's running sum has after count lanes, NIL for none.
+
+- Level: QL-A
+- Refines: AR-HLR-030, AR-HLR-031, AR-HLR-016
+- Implemented in: `rust/crates/arare-codegen/src/rt.rs`
+- Tested in `rust/crates/arare-codegen/tests/rt.rs` — **AR-VER-224**
+- Tested in `rust/crates/arare-compiled/tests/translation.rs` — **AR-VER-220**
+
+### AR-LLR-024 — The intermediate representation and lowering
+
+lower runs a program once on a stack of symbols — a scalar node, a vector whose lanes are a node, a quote — the way the interpreter runs it, adding one node per Word: a node's width and scale are what the kernel's own operation gives placeholder numbers of its operands' widths and scales; its bound is the largest code magnitude on finite inputs, and it is checked when the bound exceeds its width or it is a DIV. ADD, SUB, MUL, DIV, NEG, RESCALE, NARROW, QUANTIZE, LT, AND, NOT and SELECT lower lane by lane, EQ on scalars, MAP by running its block on the lane, SUM to a reduction whose width is the one the running sum settles at. A literal point or NIL, a quote as data, FILTER, FOLD, a lane value computed from a reduction, and an operand that is not a literal integer where one is required are refused with the reason.
+
+- Level: QL-A
+- Refines: AR-HLR-030
+- Implemented in: `rust/crates/arare-codegen/src/ir.rs`, `rust/crates/arare-codegen/src/lower.rs`, `rust/crates/arare-codegen/src/lower_words.rs`
+- Tested in `rust/crates/arare-codegen/tests/lower.rs` — **AR-VER-223**
+- Tested in `rust/crates/arare-compiled/tests/translation.rs` — **AR-VER-220**
+
+### AR-LLR-025 — Emitting Rust
+
+emit writes, for a program and a signature, a function that runs the fast path and otherwise calls fallback with the source, and the fast path alone. The fast path takes the plain codes of every input, requires equal lengths and, for each SUM, enough lanes for its settled width and lanes × bound within int64; it computes uniform nodes before one loop over the lanes in chunks of 4096, lane nodes inside it in the integer type each bound needs, each SUM in a per-chunk partial of a type that holds the chunk, and reductions' dependents after it; a failed check sets trap and a trapped run answers None. One vector output with no reduction is written straight into the output, others through a chunk buffer. The text is deterministic. arare-compiled builds the programs of programs.txt this way at build time.
+
+- Level: QL-A
+- Refines: AR-HLR-030, AR-HLR-031
+- Implemented in: `rust/crates/arare-codegen/src/emit.rs`, `rust/crates/arare-codegen/src/node.rs`, `rust/crates/arare-compiled/src/lib.rs`, `rust/crates/arare-compiled/build.rs`
+- Tested in `rust/crates/arare-codegen/tests/lower.rs` — **AR-VER-223**
+- Tested in `rust/crates/arare-compiled/tests/translation.rs` — **AR-VER-220**
+
+### AR-LLR-026 — Fast-path arithmetic
+
+div_f64 rounds the f64 quotient of two integers half to even; for a dividend below 2^52 and a nonzero divisor below 2^53 in magnitude it is the kernel's round_div, and emit uses it then and round_div otherwise. rescale_i32 is the kernel's rescale_code on an i32 code, and emit uses it for codes that fit i32.
+
+- Level: QL-A
+- Refines: AR-HLR-007, AR-HLR-008, AR-HLR-030
+- Derived: Floating-point division and 32-bit shifts are how the fast path vectorizes DIV and RESCALE (AR-PERF-004); they are implementation choices, held to the kernel's integer definitions.
+- Implemented in: `rust/crates/arare-codegen/src/rt.rs`
+- Tested in `rust/crates/arare-codegen/tests/div.rs` — **AR-VER-222**
+
+### AR-LLR-027 — arare compile
+
+`arare compile --inputs SIGNATURE [--name NAME] [FILE | -]` writes the program compiled for the signature (`v` or `s`, the width in bits, `:` and the scale exponent, for each input bottom first) as Rust source: arare-codegen's prelude and a function NAME, default `kernel`. It exits 2 on a bad signature or an unreadable file, 1 on a program the front end refuses.
+
+- Level: QL-C
+- Refines: AR-HLR-030
+- Implemented in: `rust/crates/arare-cli/src/main.rs`
+- Tested in `rust/crates/arare-cli/tests/cli.rs` — **AR-VER-225**
+
 ## Performance requirements
 
 ### AR-PERF-001 — int8 dot product
@@ -611,7 +681,8 @@ The compiled int8 dot product over 1,000,000 elements takes at most 1.5 times a 
 
 - Level: QL-A
 - Refines: AR-SYS-014, AR-SYS-004
-- Planned: Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI.
+- Tested in `rust/bench/src/main.rs` — **AR-VER-221**
+- Planned: Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; Phase 4b adds the WASM SIMD128 build.
 
 ### AR-PERF-002 — Fixed-point dot product
 
@@ -619,7 +690,8 @@ The compiled fixed-point counterpart of Ajisai's small-rational dot product is a
 
 - Level: QL-A
 - Refines: AR-SYS-014
-- Planned: Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI.
+- Tested in `rust/bench/src/main.rs` — **AR-VER-221**
+- Planned: Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; Phase 4b adds the WASM SIMD128 build.
 
 ### AR-PERF-003 — Logistic map
 
@@ -627,7 +699,7 @@ Twenty steps of the logistic map take at most 1 µs, with the error against Ajis
 
 - Level: QL-A
 - Refines: AR-SYS-014
-- Planned: Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI.
+- Planned: Phase 4b: the logistic map needs BIND and FOLD on the compiled route (AR-PERF-003); the WASM SIMD128 build is measured against the native one (AR-PERF-007).
 
 ### AR-PERF-004 — Harmonic sum
 
@@ -635,7 +707,8 @@ The harmonic sum to k = 20,000 is at least 1,000 times faster than Ajisai.
 
 - Level: QL-A
 - Refines: AR-SYS-014
-- Planned: Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI.
+- Tested in `rust/bench/src/main.rs` — **AR-VER-221**
+- Planned: Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; Phase 4b adds the WASM SIMD128 build.
 
 ### AR-PERF-005 — Top-level scalar Words
 
@@ -643,7 +716,8 @@ A top-level scalar Word takes at most 2 ns on the compiled route.
 
 - Level: QL-A
 - Refines: AR-SYS-014, AR-SYS-004
-- Planned: Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI.
+- Tested in `rust/bench/src/main.rs` — **AR-VER-221**
+- Planned: Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; Phase 4b adds the WASM SIMD128 build.
 
 ### AR-PERF-006 — Cost of wheel points and NIL
 
@@ -651,7 +725,8 @@ Carrying the wheel-point codes and NIL validity costs at most 1.1 times the same
 
 - Level: QL-A
 - Refines: AR-SYS-014, AR-SYS-009
-- Planned: Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI.
+- Tested in `rust/bench/src/main.rs` — **AR-VER-221**
+- Planned: Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; Phase 4b adds the WASM SIMD128 build.
 
 ### AR-PERF-007 — WebAssembly
 
@@ -659,4 +734,4 @@ The WASM SIMD128 build is within 3 times the native build. The figure is a targe
 
 - Level: QL-A
 - Refines: AR-SYS-014, AR-SYS-004
-- Planned: Phase 4: the benchmark of WORK_ORDER.md §6, against a baseline loop measured in the same run, blocking in CI.
+- Planned: Phase 4b: the logistic map needs BIND and FOLD on the compiled route (AR-PERF-003); the WASM SIMD128 build is measured against the native one (AR-PERF-007).

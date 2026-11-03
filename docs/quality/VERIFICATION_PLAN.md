@@ -52,8 +52,8 @@ These start in the phase named and are blocking from then on.
 | Oracle comparison | `|Arare − Ajisai| ≤` the inferred error budget over `tests/oracle/corpus.json`, each case's budget no looser than its hand-derived figure, the deliberate divergences recorded as cases (AR-VER-209, ADR-0007, `npm run check:oracle`); Ajisai pinned to the commit `UPSTREAM.md` names | Phase 2b — active; inferred budgets from Phase 3 |
 | Error budget against the model | The Rust checker infers what the Lean checker does over the grid of `formal/BudgetTable.lean` (AR-VER-215, in the Lean job) | Phase 3 — active |
 | Error budget against Ajisai | `|Arare − Ajisai| ≤` the inferred budget on at least 10,000 seeded, generated programs, with no violation and at least half the values bounded (AR-VER-217, `npm run check:oracle-random`) | Phase 3 — active |
-| Translation validation | Compiled code (native and WASM SIMD128) agrees with the reference interpreter: exhaustively for int8, by boundary and random cases for int16 and int32 | Phase 4 |
-| Performance | Every `AR-PERF-*` requirement, measured against a baseline loop in the same run (WORK_ORDER.md §6) | Phase 4 |
+| Translation validation | Compiled code agrees with the reference interpreter: every int8 pair for the lane-wise Words, seeded boundary and random inputs at every width for every compiled program, wheel points, NIL and mismatched inputs included, and the fast path must be the one that answers on finite inputs (AR-VER-220) | Phase 4a — active for the native route; Phase 4b adds WASM SIMD128 |
+| Performance | Every `AR-PERF-*` requirement, measured against a baseline in the same run — a hand-written loop or Ajisai's native build pinned to `UPSTREAM.md`'s commit — in interleaved rounds, best round kept, built for x86-64-v3 (AR-VER-221, `rust/bench`, the performance job) | Phase 4a — active for AR-PERF-001, 002, 004, 005, 006; Phase 4b for 003 and 007 |
 
 ## Coverage measurement
 

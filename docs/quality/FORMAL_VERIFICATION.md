@@ -13,18 +13,18 @@ exactly where it is stated, and nowhere else.
 | Semantic model | Lean 4, `formal/` | The value model of WORK_ORDER.md §3 and its laws |
 | Model to code | Differential tests | `rust/crates/arare-spec` against the Lean model, on every int8 operand pair |
 | Implementation | Kani, `rust/` | Each kernel against `arare-spec`, over its whole range or a stated small scope |
-| Compiled code | Translation validation | Native and WASM output against the reference interpreter |
+| Compiled code | Translation validation | Native (Phase 4a) and WASM (Phase 4b) output against the reference interpreter (AR-VER-220) |
 | Error budget | Lean 4, `formal/`; differential tests; the Ajisai oracle | The checker's soundness, proved over the numeric Words; the Rust checker against the Lean one; `|Arare − Ajisai| ≤` the inferred budget on the corpus and on generated programs |
 
 ## Status
 
-**Phase 3: the value model is proved in Lean, mirrored in Rust and diffed
+**Phase 4a: the value model is proved in Lean, mirrored in Rust and diffed
 against it, and the kernel is proved against laws in Kani. The error-budget
 checker is proved sound in Lean over the numeric Words, computed in Rust as
 the same functions and diffed against Lean, and held to Ajisai on the corpus
-and on at least 10,000 generated programs.** The front end and the
-interpreter are QL-B: tested, compared with the Ajisai oracle (AR-VER-209),
-not proved.
+and on at least 10,000 generated programs. Compiled code is held to the
+interpreter by translation validation.** The front end and the interpreter are
+QL-B: tested, compared with the Ajisai oracle (AR-VER-209), not proved.
 
 ### Lean
 
@@ -94,6 +94,20 @@ checked the scale with `scale.abs()`, which overflows for `i32::MIN` and in a
 release build wraps to a negative number that passed the check. The check is
 now a range check, with a regression test in
 `rust/crates/arare-kernel/tests/widths.rs`.
+
+### Compiled code (AR-VER-220)
+
+Not proved: held to the reference interpreter by translation validation. The
+compiled route of `rust/crates/arare-codegen` (ADR-0009) runs a fast path on
+plain codes and otherwise the interpreter itself, so where it falls back it
+answers what the interpreter answers by construction; the fast path is
+compared with the interpreter on every int8 pair for the lane-wise Words and
+on seeded boundary and random inputs at every width for every compiled
+program (`rust/crates/arare-compiled/tests/translation.rs`). The comparison
+covers the programs in `programs.txt` and the inputs the tests draw, not every
+program or input. The vectorized DIV and RESCALE (AR-LLR-026) are argued in
+their doc comments and tested against the kernel's integer definitions
+(AR-VER-222), not proved.
 
 ### What is not proved
 

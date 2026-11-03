@@ -33,7 +33,7 @@ Arare は、量子化を前提とし、失った精度を数字で管理する�
 - `npm run check:oracle`、`npm run check:oracle-random`：Ajisai との比較。Arare の値が、検査器の推論した誤差予算の中に収まるか（コーパスと、生成した 1 万本のプログラム）
 - `npm run requirements:generate`：`spec/requirements.json` を変えたら、`spec/REQUIREMENTS.md` と追跡表の生成部分を作り直す
 - `npm run check`、`npm run lint`、`npm test`：TypeScript
-- 性能（Phase 4 から）：AR-PERF の要件を割っていないか、ベンチマークで確かめる
+- 性能（Phase 4 から）：`rust/bench` で `RUSTFLAGS="-C target-cpu=x86-64-v3" cargo run --release -- --check`。AR-PERF の要件を割っていないかを、同じ実行で測った手書きループと Ajisai のネイティブ版との比で確かめる。Ajisai は `UPSTREAM.md` のコミットを Git の依存として取得する
 
 ## 置き場所
 
