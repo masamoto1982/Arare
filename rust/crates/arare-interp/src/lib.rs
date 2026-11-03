@@ -14,7 +14,7 @@ mod machine;
 mod value;
 mod words;
 
-pub use machine::{run, Machine, RunError};
+pub use machine::{run, run_on, Machine, RunError};
 pub use value::{Error, ErrorKind, Reason, Value};
 
 #[cfg(test)]

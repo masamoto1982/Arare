@@ -33,8 +33,14 @@ pub struct Machine {
 
 impl Machine {
     pub fn new(program: Program) -> Machine {
+        Machine::with_stack(program, Vec::new())
+    }
+
+    /// A machine that starts with `stack` already on its stack, bottom
+    /// first: how the compiled route hands a program its inputs (AR-LLR-023).
+    pub fn with_stack(program: Program, stack: Vec<Value>) -> Machine {
         Machine {
-            stack: Vec::new(),
+            stack,
             items: program.items,
             next: 0,
         }
@@ -66,7 +72,12 @@ impl Machine {
 
 /// Parse and run `source`, answering the final stack.
 pub fn run(source: &str) -> Result<Vec<Value>, RunError> {
-    let mut m = Machine::new(parse(source).map_err(RunError::Front)?);
+    run_on(source, Vec::new())
+}
+
+/// Parse and run `source` on a stack that already holds `inputs`.
+pub fn run_on(source: &str, inputs: Vec<Value>) -> Result<Vec<Value>, RunError> {
+    let mut m = Machine::with_stack(parse(source).map_err(RunError::Front)?, inputs);
     m.run().map_err(RunError::Interp)?;
     Ok(m.stack)
 }

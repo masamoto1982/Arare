@@ -35,7 +35,7 @@ fn shifted_bound(w: Width, d: u32) -> u128 {
 /// Round half to even of `n / d`, `d ≠ 0` (AR-LLR-005). Written on the
 /// truncating quotient, a second formulation beside the specification's
 /// Euclidean one.
-pub(crate) fn round_div(n: i128, d: i128) -> i128 {
+pub fn round_div(n: i128, d: i128) -> i128 {
     let (n, d) = if d < 0 { (-n, -d) } else { (n, d) };
     let q = n / d;
     let twice = 2 * (n % d).abs();
@@ -50,7 +50,7 @@ pub(crate) fn round_div(n: i128, d: i128) -> i128 {
 }
 
 /// `k / 2^s` rounded half to even, by shifting (AR-LLR-006).
-pub(crate) fn rescale_code(k: i64, s: u32) -> i64 {
+pub fn rescale_code(k: i64, s: u32) -> i64 {
     if s == 0 {
         return k;
     }
