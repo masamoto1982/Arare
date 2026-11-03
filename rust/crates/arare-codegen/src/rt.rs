@@ -17,7 +17,7 @@ use arare_kernel::{decode, encode, is_code, Num, Val};
 /// `arare_kernel::rescale_code` on a code that fits `i32`: the same shift
 /// and the same tie to even, in a type that vectorizes twice as wide
 /// (AR-LLR-026).
-#[inline(always)]
+#[inline]
 pub fn rescale_i32(k: i32, s: u32) -> i32 {
     if s == 0 {
         return k;
@@ -361,7 +361,7 @@ pub fn sum_fits(count: usize, bound: u128, limit: u128) -> bool {
 /// tie is exact in `f64` and divides exactly. So rounding `q` half to even
 /// rounds `n/d` half to even. `arare_kernel::round_div` is the reference it is
 /// tested against.
-#[inline(always)]
+#[inline]
 pub fn div_f64(n: f64, d: f64) -> f64 {
     (n / d).round_ties_even()
 }
