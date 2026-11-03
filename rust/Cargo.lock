@@ -16,6 +16,7 @@ name = "arare-cli"
 version = "0.1.0-alpha.0"
 dependencies = [
  "arare-budget",
+ "arare-codegen",
  "arare-front",
  "arare-interp",
  "arare-kernel",
@@ -24,6 +25,20 @@ dependencies = [
 [[package]]
 name = "arare-codegen"
 version = "0.1.0-alpha.0"
+dependencies = [
+ "arare-front",
+ "arare-interp",
+ "arare-kernel",
+]
+
+[[package]]
+name = "arare-compiled"
+version = "0.1.0-alpha.0"
+dependencies = [
+ "arare-codegen",
+ "arare-interp",
+ "arare-kernel",
+]
 
 [[package]]
 name = "arare-front"

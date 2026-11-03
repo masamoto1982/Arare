@@ -10,3 +10,8 @@ publish = false
 
 [lints]
 workspace = true
+
+[dependencies]
+arare-front = { path = "../arare-front" }
+arare-interp = { path = "../arare-interp" }
+arare-kernel = { path = "../arare-kernel" }
