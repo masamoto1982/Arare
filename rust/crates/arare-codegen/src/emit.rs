@@ -23,8 +23,12 @@ pub const CHUNK: u128 = 4096;
 
 const MAX_W64: u128 = (1u128 << 63) - 2;
 
+/// The narrowest integer type that holds every value within `bound`, so a
+/// lane computes in as many SIMD lanes as its values allow.
 pub(crate) fn rty(bound: u128) -> &'static str {
-    if bound <= i32::MAX as u128 {
+    if bound <= i16::MAX as u128 {
+        "i16"
+    } else if bound <= i32::MAX as u128 {
         "i32"
     } else if bound <= i64::MAX as u128 {
         "i64"
@@ -228,7 +232,13 @@ fn fast(ir: &Ir, name: &str) -> String {
                 e.node(3, n);
             }
             for &(s, x) in &sums {
-                e.line(3, &format!("p{s} += v{x} as {};", rty(CHUNK * e.bound(x))));
+                e.line(
+                    3,
+                    &format!(
+                        "p{s} = p{s}.wrapping_add(v{x} as {});",
+                        rty(CHUNK * e.bound(x))
+                    ),
+                );
             }
             for &(k, n) in &vectors {
                 match ir.nodes[n].kind {
@@ -245,7 +255,7 @@ fn fast(ir: &Ir, name: &str) -> String {
             }
         }
         for &(s, _) in &sums {
-            e.line(2, &format!("t{s} += p{s} as i64;"));
+            e.line(2, &format!("t{s} = t{s}.wrapping_add(p{s} as i64);"));
         }
         e.line(2, "c = end;");
         e.line(1, "}");

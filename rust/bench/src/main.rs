@@ -18,12 +18,15 @@ use std::hint::black_box;
 use std::time::Instant;
 
 /// The best time, in milliseconds, of `rounds` interleaved runs of each.
+/// Every other round runs them in the reverse order, so that what one
+/// candidate leaves behind (freed memory, a cold cache) falls on each alike.
 fn race(rounds: usize, fs: &mut [&mut dyn FnMut()]) -> Vec<f64> {
     let mut best = vec![f64::MAX; fs.len()];
-    for _ in 0..rounds {
-        for (i, f) in fs.iter_mut().enumerate() {
+    for round in 0..rounds {
+        for k in 0..fs.len() {
+            let i = if round % 2 == 0 { k } else { fs.len() - 1 - k };
             let t = Instant::now();
-            f();
+            fs[i]();
             best[i] = best[i].min(t.elapsed().as_secs_f64() * 1e3);
         }
     }
@@ -237,8 +240,10 @@ fn main() {
             .map(|(&p, &q)| p as i16 + q as i16)
             .collect()
     };
+    // Each run writes a fresh 32 MB output, whose page faults vary on a
+    // shared machine; enough rounds that the best of each sees a quiet one.
     let t = race(
-        20,
+        60,
         &mut [
             &mut || {
                 black_box(run("add8", &add_args));

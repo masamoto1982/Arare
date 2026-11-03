@@ -56,11 +56,16 @@ otherwise `rt::fallback`, the interpreter on the same inputs. The fast path:
 2. for each SUM, requires enough lanes for the settled width and lanes × the
    lane bound within int64, so no prefix of the sum can overflow;
 3. computes the uniform nodes once, then the lane nodes in one loop over the
-   lanes in chunks of 4,096, each in the narrowest integer type its bound
-   needs, a SUM in a per-chunk partial of a type that holds the chunk, a
+   lanes in chunks of 4,096, each in the narrowest of `i16`, `i32`, `i64` and
+   `i128` its bound needs (an int8 ADD runs in `i16`, as many SIMD lanes as a
+   hand-written loop), a SUM in a per-chunk partial of a type that holds the chunk, a
    vector written straight into the output when it is the only result;
 4. sets `trap` on a zero divisor or a code that leaves its width, and answers
-   `None` if anything trapped;
+   `None` if anything trapped. The loop does not stop at a trap, so a value
+   after one can lie outside its bound; ADD, SUB, MUL, NEG and the partial
+   sums wrap, so that garbage, which is discarded, cannot panic a debug
+   build. No wrapped value is ever answered: a trapped run is the
+   interpreter's (AR-HLR-004);
 5. computes what depends on the reductions after the loop.
 
 DIV uses `rt::div_f64`, the `f64` quotient rounded half to even, when the

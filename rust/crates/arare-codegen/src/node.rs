@@ -64,10 +64,17 @@ impl Emit<'_> {
             Op::Lane(i) => format!("x{i}[i] as {t}"),
             Op::Const(c) => format!("{c} as {t}"),
             Op::Bool(b) => format!("{b}"),
-            Op::Add { a, b, da, db } => format!("{} + {}", shl(a, da, t), shl(b, db, t)),
-            Op::Sub { a, b, da, db } => format!("{} - {}", shl(a, da, t), shl(b, db, t)),
-            Op::Neg(a) => format!("-(v{a} as {t})"),
-            Op::Mul(a, b) => format!("(v{a} as {t}) * (v{b} as {t})"),
+            // Wrapping: a value is within its bound unless an earlier node
+            // trapped, and then the result is discarded; wrapping keeps that
+            // garbage from panicking a debug build.
+            Op::Add { a, b, da, db } => {
+                format!("{}.wrapping_add({})", shl(a, da, t), shl(b, db, t))
+            }
+            Op::Sub { a, b, da, db } => {
+                format!("{}.wrapping_sub({})", shl(a, da, t), shl(b, db, t))
+            }
+            Op::Neg(a) => format!("(v{a} as {t}).wrapping_neg()"),
+            Op::Mul(a, b) => format!("(v{a} as {t}).wrapping_mul(v{b} as {t})"),
             Op::Div { a, b, p, q } => {
                 let dividend = self.bound(a).saturating_mul(1u128 << p);
                 let divisor = self.bound(b).saturating_mul(1u128 << q);
