@@ -3,7 +3,7 @@
 //! together with the `<width> <exponent> QUANTIZE` that must follow it, into
 //! one quantized number (AR-HLR-018).
 
-use crate::lexer::{lex, Token, TokenKind};
+use crate::lexer::{classify, lex, Token, TokenKind};
 use crate::{FrontError, FrontErrorKind};
 use arare_kernel::{Num, Width, MAX_SCALE};
 
@@ -30,10 +30,11 @@ pub enum Word {
     True,
     False,
     Nil,
+    Bind,
 }
 
 impl Word {
-    pub const ALL: [Word; 20] = [
+    pub const ALL: [Word; 21] = [
         Word::Quantize,
         Word::Add,
         Word::Sub,
@@ -54,6 +55,7 @@ impl Word {
         Word::True,
         Word::False,
         Word::Nil,
+        Word::Bind,
     ];
 
     pub fn name(self) -> &'static str {
@@ -78,6 +80,7 @@ impl Word {
             Word::True => "TRUE",
             Word::False => "FALSE",
             Word::Nil => "NIL",
+            Word::Bind => "BIND",
         }
     }
 
@@ -98,6 +101,10 @@ pub enum Item {
         exact: (i64, i64),
     },
     Word(Word),
+    /// `'X'`: a name as text, what BIND reads (AR-LLR-028).
+    Text(String),
+    /// A name BIND may have bound, pushing the value bound to it when it runs.
+    Name(String),
     /// A bracketed sequence: data or code, by what consumes it.
     Quote(Vec<Item>),
 }
@@ -173,15 +180,33 @@ fn width_of(bits: &str) -> Option<Width> {
         .find(|w| w.bits().to_string() == bits)
 }
 
+/// Whether `text` can be a name: a token that is not a number, not a Word,
+/// and holds no whitespace, bracket, quote or `#` (AR-LLR-028).
+pub fn is_name(text: &str) -> bool {
+    !text.is_empty()
+        && !text
+            .chars()
+            .any(|c| c.is_whitespace() || matches!(c, '[' | ']' | '\'' | '#'))
+        && classify(text) == TokenKind::Name
+        && Word::from_name(text).is_none()
+}
+
 /// One bracket level of tokens, from `tokens[*at]` to its closing `]` (or
-/// the end, at the top level).
-fn sequence(tokens: &[Token], at: &mut usize, top: bool) -> Result<Vec<Item>, FrontError> {
+/// the end, at the top level). `texts` are the names the source writes as
+/// text: a bare name no text names cannot be bound, so it is refused as an
+/// unknown Word.
+fn sequence(
+    tokens: &[Token],
+    at: &mut usize,
+    top: bool,
+    texts: &[&str],
+) -> Result<Vec<Item>, FrontError> {
     let mut items = Vec::new();
     while *at < tokens.len() {
         let t = &tokens[*at];
         *at += 1;
         match t.kind {
-            TokenKind::Open => items.push(Item::Quote(sequence(tokens, at, false)?)),
+            TokenKind::Open => items.push(Item::Quote(sequence(tokens, at, false, texts)?)),
             TokenKind::Close if top => return Err(error(t, FrontErrorKind::UnexpectedClose)),
             TokenKind::Close => return Ok(items),
             TokenKind::Integer => {
@@ -197,8 +222,14 @@ fn sequence(tokens: &[Token], at: &mut usize, top: bool) -> Result<Vec<Item>, Fr
             TokenKind::Decimal | TokenKind::Fraction => items.push(quantized(tokens, at, t)?),
             TokenKind::Name => match Word::from_name(&t.text) {
                 Some(w) => items.push(Item::Word(w)),
+                None if texts.contains(&t.text.as_str()) => items.push(Item::Name(t.text.clone())),
                 None => return Err(error(t, FrontErrorKind::UnknownWord(t.text.clone()))),
             },
+            TokenKind::Text if t.text.starts_with('\'') => {
+                return Err(error(t, FrontErrorKind::UnclosedText))
+            }
+            TokenKind::Text if is_name(&t.text) => items.push(Item::Text(t.text.clone())),
+            TokenKind::Text => return Err(error(t, FrontErrorKind::BadName(t.text.clone()))),
         }
     }
     if top {
@@ -236,8 +267,13 @@ fn quantized(tokens: &[Token], at: &mut usize, t: &Token) -> Result<Item, FrontE
 /// Parse a source text.
 pub fn parse(source: &str) -> Result<Program, FrontError> {
     let tokens = lex(source);
+    let texts: Vec<&str> = tokens
+        .iter()
+        .filter(|t| t.kind == TokenKind::Text)
+        .map(|t| t.text.as_str())
+        .collect();
     let mut at = 0;
     Ok(Program {
-        items: sequence(&tokens, &mut at, true)?,
+        items: sequence(&tokens, &mut at, true, &texts)?,
     })
 }

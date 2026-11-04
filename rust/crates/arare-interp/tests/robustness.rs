@@ -5,7 +5,7 @@ use arare_interp::{run, ErrorKind as K, RunError};
 
 fn error(src: &str) -> (String, K) {
     match run(src) {
-        Err(RunError::Interp(e)) => (e.word.name().to_string(), e.kind),
+        Err(RunError::Interp(e)) => (e.word.map_or("", |w| w.name()).to_string(), e.kind),
         other => panic!("{src}: expected an error, got {other:?}"),
     }
 }

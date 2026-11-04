@@ -37,6 +37,8 @@ pub enum Value {
     Vector(Vec<Value>),
     /// A bracketed sequence not yet consumed: data or code, by what consumes it.
     Quote(Rc<Vec<Item>>),
+    /// `'X'`: a name as text, which only BIND reads (AR-LLR-028).
+    Text(Rc<str>),
 }
 
 /// Malformed use: the program is wrong, so it stops (AR-HLR-025).
@@ -59,17 +61,25 @@ pub enum ErrorKind {
     BadOperand(&'static str),
     /// A block left other than exactly one value.
     BlockResult(usize),
+    /// A name with no binding where it runs (AR-LLR-028).
+    Unbound(String),
+    /// BIND of a block that reads the name it would be bound to, directly or
+    /// through the bindings it reads (AR-LLR-028).
+    SelfReference(String),
 }
 
+/// Where a program stopped: at a Word, or at a name (`word` is `None`).
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Error {
-    pub word: Word,
+    pub word: Option<Word>,
     pub kind: ErrorKind,
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}: ", self.word.name())?;
+        if let Some(w) = self.word {
+            write!(f, "{}: ", w.name())?;
+        }
         match &self.kind {
             ErrorKind::StackUnderflow { needed, had } => {
                 write!(f, "needs {needed} operand(s), the stack has {had}")
@@ -81,6 +91,10 @@ impl fmt::Display for Error {
             ErrorKind::ScaleOverflow => write!(f, "the result exponent would leave ±31"),
             ErrorKind::BadOperand(accepts) => write!(f, "accepts {accepts}"),
             ErrorKind::BlockResult(n) => write!(f, "a block must leave exactly one value, not {n}"),
+            ErrorKind::Unbound(name) => write!(f, "{name} is not bound here"),
+            ErrorKind::SelfReference(name) => {
+                write!(f, "the block bound to {name} would read {name} itself")
+            }
         }
     }
 }
@@ -106,6 +120,7 @@ impl fmt::Display for Value {
                 f.write_str(" ]")
             }
             Value::Quote(items) => write!(f, "[ …{} item(s) ]", items.len()),
+            Value::Text(name) => write!(f, "'{name}'"),
         }
     }
 }

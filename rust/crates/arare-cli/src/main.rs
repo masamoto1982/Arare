@@ -71,6 +71,8 @@ fn node(v: &Value) -> String {
             xs.iter().map(node).collect::<Vec<_>>().join(",")
         ),
         Value::Quote(_) => "{\"type\":\"block\",\"value\":null}".to_string(),
+        // A name holds no character JSON must escape (AR-LLR-028).
+        Value::Text(name) => format!("{{\"type\":\"string\",\"value\":\"{name}\"}}"),
     }
 }
 

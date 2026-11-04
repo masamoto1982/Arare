@@ -6,7 +6,9 @@
 //! the parser has already folded. Everything the front end can refuse, it
 //! refuses before anything runs: an unknown Word, an unbalanced bracket, a
 //! literal out of range, and a non-integer literal that is not quantized where
-//! it is written (AR-HLR-018).
+//! it is written (AR-HLR-018). A bare name is accepted only where the source
+//! also writes it as text, `'X'`, for BIND to bind (AR-LLR-028); whether it is
+//! bound where it runs is the interpreter's question.
 
 #![forbid(unsafe_code)]
 
@@ -14,7 +16,7 @@ mod lexer;
 mod parser;
 
 pub use lexer::{lex, Token, TokenKind};
-pub use parser::{parse, Item, Program, Word};
+pub use parser::{is_name, parse, Item, Program, Word};
 
 /// Why the front end refused a source text, and where.
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -39,6 +41,11 @@ pub enum FrontErrorKind {
     UnquantizedLiteral(String),
     /// QUANTIZE's width is not 8, 16, 32 or 64, or its exponent is outside ±31.
     BadQuantize(String),
+    /// A quote `'` that no quote closes on its line.
+    UnclosedText,
+    /// Text in quotes that cannot be a name: empty, a number, a Word, or
+    /// holding whitespace, a bracket or `#` (AR-LLR-028).
+    BadName(String),
 }
 
 impl core::fmt::Display for FrontError {
@@ -55,6 +62,10 @@ impl core::fmt::Display for FrontError {
             }
             FrontErrorKind::UnquantizedLiteral(t) => {
                 format!("{t} is not an integer; write it as `{t} <width> <exponent> QUANTIZE`")
+            }
+            FrontErrorKind::UnclosedText => "a ' is never closed on its line".to_string(),
+            FrontErrorKind::BadName(t) => {
+                format!("'{t}' cannot be a name: it is empty, a number, a Word, or holds a space, bracket or #")
             }
             FrontErrorKind::BadQuantize(t) => format!(
                 "QUANTIZE {t}: the width must be 8, 16, 32 or 64 and the exponent within ±31"

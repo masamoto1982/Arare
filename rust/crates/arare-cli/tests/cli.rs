@@ -66,6 +66,12 @@ fn ar_ver_214_json() {
         out.starts_with(r#"{"ok":false,"error":"1:24: unknown Word \"x\""#),
         "{out}"
     );
+    // A name as text is Ajisai's string node (AR-LLR-028).
+    let (_, out, _) = arare(&["run", "--json"], "'X'");
+    assert_eq!(
+        out.trim(),
+        r#"{"ok":true,"stack":[{"type":"string","value":"X"}]}"#
+    );
     let (_, out, _) = arare(&["run", "--json"], "[ TRUE NIL ] NOT");
     assert_eq!(
         out.trim(),

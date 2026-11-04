@@ -3,7 +3,7 @@
 //! pushed; the arithmetic is `arare-kernel`'s.
 
 use crate::lift::{and, lift1, lift2, not};
-use crate::machine::{data, run_block};
+use crate::machine::{data, run_block, Env};
 use crate::value::{ErrorKind, Reason, Value};
 use arare_front::{Item, Word};
 use arare_kernel::{Num, Truth, Width, MAX_SCALE};
@@ -19,8 +19,8 @@ fn pop(stack: &mut Vec<Value>, n: usize) -> Result<Vec<Value>, ErrorKind> {
     Ok(stack.split_off(stack.len() - n))
 }
 
-fn pop_data(stack: &mut Vec<Value>, n: usize) -> Result<Vec<Value>, ErrorKind> {
-    pop(stack, n)?.into_iter().map(data).collect()
+fn pop_data(stack: &mut Vec<Value>, n: usize, env: &mut Env) -> Result<Vec<Value>, ErrorKind> {
+    pop(stack, n)?.into_iter().map(|v| data(v, env)).collect()
 }
 
 fn num(v: &Value) -> Result<Num, ErrorKind> {
@@ -90,6 +90,7 @@ fn equal(a: &Value, b: &Value) -> bool {
         (Value::Num(x), Value::Num(y)) => Num::eq(*x, *y) == Truth::True,
         (Value::Bool(x), Value::Bool(y)) => x == y,
         (Value::Nil(_), Value::Nil(_)) => true,
+        (Value::Text(x), Value::Text(y)) => x == y,
         (Value::Vector(xs), Value::Vector(ys)) => {
             xs.len() == ys.len() && xs.iter().zip(ys).all(|(x, y)| equal(x, y))
         }
@@ -145,46 +146,126 @@ fn sum(v: Value) -> Result<Value, ErrorKind> {
     Ok(total.map_or(Value::Nil(Reason::EmptyAggregate), Value::Num))
 }
 
-pub(crate) fn apply(w: Word, stack: &mut Vec<Value>) -> Result<(), ErrorKind> {
+/// The names a block reads, its nested blocks included.
+fn names_read(items: &[Item], out: &mut Vec<String>) {
+    for item in items {
+        match item {
+            Item::Name(n) => out.push(n.clone()),
+            Item::Quote(inner) => names_read(inner, out),
+            _ => {}
+        }
+    }
+}
+
+/// Whether binding `value` to `name` would let it read `name`: directly, or
+/// through the blocks bound to the names it reads.
+fn reads_itself(name: &str, value: &Value, env: &Env) -> bool {
+    let Value::Quote(items) = value else {
+        return false;
+    };
+    let mut todo = Vec::new();
+    names_read(items, &mut todo);
+    let mut seen: Vec<String> = Vec::new();
+    while let Some(n) = todo.pop() {
+        if n == name {
+            return true;
+        }
+        if seen.contains(&n) {
+            continue;
+        }
+        if let Some(Value::Quote(inner)) = env.get(&n) {
+            names_read(inner, &mut todo);
+        }
+        seen.push(n);
+    }
+    false
+}
+
+/// BIND (AR-LLR-028): `value 'X' BIND` names the value; `vector [ 'A' 'B' ]
+/// BIND` names each element of a vector of the same length. Both operands
+/// are consumed and nothing is pushed.
+fn bind(stack: &mut Vec<Value>, env: &mut Env) -> Result<(), ErrorKind> {
+    let mut o = pop(stack, 2)?;
+    let names = o.pop().expect("two operands");
+    let value = o.pop().expect("two operands");
+    if matches!(value, Value::Text(_)) {
+        return Err(ErrorKind::BadOperand("a value to bind that is not a name"));
+    }
+    match names {
+        Value::Text(name) => {
+            if reads_itself(&name, &value, env) {
+                return Err(ErrorKind::SelfReference(name.to_string()));
+            }
+            env.bind(name, value);
+        }
+        Value::Quote(_) => {
+            let mut texts = Vec::new();
+            for n in elements(data(names, env)?)? {
+                let Value::Text(n) = n else {
+                    return Err(ErrorKind::BadOperand("a name, or a block of names"));
+                };
+                texts.push(n);
+            }
+            let names = texts;
+            let values = elements(data(value, env)?)?;
+            if values.len() != names.len() {
+                return Err(ErrorKind::Shape {
+                    left: values.len(),
+                    right: names.len(),
+                });
+            }
+            for (n, v) in names.into_iter().zip(values) {
+                env.bind(n, v);
+            }
+        }
+        _ => return Err(ErrorKind::BadOperand("a name, or a block of names")),
+    }
+    Ok(())
+}
+
+pub(crate) fn apply(w: Word, stack: &mut Vec<Value>, env: &mut Env) -> Result<(), ErrorKind> {
     let result = match w {
         Word::True => Value::Bool(true),
         Word::False => Value::Bool(false),
         Word::Nil => Value::Nil(Reason::Literal),
         Word::Add | Word::Sub | Word::Mul | Word::Div => {
-            let o = pop_data(stack, 2)?;
+            let o = pop_data(stack, 2, env)?;
             arithmetic(w, &o[0], &o[1])?
         }
-        Word::Neg => lift1(&pop_data(stack, 1)?[0], &|x| Ok(Value::Num(num(x)?.neg())))?,
+        Word::Neg => {
+            let o = pop_data(stack, 1, env)?;
+            lift1(&o[0], &|x| Ok(Value::Num(num(x)?.neg())))?
+        }
         Word::Lt => {
-            let o = pop_data(stack, 2)?;
+            let o = pop_data(stack, 2, env)?;
             less(&o[0], &o[1])?
         }
         Word::Eq => {
-            let o = pop_data(stack, 2)?;
+            let o = pop_data(stack, 2, env)?;
             match (&o[0], &o[1]) {
                 (Value::Nil(r), _) | (_, Value::Nil(r)) => Value::Nil(*r),
                 (a, b) => Value::Bool(equal(a, b)),
             }
         }
         Word::And => {
-            let o = pop_data(stack, 2)?;
+            let o = pop_data(stack, 2, env)?;
             and(&o[0], &o[1])?
         }
-        Word::Not => not(&pop_data(stack, 1)?[0])?,
+        Word::Not => not(&pop_data(stack, 1, env)?[0])?,
         Word::Rescale => {
-            let o = pop_data(stack, 2)?;
+            let o = pop_data(stack, 2, env)?;
             let s = integer(&o[1], 0, 62, "a shift from 0 to 62")? as u32;
             lift1(&o[0], &|x| {
                 Ok(Value::Num(scale_overflow(num(x)?.rescale(s))?))
             })?
         }
         Word::Narrow => {
-            let o = pop_data(stack, 2)?;
+            let o = pop_data(stack, 2, env)?;
             let w = width(&o[1])?;
             lift1(&o[0], &|x| Ok(Value::Num(num(x)?.narrow(w))))?
         }
         Word::Quantize => {
-            let o = pop_data(stack, 3)?;
+            let o = pop_data(stack, 3, env)?;
             let (w, e) = (
                 width(&o[1])?,
                 integer(
@@ -199,22 +280,22 @@ pub(crate) fn apply(w: Word, stack: &mut Vec<Value>) -> Result<(), ErrorKind> {
             })?
         }
         Word::Select => {
-            let o = pop_data(stack, 3)?;
+            let o = pop_data(stack, 3, env)?;
             select(&o[0], &o[1], &o[2])?
         }
-        Word::Sum => match data(pop(stack, 1)?.remove(0))? {
+        Word::Sum => match data(pop(stack, 1)?.remove(0), env)? {
             Value::Nil(r) => Value::Nil(r),
             v => sum(v)?,
         },
         Word::Map | Word::Filter => {
             let mut o = pop(stack, 2)?;
             let code = block(o.pop().expect("two operands"))?;
-            match data(o.pop().expect("two operands"))? {
+            match data(o.pop().expect("two operands"), env)? {
                 Value::Nil(r) => Value::Nil(r),
                 v => {
                     let mut out = Vec::new();
                     for x in elements(v)? {
-                        let r = run_block(&code, vec![x.clone()])?;
+                        let r = run_block(&code, vec![x.clone()], env)?;
                         match (w, r) {
                             (Word::Map, r) => out.push(r),
                             (_, Value::Bool(true)) => out.push(x),
@@ -228,15 +309,16 @@ pub(crate) fn apply(w: Word, stack: &mut Vec<Value>) -> Result<(), ErrorKind> {
                 }
             }
         }
+        Word::Bind => return bind(stack, env),
         Word::Fold => {
             let mut o = pop(stack, 3)?;
             let code = block(o.pop().expect("three operands"))?;
-            let init = data(o.pop().expect("three operands"))?;
-            match data(o.pop().expect("three operands"))? {
+            let init = data(o.pop().expect("three operands"), env)?;
+            match data(o.pop().expect("three operands"), env)? {
                 Value::Nil(r) => Value::Nil(r),
                 v => elements(v)?
                     .into_iter()
-                    .try_fold(init, |acc, x| run_block(&code, vec![acc, x]))?,
+                    .try_fold(init, |acc, x| run_block(&code, vec![acc, x], env))?,
             }
         }
     };
