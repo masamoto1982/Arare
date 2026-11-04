@@ -191,6 +191,16 @@ fn fast(ir: &Ir, name: &str) -> String {
             _ => None,
         })
         .collect();
+    // One vector output and nothing else: written straight into the output
+    // in one pass over the lanes, as a hand-written loop would be.
+    let single = ir.sums.is_empty()
+        && folds.is_empty()
+        && ir
+            .outputs
+            .iter()
+            .filter(|o| matches!(o, Output::Vector(_)))
+            .count()
+            == 1;
     // Vector outputs.
     for (k, o) in ir.outputs.iter().enumerate() {
         if let Output::Vector(n) = o {
@@ -203,14 +213,18 @@ fn fast(ir: &Ir, name: &str) -> String {
                         1,
                         &format!("let mut o{k}: Vec<{st}> = Vec::with_capacity(n);"),
                     );
-                    e.line(1, &format!("let mut b{k} = [0 as {st}; {CHUNK}];"));
+                    if !single {
+                        e.line(1, &format!("let mut b{k} = [0 as {st}; {CHUNK}];"));
+                    }
                 }
                 Kind::Bool => {
                     e.line(
                         1,
                         &format!("let mut o{k}: Vec<bool> = Vec::with_capacity(n);"),
                     );
-                    e.line(1, &format!("let mut b{k} = [false; {CHUNK}];"));
+                    if !single {
+                        e.line(1, &format!("let mut b{k} = [false; {CHUNK}];"));
+                    }
                 }
             }
         }
@@ -219,11 +233,16 @@ fn fast(ir: &Ir, name: &str) -> String {
         .filter(|&n| need[n] && ir.nodes[n].lane)
         .collect();
     if !lane_nodes.is_empty() {
+        // Chunks bound a reduction's partials; without one, the loop is one
+        // pass over every lane.
+        let end = if single {
+            "n".to_string()
+        } else {
+            format!("(c + {CHUNK}).min(n)")
+        };
         e.line(
             1,
-            &format!(
-                "let mut c = 0usize;\n    while c < n {{\n        let end = (c + {CHUNK}).min(n);"
-            ),
+            &format!("let mut c = 0usize;\n    while c < n {{\n        let end = {end};"),
         );
         let sums: Vec<(N, N)> = ir.sums.iter().map(|s| (s.node, s.elem)).collect();
         for &(s, x) in &sums {
@@ -236,14 +255,6 @@ fn fast(ir: &Ir, name: &str) -> String {
         for &i in &columns {
             e.line(2, &format!("let x{i} = &a{i}[c..end];"));
         }
-        let single = sums.is_empty()
-            && folds.is_empty()
-            && ir
-                .outputs
-                .iter()
-                .filter(|o| matches!(o, Output::Vector(_)))
-                .count()
-                == 1;
         if !single {
             for (k, o) in ir.outputs.iter().enumerate() {
                 if let Output::Vector(_) = o {

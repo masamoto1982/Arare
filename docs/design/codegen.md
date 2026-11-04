@@ -77,7 +77,8 @@ otherwise `rt::fallback`, the interpreter on the same inputs. The fast path:
    lanes in chunks of 4,096, each in the narrowest of `i16`, `i32`, `i64` and
    `i128` its bound needs (an int8 ADD runs in `i16`, as many SIMD lanes as a
    hand-written loop), a SUM in a per-chunk partial of a type that holds the chunk, a
-   vector written straight into the output when it is the only result;
+   vector written straight into the output, in one pass over the lanes rather
+   than chunk by chunk, when it is the only result;
 4. sets `trap` on a zero divisor or a code that leaves its width, and answers
    `None` if anything trapped. The loop does not stop at a trap, so a value
    after one can lie outside its bound; ADD, SUB, MUL, NEG and the partial
