@@ -40,6 +40,17 @@ scalardiv | s16:0 s16:0 | DIV
 scalareq | s8:0 s8:0 | EQ
 scalarselect | s8:0 s8:0 s8:0 s8:0 | LT SELECT
 
+# BIND and FOLD (AR-LLR-028, AR-LLR-029). The logistic map, x' = (13/4)·x·(1 − x)
+# from x = 1/2, one step per lane, is AR-PERF-003's: written in y = x − 1/2,
+# y' = 5/16 − (13/4)·y², whose error the checker bounds (docs/design/codegen.md).
+logistic | v8:0 | 0 16 -15 QUANTIZE [ 'I' BIND 'Y' BIND 5/16 16 -15 QUANTIZE 13 Y MUL Y MUL 2 RESCALE 1/4 8 -2 QUANTIZE MUL SUB 15 RESCALE 16 NARROW ] FOLD 1/2 16 -15 QUANTIZE ADD
+foldsum | v8:0 | 0 32 0 QUANTIZE [ ADD 32 NARROW ] FOLD
+foldall | v8:0 | TRUE [ 'X' BIND X 0 LT NOT AND ] FOLD
+bound | v8:0 s8:0 | 'K' BIND [ K MUL ] MAP
+boundvec | v8:0 v8:0 | 'B' BIND 'A' BIND A B SUB A ADD
+sumfold | v8:0 | 'V' BIND V SUM V 0 32 0 QUANTIZE [ ADD 32 NARROW ] FOLD
+unreadfold | v8:0 | 'V' BIND V 0 32 0 QUANTIZE [ ADD 32 NARROW ] FOLD 'F' BIND V SUM
+
 # Programs with no fast path: the compiled route is the interpreter.
 filtered | v8:0 | [ 3 LT ] FILTER
 twopass | v8:0 v8:0 | SUM MUL

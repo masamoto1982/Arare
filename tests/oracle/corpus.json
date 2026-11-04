@@ -62,6 +62,23 @@
       "name": "overflow at int64 is 1/0",
       "source": "100 100 MUL 100 MUL 100 MUL 100 MUL 100 MUL 100 MUL 100 MUL 100 MUL 100 MUL",
       "divergence": { "kind": "overflow", "decision": "WORK_ORDER D-09, AR-HLR-004", "arare": "1/0" }
+    },
+    { "name": "a bound value read twice", "source": "5 'N' BIND N N ADD", "budget": "0" },
+    { "name": "BIND of several names", "source": "[ 1 2 ] [ 'A' 'B' ] BIND B A SUB", "budget": "0" },
+    {
+      "name": "a binding read in a block",
+      "source": "0.5 8 -1 QUANTIZE 'H' BIND [ 1 2 3 ] [ H MUL ] MAP",
+      "budget": "0"
+    },
+    {
+      "name": "FOLD naming its operands",
+      "source": "[ 1 2 3 ] 0 [ 'I' BIND 'X' BIND X I ADD ] FOLD",
+      "budget": "0"
+    },
+    {
+      "name": "logistic map, 16 steps (AR-PERF-003's program; 20 steps exceed the oracle build's limits)",
+      "source": "[ 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ] 0 16 -15 QUANTIZE [ 'I' BIND 'Y' BIND 5/16 16 -15 QUANTIZE 13 Y MUL Y MUL 2 RESCALE 1/4 8 -2 QUANTIZE MUL SUB 15 RESCALE 16 NARROW ] FOLD 1/2 16 -15 QUANTIZE ADD",
+      "budget": "1/16384"
     }
   ]
 }

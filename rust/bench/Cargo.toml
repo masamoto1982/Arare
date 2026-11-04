@@ -12,11 +12,15 @@ publish = false
 [workspace]
 
 [dependencies]
+arare-budget = { path = "../crates/arare-budget" }
 arare-codegen = { path = "../crates/arare-codegen" }
 arare-compiled = { path = "../crates/arare-compiled" }
 arare-front = { path = "../crates/arare-front" }
 arare-interp = { path = "../crates/arare-interp" }
 arare-kernel = { path = "../crates/arare-kernel" }
+# Ajisai's exact answers are rationals of a million bits; the budget is
+# checked against them in big integers (the version Ajisai itself uses).
+num-bigint = "0.4"
 ajisai-core = { git = "https://github.com/masamoto1982/Ajisai", rev = "4d5f693def073b303d7ede3a98b3e9fa15060601" }
 
 [profile.release]

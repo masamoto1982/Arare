@@ -1,4 +1,4 @@
-//! Emitting one node (AR-LLR-025, AR-LLR-026): the `let` that computes it in
+//! Emitting one node (AR-LLR-025, AR-LLR-026, AR-LLR-029): the `let` that computes it in
 //! the integer type its bound needs, and the check that sets `trap` when
 //! its code can leave its width.
 
@@ -132,6 +132,9 @@ impl Emit<'_> {
             }
             // The loop has summed the lanes into `t{n}`.
             Op::Sum(_) => format!("t{n} as {t}"),
+            // FOLD's accumulator lives in `f{acc}`, across the lanes.
+            Op::Acc => format!("f{n}"),
+            Op::Fold { acc, .. } => format!("f{acc} as {t}"),
         };
         self.line(indent, &format!("let v{n}: {t} = {expr};"));
         self.fit(indent, n);

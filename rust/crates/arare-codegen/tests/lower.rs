@@ -122,8 +122,50 @@ fn ar_ver_223_refusals() {
         ("[ 1 2 ] ADD", vec![V8], "a vector written as a quote"),
         ("1/0 8 0 QUANTIZE", vec![], "a literal wheel point"),
         ("NIL", vec![], "a literal NIL"),
-        ("[ 3 LT ] FILTER", vec![V8], "FILTER and FOLD"),
-        ("0 [ ADD ] FOLD", vec![V8], "FILTER and FOLD"),
+        ("[ 3 LT ] FILTER", vec![V8], "FILTER is not compiled"),
+        // FOLD (AR-LLR-029): the accumulator must keep its width and scale.
+        (
+            "0 [ ADD ] FOLD",
+            vec![V8],
+            "changes the accumulator's width",
+        ),
+        ("0 1 FOLD", vec![V8], "FOLD without a block"),
+        ("0 [ ADD ] FOLD", vec![S8], "FOLD over a scalar"),
+        ("[ ADD ] FOLD", vec![V8, V8], "FOLD from a vector"),
+        ("0 [ ] FOLD", vec![V8], "does not leave one scalar"),
+        (
+            "0 [ 'X' BIND 'Y' BIND ] FOLD",
+            vec![V8],
+            "does not leave one scalar",
+        ),
+        (
+            "'V' BIND V 0 [ ADD 'Z' BIND V ] FOLD",
+            vec![V8],
+            "does not leave one scalar",
+        ),
+        ("SUM [ ADD ] FOLD", vec![V8, V8], "second pass"),
+        // BIND and names (AR-LLR-028).
+        ("[ 'A' 'B' ] BIND A", vec![V8], "several names"),
+        ("'Y' 'X' BIND X", vec![], "BIND of a name"),
+        ("[ X ] 'X' BIND", vec![], "reads its own name"),
+        ("[ 1 [ X ] ] 'X' BIND", vec![], "reads its own name"),
+        // A block reading other names is bound; read as data, it is refused.
+        (
+            "[ 1 ] 'Y' BIND [ Y 2 ] 'X' BIND [ X Y ] 'Z' BIND Z SUM",
+            vec![],
+            "a vector written as a quote",
+        ),
+        (
+            "[ Y ] 'X' BIND [ X ] 'Y' BIND",
+            vec![],
+            "reads its own name",
+        ),
+        (
+            "[ [ X ] 'Y' BIND X ] MAP 'X' BIND",
+            vec![V8],
+            "not bound where it runs",
+        ),
+        ("'X' 1 ADD", vec![], "a name where a value is expected"),
         ("SUM MUL", vec![V8, V8], "second pass"),
         ("SUM", vec![S8], "SUM of a scalar"),
         ("[ SUM ] MAP", vec![V8], "SUM of a scalar"),
@@ -207,6 +249,31 @@ fn ar_ver_223_refusals() {
             Ok(_) => assert!(why.is_empty(), "{source} lowered"),
         }
     }
+}
+
+#[test]
+fn ar_ver_223_names() {
+    // A name pushes what it is bound to; binding again replaces it.
+    let ir = lower("1 'A' BIND 2 'A' BIND A", &[]).unwrap();
+    let Output::Scalar(n) = ir.outputs[0] else {
+        panic!("a scalar")
+    };
+    assert_eq!(ir.nodes[n].op, Op::Const(2));
+    // A FOLD whose result nothing reads is not computed.
+    let text = emit(
+        "k",
+        "'V' BIND V 0 32 0 QUANTIZE [ ADD 32 NARROW ] FOLD 'F' BIND V SUM",
+        &[V8],
+    );
+    assert!(!text.contains("let mut f") && text.contains("rt::sum("));
+    // A SUM and a FOLD in one loop: the FOLD keeps it lane by lane.
+    let text = emit(
+        "k",
+        "'V' BIND V SUM V 0 32 0 QUANTIZE [ ADD 32 NARROW ] FOLD",
+        &[V8],
+    );
+    assert!(text.contains("let mut f") && !text.contains("cfg!(target_arch"));
+    assert!(emit("k", "MUL SUM", &[V8, V8]).contains("cfg!(target_arch = \"wasm32\")"));
 }
 
 #[test]
