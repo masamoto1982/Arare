@@ -290,7 +290,7 @@ A program is a sequence of integer literals, quantized literals, Words and brack
 
 - Level: QL-B
 - Refines: AR-SYS-001
-- Refined by: AR-LLR-011, AR-LLR-012, AR-LLR-013, AR-LLR-017
+- Refined by: AR-LLR-011, AR-LLR-012, AR-LLR-013, AR-LLR-017, AR-LLR-028
 - Planned: Verified through AR-LLR-011, AR-LLR-012 and AR-LLR-013.
 
 ### AR-HLR-022 — Lane-wise lifting
@@ -345,8 +345,8 @@ For every number a program leaves, the error-budget checker infers, from the pro
 
 - Level: QL-A
 - Refines: AR-SYS-002, AR-SYS-009
-- Proved in `formal/Arare/Budget.lean` (AR-VER-107): `Budget.two_ne_zero`, `Budget.pow2_pos`, `Budget.pow2_add`, `Budget.pow2_nat`, `Budget.pow2_mono`, `Budget.shift_val`, `Budget.mul_between`, `Budget.imul_mem`, `Budget.mul_abs_le`, `Budget.X.add_bot`, `Budget.X.mul_bot`, `Budget.X.div_bot`, `Budget.W_add_bot`, `Budget.W_mul_bot`, `Budget.W_div_bot`, `Budget.mmag_bound`, `Budget.guard_sound`, `Budget.aneg_sound`, `Budget.padd_sound`, `Budget.nonzero_ne`, `Budget.isZero_eq`, `Budget.pmul_sound`, `Budget.inv_abs_le`, `Budget.inv_between`, `Budget.low_bound`, `Budget.half_unit`, `Budget.div_round`, `Budget.div_prop`, `Budget.pdiv_sound`, `Budget.rescale_val`, `Budget.arescale_sound`, `Budget.aquantize_sound`, `Budget.alit_sound`, `Budget.budget_sound`
-- Refined by: AR-LLR-012, AR-LLR-018, AR-LLR-019, AR-LLR-020, AR-LLR-022
+- Proved in `formal/Arare/Budget.lean` (AR-VER-107): `Budget.two_ne_zero`, `Budget.pow2_pos`, `Budget.pow2_add`, `Budget.pow2_nat`, `Budget.pow2_mono`, `Budget.shift_val`, `Budget.mul_between`, `Budget.imul_mem`, `Budget.mul_abs_le`, `Budget.X.add_bot`, `Budget.X.mul_bot`, `Budget.X.div_bot`, `Budget.W_add_bot`, `Budget.W_mul_bot`, `Budget.W_div_bot`, `Budget.mmag_bound`, `Budget.guard_sound`, `Budget.aneg_sound`, `Budget.padd_sound`, `Budget.nonzero_ne`, `Budget.isZero_eq`, `Budget.pmul_sound`, `Budget.inv_abs_le`, `Budget.inv_between`, `Budget.low_bound`, `Budget.half_unit`, `Budget.div_round`, `Budget.div_prop`, `Budget.pdiv_sound`, `Budget.rescale_val`, `Budget.arescale_sound`, `Budget.aquantize_sound`, `Budget.alit_sound`, `Budget.budget_sound`, `Budget.down_le`, `Budget.le_up`, `Budget.coarsen_sound`
+- Refined by: AR-LLR-012, AR-LLR-018, AR-LLR-019, AR-LLR-020, AR-LLR-022, AR-LLR-030
 - Planned: Empirically, against Ajisai: the oracle corpus (AR-VER-209) and at least 10,000 generated programs (AR-VER-217).
 
 ### AR-HLR-028 — The checker decides field=closed
@@ -370,13 +370,13 @@ The checker says of a truth value only whether both meanings answer the same one
 
 ### AR-HLR-030 — The compiled route answers what the interpreter answers
 
-A program compiled for a signature — the width and scale of each input, a scalar or a vector, bottom of the stack first — answers, on any inputs, exactly what the reference interpreter answers when the same inputs are on its stack before the program runs: the same values, widths, scales, NIL lanes and wheel points, and the same errors. Compiling never changes a result; a program, or a run of one, that the compiled code does not cover is answered by the interpreter.
+A program compiled for a signature — the width and scale of each input, a scalar or a vector, bottom of the stack first — answers, on any inputs, exactly what the reference interpreter answers when the same inputs are on its stack before the program runs: the same values, widths, scales, NIL lanes and wheel points, and the same errors. Compiling never changes a result; a program, or a run of one, that the compiled code does not cover is answered by the interpreter. The same holds for the native build and the WebAssembly SIMD128 build.
 
 - Level: QL-A
 - Refines: AR-SYS-004, AR-SYS-014
-- Refined by: AR-LLR-023, AR-LLR-024, AR-LLR-025, AR-LLR-026, AR-LLR-027
+- Refined by: AR-LLR-023, AR-LLR-024, AR-LLR-025, AR-LLR-026, AR-LLR-027, AR-LLR-029
 - Not proved formally: Compiled code is held to the interpreter by translation validation, the layer docs/quality/FORMAL_VERIFICATION.md assigns to it, not by a Lean theorem: the code is generated per program and compiled by rustc.
-- Planned: Phase 4b: the WASM SIMD128 build, by the same validation.
+- Planned: Held by translation validation (AR-VER-220) through AR-LLR-023 to AR-LLR-026 and AR-LLR-029, natively and under WebAssembly SIMD128.
 
 ### AR-HLR-031 — Columns know their wheel points and NIL lanes
 
@@ -388,6 +388,15 @@ A vector handed to compiled code is a column of one width and scale: codes and, 
 - Refined by: AR-LLR-023, AR-LLR-025
 - Not proved formally: A memory layout and its metadata are verified by tests, not by a theorem about values.
 - Planned: Verified through AR-LLR-023 (AR-VER-224) and the translation validation (AR-VER-220).
+
+### AR-HLR-032 — Names
+
+BIND names a value, as in Ajisai: `value 'X' BIND` consumes both operands, and the name X then pushes the value wherever it is written, however often, until the scope that bound it ends; binding a name again replaces its value, and `vector [ 'A' 'B' ] BIND` names each element of a vector of the same length. The program is one scope, and each run of a block by MAP, FILTER or FOLD opens one inside the scope it runs in: a block reads the names of the code around it, and the names it binds end with it. A name is a token that is not a number or a Word and holds no whitespace, bracket, quote or `#`. Refused: text that cannot be a name, a bare name the source never writes as text, a name not bound where it runs, BIND of a name or a malformed block of names, and a block bound to a name it reads, directly or through the blocks bound to the names it reads.
+
+- Level: QL-B
+- Refines: AR-SYS-001
+- Refined by: AR-LLR-028, AR-LLR-029
+- Planned: Verified through AR-LLR-028 and AR-LLR-029, and against Ajisai by the oracle corpus (AR-VER-209).
 
 ## Low-level requirements
 
@@ -584,7 +593,7 @@ Q is a rational n/d in lowest terms with d > 0 and n ≠ i128::MIN. Its addition
 
 ### AR-LLR-019 — The checker on one number
 
-Info is Lean's Info: nothing, 1/0 or 0/0 in both meanings, or a range [lo, hi] for the exact value, an error err and a scale range [smin, smax]. guard, lit, neg, add, sub, mul, div, rescale, narrow, quantize and join compute Lean's guard, alit, aneg, padd, pmul, pdiv, arescale and aquantize (each fitted into the widest width, of half-range 2^63, where Lean's analyze fits) and join with checked rationals, answering nothing where a rational would not fit or a scale would leave ±31. Over the grid of formal/BudgetTable.lean their output is byte for byte the Lean checker's. cross bounds a value each meaning may take from a different one of two; lt_agrees and eq_agrees say when an order or equality is the same in both meanings; budget is err, 0 for a shared point and nothing for nothing.
+Info is Lean's Info: nothing, 1/0 or 0/0 in both meanings, or a range [lo, hi] for the exact value, an error err and a scale range [smin, smax]. guard, lit, neg, add, sub, mul, div, rescale, narrow, quantize and join compute Lean's guard, alit, aneg, padd, pmul, pdiv, arescale and aquantize (each fitted into the widest width, of half-range 2^63, where Lean's analyze fits) and join with checked rationals, and coarsen computes Lean's coarsen (AR-LLR-030), answering nothing where a rational would not fit or a scale would leave ±31. Over the grid of formal/BudgetTable.lean their output is byte for byte the Lean checker's. cross bounds a value each meaning may take from a different one of two; lt_agrees and eq_agrees say when an order or equality is the same in both meanings; budget is err, 0 for a shared point and nothing for nothing.
 
 - Level: QL-A
 - Refines: AR-HLR-027, AR-HLR-028, AR-HLR-029
@@ -596,7 +605,7 @@ Info is Lean's Info: nothing, 1/0 or 0/0 in both meanings, or a range [lo, hi] f
 
 ### AR-LLR-020 — The checker over a program
 
-analyze runs a parsed program as the reference interpreter does, item by item and Word by Word, on what is known of each value — nothing; NIL in both meanings; a number (possibly NIL in both instead) with its Info; a truth value or NIL, agreeing or not; a vector of known length lane by lane, or of a length at most max shared by both meanings with one description of every lane; or a quote — and never on a value a Word computes. Numeric Words apply AR-LLR-019's functions lane by lane under the interpreter's lifting; a RESCALE shift, NARROW width or QUANTIZE exponent must be an integer exact in both meanings; LT of a wheel point is NIL in both; SELECT joins its branches when its condition agrees and bounds them across otherwise; FILTER with an agreeing predicate keeps a vector of unknown length; MAP, FOLD and SUM over such a vector run once per length it may have, joined, a FOLD stopping when an iteration changes nothing. It leaves as many values as the interpreter and takes the same steps on every run.
+analyze runs a parsed program as the reference interpreter does, item by item and Word by Word, on what is known of each value — nothing; NIL in both meanings; a number (possibly NIL in both instead) with its Info; a truth value or NIL, agreeing or not; a vector of known length lane by lane, or of a length at most max shared by both meanings with one description of every lane; or a quote — and never on a value a Word computes. Numeric Words apply AR-LLR-019's functions lane by lane under the interpreter's lifting; a RESCALE shift, NARROW width or QUANTIZE exponent must be an integer exact in both meanings; LT of a wheel point is NIL in both; SELECT joins its branches when its condition agrees and bounds them across otherwise; FILTER with an agreeing predicate keeps a vector of unknown length; MAP, FOLD and SUM over such a vector run once per length it may have, joined, a FOLD stopping when an iteration changes nothing. BIND binds what is known of a value as the interpreter binds the value, in the same scopes, a block of names taking a vector's lanes; a name pushes what is known of its value, nothing where the checker does not see it bound; and every numeric result is coarsened (AR-LLR-030). It leaves as many values as the interpreter and takes the same steps on every run.
 
 - Level: QL-A
 - Refines: AR-HLR-027, AR-HLR-029
@@ -604,6 +613,7 @@ analyze runs a parsed program as the reference interpreter does, item by item an
 - Tested in `rust/crates/arare-budget/tests/check.rs` — **AR-VER-216-C**
 - Tested in `tests/oracle/corpus.json` — **AR-VER-209**
 - Tested in `scripts/check-oracle-random.mjs` — **AR-VER-217**
+- Tested in `rust/crates/arare-budget/tests/bind.rs` — **AR-VER-229**
 
 ### AR-LLR-021 — The field contract in the checker
 
@@ -636,7 +646,7 @@ Column::new checks every non-NIL code with is_code for its width and records has
 
 ### AR-LLR-024 — The intermediate representation and lowering
 
-lower runs a program once on a stack of symbols — a scalar node, a vector whose lanes are a node, a quote — the way the interpreter runs it, adding one node per Word: a node's width and scale are what the kernel's own operation gives placeholder numbers of its operands' widths and scales; its bound is the largest code magnitude on finite inputs, and it is checked when the bound exceeds its width or it is a DIV. ADD, SUB, MUL, DIV, NEG, RESCALE, NARROW, QUANTIZE, LT, AND, NOT and SELECT lower lane by lane, EQ on scalars, MAP by running its block on the lane, SUM to a reduction whose width is the one the running sum settles at. A literal point or NIL, a quote as data, FILTER, FOLD, a lane value computed from a reduction, and an operand that is not a literal integer where one is required are refused with the reason.
+lower runs a program once on a stack of symbols — a scalar node, a vector whose lanes are a node, a quote — the way the interpreter runs it, adding one node per Word: a node's width and scale are what the kernel's own operation gives placeholder numbers of its operands' widths and scales; its bound is the largest code magnitude on finite inputs, and it is checked when the bound exceeds its width or it is a DIV. ADD, SUB, MUL, DIV, NEG, RESCALE, NARROW, QUANTIZE, LT, AND, NOT and SELECT lower lane by lane, EQ on scalars, MAP by running its block on the lane, SUM to a reduction whose width is the one the running sum settles at, FOLD and BIND as AR-LLR-029 says. A literal point or NIL, a quote as data, FILTER, a lane value computed from a reduction, and an operand that is not a literal integer where one is required are refused with the reason.
 
 - Level: QL-A
 - Refines: AR-HLR-030
@@ -646,7 +656,7 @@ lower runs a program once on a stack of symbols — a scalar node, a vector whos
 
 ### AR-LLR-025 — Emitting Rust
 
-emit writes, for a program and a signature, a function that runs the fast path and otherwise calls fallback with the source, and the fast path alone. The fast path takes the plain codes of every input, requires equal lengths and, for each SUM, enough lanes for its settled width and lanes × bound within int64; it computes uniform nodes before one loop over the lanes in chunks of 4096, lane nodes inside it in the narrowest of i16, i32, i64 and i128 that each bound needs, each SUM in a per-chunk partial of a type that holds the chunk, and reductions' dependents after it; a failed check sets trap and a trapped run answers None; ADD, SUB, MUL, NEG and the partial sums wrap, so the values computed after a failed check, which are discarded, cannot panic. One vector output with no reduction is written straight into the output, others through a chunk buffer. The text is deterministic. arare-compiled builds the programs of programs.txt this way at build time.
+emit writes, for a program and a signature, a function that runs the fast path and otherwise calls fallback with the source, and the fast path alone. The fast path takes the plain codes of every input, requires equal lengths and, for each SUM, enough lanes for its settled width and lanes × bound within int64; it computes uniform nodes before one loop over the lanes in chunks of 4096, lane nodes inside it in the narrowest of i16, i32, i64 and i128 that each bound needs, each SUM in per-chunk partials of a type that holds the chunk — under WebAssembly sixteen, one for each lane of a group of sixteen, natively one —, and reductions' dependents after it; a failed check sets trap and a trapped run answers None; ADD, SUB, MUL, NEG and the partial sums wrap, so the values computed after a failed check, which are discarded, cannot panic. One vector output with no reduction is written straight into the output, others through a chunk buffer. The text is deterministic. arare-compiled builds the programs of programs.txt this way at build time.
 
 - Level: QL-A
 - Refines: AR-HLR-030, AR-HLR-031
@@ -673,6 +683,39 @@ div_f64 rounds the f64 quotient of two integers half to even; for a dividend bel
 - Implemented in: `rust/crates/arare-cli/src/main.rs`
 - Tested in `rust/crates/arare-cli/tests/cli.rs` — **AR-VER-225**
 
+### AR-LLR-028 — Names in the front end and the interpreter
+
+The lexer reads `'X'` — a quote, the text up to the next quote on the line, and that quote — as a text token. The parser makes it a text item when the text is a name (is_name) and refuses it otherwise, and makes a bare token that is no number and no Word a name item when the source writes it as text somewhere, refusing it as an unknown Word otherwise. The interpreter pushes text as a value only BIND reads (EQ compares it as a name) and keeps the names bound so far in scopes: the program's, and one for every run of a block, closed when the block finishes. A name pushes the value of the innermost binding of it, or stops the program (Unbound). BIND binds in the innermost scope, replacing an earlier binding there; it refuses text as the value, a names operand that is neither text nor a block of texts, a vector of another length (Shape), and a block that reads its own name directly or through the blocks bound to the names it reads (SelfReference).
+
+- Level: QL-B
+- Refines: AR-HLR-021, AR-HLR-032
+- Implemented in: `rust/crates/arare-front/src/lexer.rs`, `rust/crates/arare-front/src/parser.rs`, `rust/crates/arare-interp/src/machine.rs`, `rust/crates/arare-interp/src/words.rs`, `rust/crates/arare-interp/src/value.rs`
+- Tested in `rust/crates/arare-front/tests/names.rs` — **AR-VER-227**
+- Tested in `rust/crates/arare-interp/tests/bind.rs` — **AR-VER-228**
+- Tested in `tests/oracle/corpus.json` — **AR-VER-209**
+
+### AR-LLR-029 — BIND and FOLD on the compiled route
+
+lower binds a name to a symbol in the innermost of its scopes, as the interpreter binds a value, opens a scope for every block it runs (MAP's and FOLD's), pushes the symbol a name is bound to, and refuses what the interpreter refuses — an unbound name, BIND of a name, a block that reads its own name — and BIND of several names. FOLD over a vector from a scalar becomes an accumulator node (Acc), its block lowered once on the accumulator and the lane, and a result node (Fold) after the loop; it is refused when the block does not leave one scalar of the accumulator's own width and scale. emit starts the accumulator at its initial value before the loop, replaces it with the block's result after each lane, and reads it after the loop.
+
+- Level: QL-A
+- Refines: AR-HLR-030, AR-HLR-032
+- Implemented in: `rust/crates/arare-codegen/src/lower_names.rs`, `rust/crates/arare-codegen/src/lower_words.rs`, `rust/crates/arare-codegen/src/ir.rs`, `rust/crates/arare-codegen/src/emit.rs`, `rust/crates/arare-codegen/src/node.rs`
+- Tested in `rust/crates/arare-codegen/tests/lower.rs` — **AR-VER-223**
+- Tested in `rust/crates/arare-compiled/tests/translation.rs` — **AR-VER-220**
+
+### AR-LLR-030 — Coarsening in the checker
+
+coarsen d rounds a number's range [lo, hi] outward and its error up to multiples of 2^-d wherever their denominators exceed 2^d, and leaves them otherwise; Q's down and up compute Lean's down and up exactly, digit by digit, for d below 127 (nothing at or beyond). The checker coarsens every numeric result at d = 48, so a loop of many steps keeps its rationals within 128 bits; over the grid of formal/BudgetTable.lean coarsen is byte for byte Lean's, which coarsen_sound proves keeps what is known right.
+
+- Level: QL-A
+- Refines: AR-HLR-027
+- Derived: Exact rationals double their size with every multiplication: twenty steps of the logistic map (AR-PERF-003) need a million bits, and the checker's 128-bit rationals would know nothing after five. Rounding outward trades a little precision for a budget at all.
+- Implemented in: `rust/crates/arare-budget/src/rat.rs`, `rust/crates/arare-budget/src/info.rs`, `rust/crates/arare-budget/src/check.rs`
+- Tested in `rust/crates/arare-budget/tests/table.rs` — **AR-VER-215**
+- Tested in `formal/BudgetTable.lean` — **AR-VER-215**
+- Tested in `rust/crates/arare-budget/tests/bind.rs` — **AR-VER-229**
+
 ## Performance requirements
 
 ### AR-PERF-001 — int8 dot product
@@ -682,7 +725,7 @@ The compiled int8 dot product over 1,000,000 elements takes at most 1.5 times a 
 - Level: QL-A
 - Refines: AR-SYS-014, AR-SYS-004
 - Tested in `rust/bench/src/main.rs` — **AR-VER-221**
-- Planned: Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; Phase 4b adds the WASM SIMD128 build.
+- Planned: Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; the WASM SIMD128 build is held to the native one by AR-PERF-007.
 
 ### AR-PERF-002 — Fixed-point dot product
 
@@ -691,7 +734,7 @@ The compiled fixed-point counterpart of Ajisai's small-rational dot product is a
 - Level: QL-A
 - Refines: AR-SYS-014
 - Tested in `rust/bench/src/main.rs` — **AR-VER-221**
-- Planned: Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; Phase 4b adds the WASM SIMD128 build.
+- Planned: Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; the WASM SIMD128 build is held to the native one by AR-PERF-007.
 
 ### AR-PERF-003 — Logistic map
 
@@ -699,7 +742,7 @@ Twenty steps of the logistic map take at most 1 µs, with the error against Ajis
 
 - Level: QL-A
 - Refines: AR-SYS-014
-- Planned: Phase 4b: the logistic map needs BIND and FOLD on the compiled route (AR-PERF-003); the WASM SIMD128 build is measured against the native one (AR-PERF-007).
+- Tested in `rust/bench/src/main.rs` — **AR-VER-221**
 
 ### AR-PERF-004 — Harmonic sum
 
@@ -708,7 +751,7 @@ The harmonic sum to k = 20,000 is at least 1,000 times faster than Ajisai.
 - Level: QL-A
 - Refines: AR-SYS-014
 - Tested in `rust/bench/src/main.rs` — **AR-VER-221**
-- Planned: Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; Phase 4b adds the WASM SIMD128 build.
+- Planned: Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; the WASM SIMD128 build is held to the native one by AR-PERF-007.
 
 ### AR-PERF-005 — Top-level scalar Words
 
@@ -717,7 +760,7 @@ A top-level scalar Word takes at most 2 ns on the compiled route.
 - Level: QL-A
 - Refines: AR-SYS-014, AR-SYS-004
 - Tested in `rust/bench/src/main.rs` — **AR-VER-221**
-- Planned: Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; Phase 4b adds the WASM SIMD128 build.
+- Planned: Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; the WASM SIMD128 build is held to the native one by AR-PERF-007.
 
 ### AR-PERF-006 — Cost of wheel points and NIL
 
@@ -726,12 +769,13 @@ Carrying the wheel-point codes and NIL validity costs at most 1.1 times the same
 - Level: QL-A
 - Refines: AR-SYS-014, AR-SYS-009
 - Tested in `rust/bench/src/main.rs` — **AR-VER-221**
-- Planned: Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; Phase 4b adds the WASM SIMD128 build.
+- Planned: Measured on the compiled native route against a baseline in the same run (rust/bench, built for x86-64-v3), blocking in CI; the WASM SIMD128 build is held to the native one by AR-PERF-007.
 
 ### AR-PERF-007 — WebAssembly
 
-The WASM SIMD128 build is within 3 times the native build. The figure is a target to be re-measured in Phase 4.
+Each compiled kernel of the benchmarks — the int8 and small-rational dot products, the int8 ADD, the harmonic sum, the fixed-point chain and the logistic map — built for WebAssembly with SIMD128 runs within 3 times its native build (x86-64-v3), both measured in the same CI job.
 
 - Level: QL-A
 - Refines: AR-SYS-014, AR-SYS-004
-- Planned: Phase 4b: the logistic map needs BIND and FOLD on the compiled route (AR-PERF-003); the WASM SIMD128 build is measured against the native one (AR-PERF-007).
+- Tested in `scripts/check-wasm-speed.mjs` — **AR-VER-226**
+- Tested in `rust/crates/arare-timing/src/main.rs` — **AR-VER-226**

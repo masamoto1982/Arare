@@ -34,6 +34,7 @@ Arare は、量子化を前提とし、失った精度を数字で管理する�
 - `npm run requirements:generate`：`spec/requirements.json` を変えたら、`spec/REQUIREMENTS.md` と追跡表の生成部分を作り直す
 - `npm run check`、`npm run lint`、`npm test`：TypeScript
 - 性能（Phase 4 から）：`rust/bench` で `RUSTFLAGS="-C target-cpu=x86-64-v3" cargo run --release -- --check`。AR-PERF の要件を割っていないかを、同じ実行で測った手書きループと Ajisai のネイティブ版との比で確かめる。Ajisai は `UPSTREAM.md` のコミットを Git の依存として取得する
+- WebAssembly（Phase 4b から）：`rust/` で `rustup target add wasm32-wasip1` のあと、`arare-timing` を `RUSTFLAGS="-C target-feature=+simd128" cargo build --release -p arare-timing --target wasm32-wasip1` とネイティブ（x86-64-v3）の両方でビルドし、`node scripts/check-wasm-speed.mjs --native rust/target/release/arare-timing --wasm rust/target/wasm32-wasip1/release/arare-timing.wasm`（AR-PERF-007）。翻訳の検証も WebAssembly で回す（`CARGO_TARGET_WASM32_WASIP1_RUNNER="node scripts/lib/run-wasi.mjs"`）
 
 ## 置き場所
 

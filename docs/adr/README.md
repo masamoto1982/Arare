@@ -16,3 +16,6 @@ record supersedes it and says so.
 | [0007](0007-oracle-comparison.md) | Comparing Arare with the Ajisai oracle, divergences recorded as cases | Accepted |
 | [0008](0008-error-budget-checker.md) | The error-budget checker: its domain, proved in Lean, computed in Rust with checked 128-bit rationals | Accepted |
 | [0009](0009-compiled-route.md) | The compiled route: Rust source, a fast path with the interpreter behind it, columns that know their points and NIL | Accepted |
+| [0010](0010-names.md) | Names, as Ajisai's BIND, in scopes without User Words | Accepted |
+| [0011](0011-coarsening.md) | Coarsening the checker's rationals outward to 2^-48 in long loops | Accepted |
+| [0012](0012-webassembly-build.md) | The WebAssembly build: wasm32-wasip1 under Node's WASI, a reduction loop per target | Accepted |

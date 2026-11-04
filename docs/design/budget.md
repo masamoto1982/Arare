@@ -1,6 +1,6 @@
 # The error-budget checker
 
-The design behind AR-LLR-018 to AR-LLR-022: how `rust/crates/arare-budget`
+The design behind AR-LLR-018 to AR-LLR-022 and AR-LLR-030: how `rust/crates/arare-budget`
 infers, from a program's text, how far each of its numbers may be from the
 exact value Ajisai computes (AR-HLR-027), decides the `field` contract
 (AR-HLR-028), and carries both through truth values, SELECT and vectors
@@ -71,6 +71,7 @@ checker answers what Lean's `analyze` answers, or nothing.
 | `Lanes(xs)` | a vector of this length in both, lane by lane |
 | `Hull { max, elem }` | a vector of the same length in both, at most `max`, every lane described by `elem` |
 | `Quote(items)` | a quote not yet consumed |
+| `Text(name)` | `'X'`, the same name in both |
 
 - **Numeric Words** lift as the interpreter lifts: NIL is the result, vectors
   pair lane by lane, a one-lane vector or a scalar is reused, and a `Hull`
@@ -91,9 +92,28 @@ checker answers what Lean's `analyze` answers, or nothing.
   **SUM** run lane by lane; over a `Hull` they run once for every length it
   may have and join the results, a FOLD stopping early when an iteration
   changes nothing. SUM skips NIL lanes and may be NIL when nothing is left.
+- **BIND** binds what is known of a value to a name in the innermost scope,
+  as the interpreter binds the value (AR-LLR-028); every block the checker
+  runs opens a scope of its own. A block of names takes the lanes of a vector
+  of known length, and any lane of one of unknown length. A name pushes what
+  is known of its value, and nothing where the checker does not see it bound.
 
 The checker never panics on a program the interpreter would refuse: a Word
 whose operands it cannot follow answers `Top`.
+
+## Coarsening (AR-LLR-030)
+
+Every Word that multiplies doubles the size of the exact rationals: twenty
+steps of the logistic map hold a million bits, and 128-bit rationals would
+know nothing after five. So every numeric result is coarsened: where a
+denominator of its range or error exceeds 2^48, the range is rounded outward
+and the error up to multiples of 2^-48 (Lean's `coarsen`, by `down` and
+`up`). The checker then knows a little less — the range is up to 2^-48 wider
+and the error up to 2^-48 larger, far below the 2^-31 of the finest scale a
+value has — and never something wrong: `coarsen_sound` proves a coarsened
+`Info` is right about whatever the original was right about. A denominator
+within the grid is kept, so what the checker inferred before Phase 4b, from
+programs whose rationals stay small, is unchanged.
 
 ## The field contract (AR-LLR-021)
 
@@ -115,8 +135,8 @@ harnesses run thousands of programs in one process (AR-VER-209, AR-VER-217).
 
 | Layer | Evidence |
 |---|---|
-| The numeric checker, in Lean | `budget_sound`, `closed_safe`, `join_sound_left`, `join_sound_right` (AR-VER-107) |
-| Rust's numeric functions against Lean's | the same 14,280-line table, diffed in CI (AR-VER-215) |
+| The numeric checker, in Lean | `budget_sound`, `closed_safe`, `join_sound_left`, `join_sound_right`, `coarsen_sound` (AR-VER-107) |
+| Rust's numeric functions against Lean's | the same 14,399-line table, coarsening included, diffed in CI (AR-VER-215) |
 | Rust's numeric functions against the kernel | every Word over a grid of literals, and two levels deep, held to `Sound` with exact rationals (AR-VER-216) |
 | The rationals | grid tests and the order past overflow (AR-VER-216-R); no Kani harness, since symbolic 128-bit division is beyond the solver in CI time |
-| The program layer | requirements-based tests (AR-VER-216-C); the oracle corpus and 10,000 generated programs against Ajisai (AR-VER-209, AR-VER-217) |
+| The program layer | requirements-based tests (AR-VER-216-C, and AR-VER-229 for names and a twenty-step loop); the oracle corpus and 10,000 generated programs against Ajisai (AR-VER-209, AR-VER-217) |

@@ -13,17 +13,20 @@ exactly where it is stated, and nowhere else.
 | Semantic model | Lean 4, `formal/` | The value model of WORK_ORDER.md §3 and its laws |
 | Model to code | Differential tests | `rust/crates/arare-spec` against the Lean model, on every int8 operand pair |
 | Implementation | Kani, `rust/` | Each kernel against `arare-spec`, over its whole range or a stated small scope |
-| Compiled code | Translation validation | Native (Phase 4a) and WASM (Phase 4b) output against the reference interpreter (AR-VER-220) |
+| Compiled code | Translation validation | Native and WASM SIMD128 output against the reference interpreter (AR-VER-220) |
 | Error budget | Lean 4, `formal/`; differential tests; the Ajisai oracle | The checker's soundness, proved over the numeric Words; the Rust checker against the Lean one; `|Arare − Ajisai| ≤` the inferred budget on the corpus and on generated programs |
 
 ## Status
 
-**Phase 4a: the value model is proved in Lean, mirrored in Rust and diffed
+**Phase 4b: the value model is proved in Lean, mirrored in Rust and diffed
 against it, and the kernel is proved against laws in Kani. The error-budget
-checker is proved sound in Lean over the numeric Words, computed in Rust as
-the same functions and diffed against Lean, and held to Ajisai on the corpus
-and on at least 10,000 generated programs. Compiled code is held to the
-interpreter by translation validation.** The front end and the interpreter are
+checker is proved sound in Lean over the numeric Words, coarsening included
+(`coarsen_sound`), computed in Rust as the same functions and diffed against
+Lean, and held to Ajisai on the corpus and on at least 10,000 generated
+programs. Compiled code, native and WebAssembly SIMD128, is held to the
+interpreter by translation validation.** Names and BIND (ADR-0010) are part of
+the front end and the interpreter: tested and compared with Ajisai, not
+proved. The front end and the interpreter are
 QL-B: tested, compared with the Ajisai oracle (AR-VER-209), not proved.
 
 ### Lean
@@ -61,7 +64,8 @@ grid.
 `formal/BudgetTable.lean` runs the Lean checker over a grid — 17 literals
 (integers, rationals that round and that do not, one out of its width, the two
 wheel points) under seven unary Words, and every pair of those under ADD, SUB,
-MUL, DIV and the join — and prints 14,280 lines;
+MUL, DIV and the join, with each literal coarsened to three grids and each
+product and quotient coarsened (AR-LLR-030) — and prints 14,399 lines;
 `rust/crates/arare-budget/src/table.rs` prints the same grid from the Rust
 checker. The Lean job of CI diffs the two. The Rust checker computes Lean's
 functions with checked 128-bit rationals and answers nothing where one would
@@ -105,7 +109,9 @@ compared with the interpreter on every int8 pair for the lane-wise Words and
 on seeded boundary and random inputs at every width for every compiled
 program (`rust/crates/arare-compiled/tests/translation.rs`). The comparison
 covers the programs in `programs.txt` and the inputs the tests draw, not every
-program or input. The vectorized DIV and RESCALE (AR-LLR-026) are argued in
+program or input. The same tests run built for `wasm32-wasip1` with SIMD128
+under Node's WASI, where a reduction takes the loop the native build never
+runs (ADR-0012). The vectorized DIV and RESCALE (AR-LLR-026) are argued in
 their doc comments and tested against the kernel's integer definitions
 (AR-VER-222), not proved.
 
@@ -145,8 +151,10 @@ Read these as open, not as proved by implication:
   (AR-VER-216-R) and through the soundness tests and the Lean–Rust table.
 - **The Rust checker beyond the grid.** That it computes Lean's functions or
   nothing rests on its structure (each function written after the Lean one,
-  every rational operation checked) and the 14,280-line diff, not on a proof
-  (AR-LLR-019).
+  every rational operation checked) and the 14,399-line diff, not on a proof
+  (AR-LLR-019). That `down` never overflows rests on the bound in its
+  comment (a denominator past the grid keeps |n·2^d/den| within |n|) and its
+  tests, not on a harness.
 - **The exact meaning is Ajisai's only where the oracle shows it.** The
   model's exact meaning is written from ADR-0007's prelude; that Ajisai
   computes it is what the oracle comparison checks, on its programs.

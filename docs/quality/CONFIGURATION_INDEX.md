@@ -20,6 +20,8 @@ change that updates this file in the same diff
 | Tauri crates | as locked | `src-tauri/Cargo.lock` |
 | Benchmark build target | `-C target-cpu=x86-64-v3` | `.github/workflows/test.yml` (performance job), ADR-0009 |
 | Benchmark crates | as locked | `rust/bench/Cargo.lock` |
+| WebAssembly target | `wasm32-wasip1` with `-C target-feature=+simd128`, for the stable toolchain above | `.github/workflows/test.yml` (performance job), ADR-0012 |
+| WebAssembly runtime | Node.js's `node:wasi` (preview 1), the Node.js above | `scripts/lib/run-wasi.mjs` |
 
 ## The Ajisai oracle
 
@@ -40,4 +42,5 @@ change that updates this file in the same diff
 | 2a. Executable specification and kernel | Merged | `1b0afab` (masamoto1982/Arare#4) | `arare-spec`, `arare-kernel`, AR-LLR-001 to 009, AR-VER-201 to 207 |
 | 2b. Front end and interpreter | Merged | `f3e3ea3` (masamoto1982/Arare#5) | Literals and QUANTIZE, the Words, NIL reasons, the CLI, the Ajisai oracle; AR-HLR-021 to 026, AR-LLR-010 to 017, AR-VER-208 to 214 |
 | 3. Error-budget checker | Merged | `c4e2ab2` (masamoto1982/Arare#6) | `arare-budget`, `arare check`, ADR-0008; the soundness theorem (AR-VER-107); AR-HLR-027 to 029, AR-LLR-018 to 022, AR-VER-215 to 218; the oracle against inferred budgets and 10,000 generated programs |
-| 4a. Compiled route, native | In review | — | `arare-codegen`, `arare-compiled`, `arare compile`, `rust/bench`, ADR-0009; AR-HLR-030 and 031, AR-LLR-023 to 027, AR-VER-220 to 225; AR-PERF-001, 002, 004, 005 and 006 measured. Phase 4b: BIND and FOLD compiled, the logistic map (AR-PERF-003), the WASM SIMD128 build (AR-PERF-007) |
+| 4a. Compiled route, native | Merged | `7ec8d2a` (masamoto1982/Arare#7) | `arare-codegen`, `arare-compiled`, `arare compile`, `rust/bench`, ADR-0009; AR-HLR-030 and 031, AR-LLR-023 to 027, AR-VER-220 to 225; AR-PERF-001, 002, 004, 005 and 006 measured |
+| 4b. Names, FOLD compiled, WebAssembly | In review | — | BIND and names (ADR-0010), FOLD and BIND on the compiled route, the checker's coarsening (ADR-0011, `coarsen_sound`), the WebAssembly SIMD128 build (ADR-0012, `arare-timing`); AR-HLR-032, AR-LLR-028 to 030, AR-VER-226 to 229; AR-PERF-003 and 007 measured |
