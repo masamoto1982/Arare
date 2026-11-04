@@ -29,6 +29,8 @@ pub enum Abs {
     Hull { max: usize, elem: Box<Abs> },
     /// A quote not yet consumed: the same code in both meanings.
     Quote(Rc<Vec<Item>>),
+    /// `'X'`: the same name in both meanings (AR-LLR-028).
+    Text(Rc<str>),
 }
 
 impl Abs {
@@ -159,7 +161,7 @@ pub fn eq_agrees(a: &Abs, b: &Abs) -> bool {
 pub fn budget(v: &Abs) -> Option<Q> {
     match v {
         Abs::Top | Abs::Quote(_) => None,
-        Abs::Nil => Some(Q::ZERO),
+        Abs::Nil | Abs::Text(_) => Some(Q::ZERO),
         Abs::Num { info, .. } => info::budget(*info),
         Abs::Truth { agree } => agree.then_some(Q::ZERO),
         Abs::Lanes(xs) => xs.iter().try_fold(Q::ZERO, |acc, x| {

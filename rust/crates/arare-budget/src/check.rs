@@ -19,6 +19,11 @@ use arare_front::{Item, Program, Word};
 use arare_kernel::{Num, Width, MAX_SCALE};
 use std::rc::Rc;
 
+/// The grid results are coarsened to, `2^-48`: far below any scale a value
+/// has (at least `2^-31`), and coarse enough that the product of two such
+/// rationals stays within 128 bits.
+pub const COARSE: u32 = 48;
+
 /// Why a numeric result is not bounded as a number.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
 pub enum Why {
@@ -69,7 +74,10 @@ impl Analysis {
 
 /// Check a parsed program.
 pub fn analyze(program: &Program) -> Analysis {
-    let mut c = Checker { open: Vec::new() };
+    let mut c = Checker {
+        open: Vec::new(),
+        scopes: vec![Vec::new()],
+    };
     let mut stack = Vec::new();
     for item in &program.items {
         c.exec(&mut stack, item);
@@ -84,6 +92,9 @@ pub fn analyze(program: &Program) -> Analysis {
 
 pub(crate) struct Checker {
     open: Vec<Open>,
+    /// What is known of the value of each name bound so far, scope by scope,
+    /// as `arare-interp`'s `Env` holds the values (AR-LLR-028).
+    scopes: Vec<Vec<(Rc<str>, Abs)>>,
 }
 
 /// The numeric Words that apply lane by lane to two numbers.
@@ -114,8 +125,12 @@ impl Checker {
         self.open.push(Open { word, why });
     }
 
-    /// A numeric result: noted when it is not bounded as a number.
+    /// A numeric result: noted when it is not bounded as a number. Its range
+    /// and error are coarsened to multiples of `2^-COARSE` once their
+    /// denominators grow past it (AR-LLR-030), so that a long loop keeps its
+    /// rationals within 128 bits.
     pub(crate) fn result(&mut self, w: Word, operands: &[Info], out: Info) -> Info {
+        let out = info::coarsen(out, COARSE);
         if !out.is_num() {
             let why = if matches!(out, Info::Inf | Info::Bot)
                 || operands.iter().any(|i| matches!(i, Info::Inf | Info::Bot))
@@ -152,16 +167,66 @@ impl Checker {
                 stack.push(Abs::num(i));
             }
             Item::Quote(items) => stack.push(Abs::Quote(Rc::new(items.clone()))),
+            Item::Text(name) => stack.push(Abs::Text(name.as_str().into())),
+            // A name the checker cannot see bound is one the interpreter
+            // stops at, or one bound where the checker knows nothing.
+            Item::Name(name) => stack.push(self.lookup(name)),
             Item::Word(w) => self.apply(*w, stack),
+        }
+    }
+
+    fn lookup(&self, name: &str) -> Abs {
+        self.scopes
+            .iter()
+            .rev()
+            .find_map(|s| s.iter().find(|(n, _)| &**n == name).map(|(_, v)| v.clone()))
+            .unwrap_or(Abs::Top)
+    }
+
+    fn bind_one(&mut self, name: Rc<str>, value: Abs) {
+        let scope = self.scopes.last_mut().expect("the program's scope");
+        match scope.iter_mut().find(|(n, _)| *n == name) {
+            Some(slot) => slot.1 = value,
+            None => scope.push((name, value)),
+        }
+    }
+
+    /// BIND, as the interpreter binds: one name takes the value; a block of
+    /// names takes the lanes of a vector of known length, and any lane of one
+    /// of unknown length.
+    fn bind(&mut self, stack: &mut Vec<Abs>) {
+        let mut o = self.pop(stack, 2);
+        let names = o.pop().expect("two operands");
+        let value = o.pop().expect("two operands");
+        match names {
+            Abs::Text(name) => self.bind_one(name, value),
+            names => {
+                let Abs::Lanes(names) = self.data(names) else {
+                    return;
+                };
+                let value = self.data(value);
+                for (k, n) in names.into_iter().enumerate() {
+                    let v = match &value {
+                        Abs::Lanes(xs) => xs.get(k).cloned().unwrap_or(Abs::Top),
+                        v if v.is_vector() => any_lane(v),
+                        _ => Abs::Top,
+                    };
+                    if let Abs::Text(n) = n {
+                        self.bind_one(n, v);
+                    }
+                }
+            }
         }
     }
 
     /// Run a block on `inputs`; what it leaves when it leaves one value.
     pub(crate) fn block(&mut self, items: &[Item], inputs: Vec<Abs>) -> Abs {
+        self.scopes.push(Vec::new());
         let mut stack = inputs;
         for item in items {
             self.exec(&mut stack, item);
         }
+        self.scopes.pop();
         match stack.len() {
             1 => stack.pop().expect("one value"),
             _ => Abs::Top,
@@ -297,6 +362,7 @@ impl Checker {
 
     fn apply(&mut self, w: Word, stack: &mut Vec<Abs>) {
         let result = match w {
+            Word::Bind => return self.bind(stack),
             Word::True | Word::False => Abs::Truth { agree: true },
             Word::Nil => Abs::Nil,
             Word::Add | Word::Sub | Word::Mul | Word::Div => {

@@ -1,4 +1,5 @@
-//! Exact rationals in 128 bits (AR-LLR-018, refining AR-HLR-027).
+//! Exact rationals in 128 bits (AR-LLR-018, refining AR-HLR-027), and their
+//! rounding outward to a grid (AR-LLR-030).
 //!
 //! The checker's bounds are the Lean model's rationals (`formal/Arare/Budget.lean`)
 //! computed exactly. Every operation is checked: one whose exact result does
@@ -126,6 +127,40 @@ impl Q {
 
     /// The exact order, by comparing integer parts and then the reciprocals
     /// of the remainders, so it never overflows.
+    /// Lean's `down d`: rounded down to a multiple of `2^-d` when the
+    /// denominator exceeds `2^d` (`d` below 127), itself otherwise.
+    pub fn down(self, d: u32) -> Option<Q> {
+        if d >= 127 {
+            return None;
+        }
+        let unit = 1i128 << d;
+        if self.d <= unit {
+            return Some(self);
+        }
+        // floor(n · 2^d / den), one binary digit at a time, so nothing
+        // overflows: the remainder stays below den, at most 2^127.
+        let whole = self.n.div_euclid(self.d);
+        let mut rem = self.n.rem_euclid(self.d) as u128;
+        let den = self.d as u128;
+        let mut frac = 0i128;
+        for _ in 0..d {
+            rem <<= 1;
+            frac <<= 1;
+            if rem >= den {
+                rem -= den;
+                frac |= 1;
+            }
+        }
+        // floor(n · 2^d / den) cannot overflow: den > 2^d makes its
+        // magnitude at most |n|.
+        Q::new(whole * unit + frac, unit)
+    }
+
+    /// Lean's `up d`.
+    pub fn up(self, d: u32) -> Option<Q> {
+        Some(self.neg().down(d)?.neg())
+    }
+
     pub fn compare(self, o: Q) -> Ordering {
         let (q1, r1) = (self.n.div_euclid(self.d), self.n.rem_euclid(self.d));
         let (q2, r2) = (o.n.div_euclid(o.d), o.n.rem_euclid(o.d));
