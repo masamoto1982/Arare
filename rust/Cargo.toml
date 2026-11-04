@@ -13,6 +13,7 @@ members = [
   "crates/arare-compiled",
   "crates/arare-wasm",
   "crates/arare-cli",
+  "crates/arare-timing",
 ]
 
 [workspace.package]
