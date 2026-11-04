@@ -154,3 +154,33 @@ fn ar_ver_218_check_lines() {
     assert!(lines[2].contains(r#"{"type":"boolean","value":true,"budget":"0/1"}"#));
     assert_eq!(arare(&["check", "/no/such/file"], "").0, 2);
 }
+
+/// AR-VER-225: `compile` (AR-LLR-027) writes the compiled program as Rust,
+/// the same text every time, and refuses a bad signature or program.
+#[test]
+fn ar_ver_225_compile() {
+    let (code, out, _) = arare(
+        &["compile", "--inputs", "v8:0 v8:0", "--name", "dot"],
+        "MUL SUM\n",
+    );
+    assert_eq!(code, 0);
+    assert!(out.starts_with("use arare_codegen::rt::"), "{out}");
+    assert!(out.contains("pub fn dot_fast(") && out.contains("pub fn dot("));
+    assert_eq!(
+        arare(
+            &["compile", "--inputs", "v8:0 v8:0", "--name", "dot"],
+            "MUL SUM\n"
+        )
+        .1,
+        out
+    );
+    let (_, out, _) = arare(&["compile", "--inputs", "v8:0"], "[ 3 LT ] FILTER");
+    assert!(out.contains("pub fn kernel(") && out.contains("No fast path"));
+    assert_eq!(arare(&["compile"], "ADD").0, 2);
+    assert_eq!(arare(&["compile", "--inputs", "x8:0"], "ADD").0, 2);
+    assert_eq!(arare(&["compile", "--inputs", "v8:0"], "SWAP").0, 1);
+    assert_eq!(
+        arare(&["compile", "--inputs", "v8:0", "/no/such/file"], "").0,
+        2
+    );
+}

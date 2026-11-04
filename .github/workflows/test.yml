@@ -48,6 +48,9 @@ jobs:
           mkdir -p target/coverage
           cargo +nightly-2026-10-09 llvm-cov report --branch --json --summary-only --output-path target/coverage/coverage.json
           cargo +nightly-2026-10-09 llvm-cov report --branch --lcov --output-path target/coverage/lcov.info
+          # The lines each file misses, in the log, so a ratchet failure seen
+          # only here can be traced to its lines.
+          cargo +nightly-2026-10-09 llvm-cov report --branch --show-missing-lines | sed -n '/^Uncovered Lines:/,$p'
 
       - name: Upload Rust coverage reports
         uses: actions/upload-artifact@v4
@@ -118,6 +121,26 @@ jobs:
 
       - name: Playground builds
         run: npm run build
+
+  # AR-VER-221: the performance requirements (WORK_ORDER.md §6), on the
+  # compiled native route, against baselines measured in the same run — a
+  # hand-written loop, or Ajisai's native build at the commit UPSTREAM.md
+  # records. Built for x86-64-v3 so every runner runs the same code (ADR-0009).
+  performance:
+    name: Performance (AR-PERF)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: The compiled route meets the performance requirements
+        working-directory: rust/bench
+        env:
+          RUSTFLAGS: -C target-cpu=x86-64-v3
+        run: |
+          set -o pipefail
+          cargo run --release --locked -- --check | tee -a "$GITHUB_STEP_SUMMARY"
 
   formal-verification-kani:
     name: Formal Verification (Kani)

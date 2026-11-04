@@ -6,6 +6,7 @@
 //! arare version
 //! arare run [--json] [FILE | -]
 //! arare check [--json] [--lines] [FILE | -]
+//! arare compile --inputs SIGNATURE [--name NAME] [FILE | -]
 //! ```
 //!
 //! `run` executes a program with the reference interpreter and prints the
@@ -23,6 +24,13 @@
 //! knows nothing. With `--lines`, every input line is a program of its own and
 //! gets a JSON document of its own, for the oracle harness's thousands of
 //! programs (AR-VER-217); the exit status is then 0 unless input cannot be read.
+
+//!
+//! `compile` writes the program, compiled for the inputs SIGNATURE names
+//! (such as `v8:0 v8:0`: a vector or scalar, its width in bits and its scale
+//! exponent, bottom of the stack first), as Rust source on standard output:
+//! a function NAME (default `kernel`) that the crate `arare-codegen` runs
+//! (AR-LLR-027). The same program and signature always give the same text.
 
 use arare_budget::{analyze, budget, Abs, Analysis};
 use arare_interp::{run, Value};
@@ -232,9 +240,54 @@ fn main() -> ExitCode {
                 ExitCode::from(1)
             }
         }
+        Some("compile") => {
+            let value = |flag: &str| {
+                args.iter()
+                    .position(|a| a == flag)
+                    .and_then(|i| args.get(i + 1))
+                    .cloned()
+            };
+            let Some(signature) = value("--inputs") else {
+                eprintln!("arare: compile needs --inputs, such as --inputs \"v8:0 v8:0\"");
+                return ExitCode::from(2);
+            };
+            let name = value("--name").unwrap_or_else(|| "kernel".to_string());
+            let inputs = match arare_codegen::Input::parse_list(&signature) {
+                Ok(inputs) => inputs,
+                Err(e) => {
+                    eprintln!("arare: {e}");
+                    return ExitCode::from(2);
+                }
+            };
+            let flagged = ["--inputs", "--name"];
+            let path = args
+                .iter()
+                .enumerate()
+                .skip(1)
+                .find(|(i, a)| {
+                    !flagged.contains(&a.as_str()) && !flagged.contains(&args[i - 1].as_str())
+                })
+                .map(|(_, a)| a.as_str())
+                .unwrap_or("-");
+            let source = match read(path) {
+                Ok(s) => s,
+                Err(code) => return code,
+            };
+            let source = source.trim();
+            if let Err(e) = arare_front::parse(source) {
+                eprintln!("arare: {e}");
+                return ExitCode::from(1);
+            }
+            print!(
+                "{}{}",
+                arare_codegen::PRELUDE,
+                arare_codegen::emit(&name, source, &inputs)
+            );
+            ExitCode::SUCCESS
+        }
         _ => {
             eprintln!(
-                "usage: arare version | arare run [--json] [FILE | -] | arare check [--json] [--lines] [FILE | -]"
+                "usage: arare version | arare run [--json] [FILE | -] | arare check [--json] [--lines] [FILE | -] | arare compile --inputs SIGNATURE [--name NAME] [FILE | -]"
             );
             ExitCode::from(2)
         }

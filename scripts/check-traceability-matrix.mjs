@@ -77,6 +77,7 @@ const sourceFiles = [
   ...walk(resolve(repoRoot, 'spec'), ['.md', '.json']),
   ...walk(resolve(repoRoot, 'docs/design'), ['.md']),
   ...walk(resolve(repoRoot, 'rust/crates'), ['.rs']),
+  ...walk(resolve(repoRoot, 'rust/bench/src'), ['.rs']),
   ...walk(resolve(repoRoot, 'formal'), ['.lean']),
   ...walk(resolve(repoRoot, 'src'), ['.ts', '.tsx']),
   ...walk(resolve(repoRoot, 'scripts/bench'), ['.mjs', '.json']),

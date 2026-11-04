@@ -1,0 +1,24 @@
+# The performance benchmarks (AR-VER-221, WORK_ORDER.md §6). A workspace of
+# its own: it builds Ajisai, pinned to the commit UPSTREAM.md records, to
+# time it in the same run, and the main workspace must not build Ajisai.
+[package]
+name = "arare-bench"
+description = "Arare's compiled route timed against hand-written loops and Ajisai's native build"
+version = "0.1.0-alpha.0"
+edition = "2021"
+license = "MIT"
+publish = false
+
+[workspace]
+
+[dependencies]
+arare-codegen = { path = "../crates/arare-codegen" }
+arare-compiled = { path = "../crates/arare-compiled" }
+arare-front = { path = "../crates/arare-front" }
+arare-interp = { path = "../crates/arare-interp" }
+arare-kernel = { path = "../crates/arare-kernel" }
+ajisai-core = { git = "https://github.com/masamoto1982/Ajisai", rev = "4d5f693def073b303d7ede3a98b3e9fa15060601" }
+
+[profile.release]
+codegen-units = 1
+lto = "thin"

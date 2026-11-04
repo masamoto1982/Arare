@@ -1,0 +1,22 @@
+[package]
+name = "arare-compiled"
+description = "Arare programs compiled by arare-codegen at build time, for translation validation and the benchmarks"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+arare-codegen = { path = "../arare-codegen" }
+
+[build-dependencies]
+arare-codegen = { path = "../arare-codegen" }
+
+[dev-dependencies]
+arare-interp = { path = "../arare-interp" }
+arare-kernel = { path = "../arare-kernel" }

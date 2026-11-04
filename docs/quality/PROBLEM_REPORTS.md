@@ -13,6 +13,8 @@ from the first commit that has them.
 | PR-0007 | `tools/mcp-server/` is Ajisai's server, kept as the oracle for agent sessions; the server is outside CI, though its committed Node build of Ajisai is what the oracle comparison runs (ADR-0007) | Arare's own server is Phase 6 work | Phase 6 |
 | PR-0008 | Ajisai's Reference generator (`scripts/generate-word-reference.mjs`) was removed with Ajisai's spec | The Reference comes with the Playground; the specification half of this report closed in Phase 1 (see Closed) | Phase 5 |
 | PR-0009 | Inherited comments in `src/`, `index.html`, `tests/formatter-corpus.json` and `spec/host-protocol.schema.json` cite Ajisai paths (`rust/src/...`, `spec/...`, `docs/dev/...`) that are not in this repository; they name files at the commit `UPSTREAM.md` records | They describe the Ajisai engine the Playground still drives; rewriting them before the shell is engine-neutral would only move the problem | Phase 5 |
+| PR-0011 | The compiled route has no fast path for FILTER, FOLD, BIND, a literal vector, a lane value computed from a reduction or EQ of vectors: such a program runs in the interpreter, correctly but slowly (AR-LLR-024) | Phase 4a compiles the Words the benchmarks need; FOLD and BIND come with the logistic map | Phase 4b (FOLD, BIND); later for the rest |
+| PR-0012 | AR-PERF-003 (the logistic map) and AR-PERF-007 (WASM SIMD128) are not measured | The logistic map needs BIND, and the WebAssembly build of the compiled route is Phase 4b's | Phase 4b |
 
 ## Closed
 

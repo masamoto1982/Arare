@@ -10,6 +10,7 @@ members = [
   "crates/arare-budget",
   "crates/arare-interp",
   "crates/arare-codegen",
+  "crates/arare-compiled",
   "crates/arare-wasm",
   "crates/arare-cli",
 ]
