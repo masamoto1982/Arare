@@ -1,0 +1,20 @@
+# The compiled kernels timed on their own (AR-VER-226): built natively and for
+# wasm32-wasip1 with SIMD128, so `scripts/check-wasm-speed.mjs` can compare
+# the WebAssembly build with the native one (AR-PERF-007). It does not build
+# Ajisai, so it builds for WebAssembly as it is.
+[package]
+name = "arare-timing"
+description = "Times Arare's compiled kernels, natively or under WebAssembly"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+
+[dependencies]
+arare-compiled = { path = "../arare-compiled" }
+arare-kernel = { path = "../arare-kernel" }
+
+[lints]
+workspace = true

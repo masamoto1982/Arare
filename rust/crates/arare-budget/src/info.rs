@@ -390,6 +390,25 @@ pub fn eq_agrees(a: Info, b: Info) -> bool {
 
 /// The error budget of a number: its `err`, `0` for a point both meanings
 /// share, nothing when nothing is known.
+/// Lean's `coarsen d`: the range and error rounded outward to multiples of
+/// `2^-d` where their denominators exceed `2^d` (AR-LLR-030).
+pub fn coarsen(i: Info, d: u32) -> Info {
+    match i {
+        Info::Num(r) => {
+            let c = || {
+                Some(Info::Num(Range {
+                    lo: r.lo.down(d)?,
+                    hi: r.hi.up(d)?,
+                    err: r.err.up(d)?,
+                    ..r
+                }))
+            };
+            c().unwrap_or(Info::Top)
+        }
+        i => i,
+    }
+}
+
 pub fn budget(i: Info) -> Option<Q> {
     match i {
         Info::Num(r) => Some(r.err),

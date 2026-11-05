@@ -1,6 +1,6 @@
 # Front end and reference interpreter
 
-The design behind AR-LLR-010 to AR-LLR-017: how source text becomes a
+The design behind AR-LLR-010 to AR-LLR-017 and AR-LLR-028: how source text becomes a
 `Program` (`rust/crates/arare-front`), how the reference interpreter runs it
 (`rust/crates/arare-interp`), and how `arare run` shows the result
 (`rust/crates/arare-cli`).
@@ -49,8 +49,34 @@ two SQL departures from Ajisai are SELECT on UNKNOWN taking ELSE and SUM
 skipping NIL (ADR-0007). EQ compares whole values, as Ajisai's EQ does; LT is
 lane-wise.
 
+## Names (AR-HLR-032, AR-LLR-028)
+
+BIND is Ajisai's, so that a value read more than once — the x of the logistic
+map, read twice a step — can be named instead of recomputed (ADR-0010):
+
+```text
+5 'N' BIND N N ADD                     # 10
+[ 1 2 ] [ 'A' 'B' ] BIND B A SUB       # 1
+[ 1 2 3 ] 0 [ 'I' BIND 'X' BIND X I ADD ] FOLD   # 6
+```
+
+`'X'` is a name as text, a value only BIND reads; a bare `X` pushes the value
+bound to it. The front end accepts a bare name only where the source also
+writes it as text, so a misspelled Word is still refused before anything runs;
+whether the name is bound where it runs is the interpreter's question. The
+machine keeps the names in scopes: the program's, and one for every run of a
+block, which ends with it — a block reads the names of the code around it,
+and its own bindings do not outlive it. Binding a name again replaces it.
+
+Arare has no User Words, so the one scope that is not a block's is the
+program's, and a name is looked up when the item that names it runs. A quote
+that leaves its block — a block's result that is itself a quote, read as data
+after the block — reads the scope where it is read, not the one it was
+written in, where Ajisai reads the latter (PR-0013).
+
 ## The CLI (AR-LLR-017)
 
 `arare run --json` writes Ajisai's value nodes — exact numerator and
-denominator as strings — plus Arare's width and scale. That shared shape is
+denominator as strings — plus Arare's width and scale; a name as text is
+Ajisai's string node. That shared shape is
 what lets the oracle harness (ADR-0007) read both languages with one reader.

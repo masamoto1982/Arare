@@ -15,7 +15,9 @@ widest width, `NARROW`, `QUANTIZE`). `analyze` reads the expression alone,
 child by child, and answers an `Info`: nothing, a wheel point both meanings
 reach, or a range for the exact value with a bound on the machine's error.
 
-`budget_sound` says the answer is never wrong (AR-HLR-027). `closed_safe`
+`budget_sound` says the answer is never wrong (AR-HLR-027), and
+`coarsen_sound` that rounding its rationals outward, as the checker does in
+long loops, keeps it so. `closed_safe`
 says what the `field=closed` contract the checker derives from it guarantees
 (AR-HLR-028): no wheel point anywhere, so no overflow, and no division by
 zero. `join_sound_left` and `join_sound_right` say a join is right about
@@ -894,6 +896,57 @@ theorem join_sound_right {i1 i2 : Info} {x : X} {m : W} {s : Int} (h : Sound i2 
     | exact h
     | (obtain ⟨hs1, hs2, q, k, rfl, rfl, hq1, hq2, he1, he2⟩ := h
        refine ⟨by omega, by omega, q, k, rfl, rfl, ?_, ?_, ?_, ?_⟩ <;> grind [rmin, rmax])
+
+/-! ## Coarsening -/
+
+/-- `q` rounded down to a multiple of `2^-d` when its denominator exceeds
+`2^d`, and `q` itself otherwise. -/
+def down (d : Nat) (q : Rat) : Rat :=
+  if q.den ≤ 2 ^ d then q else ((q * pow2 (d : Int)).floor : Rat) * pow2 (-(d : Int))
+
+/-- `q` rounded up the same way. -/
+def up (d : Nat) (q : Rat) : Rat := -(down d (-q))
+
+theorem down_le (d : Nat) (q : Rat) : down d q ≤ q := by
+  unfold down
+  split
+  · exact Rat.le_refl
+  · have h1 := Rat.floor_le (q * pow2 (d : Int))
+    have hp : 0 ≤ pow2 (-(d : Int)) := Rat.le_of_lt (pow2_pos _)
+    have h2 := Rat.mul_le_mul_of_nonneg_right h1 hp
+    have h3 : q * pow2 (d : Int) * pow2 (-(d : Int)) = q := by
+      rw [Rat.mul_assoc, ← pow2_add, Int.add_right_neg, pow2, Rat.zpow_zero, Rat.mul_one]
+    rw [h3] at h2
+    exact h2
+
+theorem le_up (d : Nat) (q : Rat) : q ≤ up d q := by
+  have h := Rat.neg_le_neg (down_le d (-q))
+  rw [Rat.neg_neg] at h
+  exact h
+
+/-- What is known of a number, with its range and error rounded outward to
+multiples of `2^-d` where their denominators exceed `2^d`. A long loop keeps
+its rationals small this way, where the exact ones would outgrow any bound
+(AR-LLR-030); the checker knows less, never something wrong. -/
+def coarsen (d : Nat) : Info → Info
+  | .num lo hi err a b => .num (down d lo) (up d hi) (up d err) a b
+  | i => i
+
+/-- AR-HLR-027: coarsening keeps what is known right. -/
+theorem coarsen_sound (d : Nat) {i : Info} {x : X} {m : W} {s : Int} (h : Sound i x m s) :
+    Sound (coarsen d i) x m s := by
+  cases i with
+  | num lo hi err a b =>
+    obtain ⟨hs1, hs2, q, k, hx, hm, hq1, hq2, he1, he2⟩ := h
+    have hl := down_le d lo
+    have hh := le_up d hi
+    have he := le_up d err
+    refine ⟨hs1, hs2, q, k, hx, hm, ?_, ?_, ?_, ?_⟩
+    · exact Rat.le_trans hl hq1
+    · exact Rat.le_trans hq2 hh
+    · exact Rat.le_trans (Rat.neg_le_neg he) he1
+    · exact Rat.le_trans he2 he
+  | _ => exact h
 
 /-! ## The field contract -/
 

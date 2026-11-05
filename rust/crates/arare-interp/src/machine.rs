@@ -1,6 +1,7 @@
-//! The machine (AR-LLR-013): a stack, a program, and the position reached.
-//! Quotes are data or code by what consumes them: a Word that runs a block
-//! runs it; any other Word evaluates it into a vector first.
+//! The machine (AR-LLR-013): a stack, a program, the position reached, and
+//! the names bound so far (AR-LLR-028). Quotes are data or code by what
+//! consumes them: a Word that runs a block runs it; any other Word evaluates
+//! it into a vector first.
 
 use crate::value::{Error, ErrorKind, Value};
 use crate::words::apply;
@@ -24,9 +25,45 @@ impl core::fmt::Display for RunError {
     }
 }
 
+/// The names bound so far, scope by scope (AR-LLR-028). The program has
+/// the outermost scope; every block a Word runs opens one inside the scope it
+/// runs in and closes it when it finishes, so a block reads the names of the
+/// code around it and its own bindings end with it, as Ajisai's do.
+#[derive(Clone, Debug)]
+pub(crate) struct Env {
+    scopes: Vec<Vec<(Rc<str>, Value)>>,
+}
+
+impl Env {
+    pub(crate) fn new() -> Env {
+        Env {
+            scopes: vec![Vec::new()],
+        }
+    }
+
+    /// The value bound to `name` in the innermost scope that binds it.
+    pub(crate) fn get(&self, name: &str) -> Option<&Value> {
+        self.scopes
+            .iter()
+            .rev()
+            .find_map(|s| s.iter().find(|(n, _)| &**n == name).map(|(_, v)| v))
+    }
+
+    /// Bind `name` in the innermost scope; binding a name again there
+    /// replaces its value.
+    pub(crate) fn bind(&mut self, name: Rc<str>, value: Value) {
+        let scope = self.scopes.last_mut().expect("the program's scope");
+        match scope.iter_mut().find(|(n, _)| *n == name) {
+            Some(slot) => slot.1 = value,
+            None => scope.push((name, value)),
+        }
+    }
+}
+
 /// Runs a program one top-level item at a time.
 pub struct Machine {
     stack: Vec<Value>,
+    env: Env,
     items: Vec<Item>,
     next: usize,
 }
@@ -41,6 +78,7 @@ impl Machine {
     pub fn with_stack(program: Program, stack: Vec<Value>) -> Machine {
         Machine {
             stack,
+            env: Env::new(),
             items: program.items,
             next: 0,
         }
@@ -60,7 +98,7 @@ impl Machine {
             return Ok(false);
         };
         self.next += 1;
-        exec(&mut self.stack, &item)?;
+        exec(&mut self.stack, &mut self.env, &item)?;
         Ok(true)
     }
 
@@ -82,24 +120,45 @@ pub fn run_on(source: &str, inputs: Vec<Value>) -> Result<Vec<Value>, RunError> 
     Ok(m.stack)
 }
 
-pub(crate) fn exec(stack: &mut Vec<Value>, item: &Item) -> Result<(), Error> {
+pub(crate) fn exec(stack: &mut Vec<Value>, env: &mut Env, item: &Item) -> Result<(), Error> {
     match item {
         Item::Int(k) => stack.push(Value::Num(
             Num::int(*k).expect("the front end checked the range"),
         )),
         Item::Num { num, .. } => stack.push(Value::Num(*num)),
         Item::Quote(items) => stack.push(Value::Quote(Rc::new(items.clone()))),
-        Item::Word(w) => apply(*w, stack).map_err(|kind| Error { word: *w, kind })?,
+        Item::Text(name) => stack.push(Value::Text(name.as_str().into())),
+        Item::Name(name) => match env.get(name) {
+            Some(v) => stack.push(v.clone()),
+            None => {
+                return Err(Error {
+                    word: None,
+                    kind: ErrorKind::Unbound(name.clone()),
+                })
+            }
+        },
+        Item::Word(w) => apply(*w, stack, env).map_err(|kind| Error {
+            word: Some(*w),
+            kind,
+        })?,
     }
     Ok(())
 }
 
-/// Run a block on `inputs`; it must leave exactly one value.
-pub(crate) fn run_block(items: &[Item], inputs: Vec<Value>) -> Result<Value, ErrorKind> {
+/// Run a block on `inputs`, in a scope of its own; it must leave exactly one
+/// value.
+pub(crate) fn run_block(
+    items: &[Item],
+    inputs: Vec<Value>,
+    env: &mut Env,
+) -> Result<Value, ErrorKind> {
+    env.scopes.push(Vec::new());
     let mut stack = inputs;
-    for item in items {
-        exec(&mut stack, item).map_err(|e| e.kind)?;
-    }
+    let ran = items
+        .iter()
+        .try_for_each(|item| exec(&mut stack, env, item).map_err(|e| e.kind));
+    env.scopes.pop();
+    ran?;
     match stack.len() {
         1 => Ok(stack.pop().expect("one value")),
         n => Err(ErrorKind::BlockResult(n)),
@@ -107,17 +166,18 @@ pub(crate) fn run_block(items: &[Item], inputs: Vec<Value>) -> Result<Value, Err
 }
 
 /// A value as data: a quote is evaluated, on a stack of its own, into the
-/// vector of what it leaves, nested quotes included.
-pub(crate) fn data(v: Value) -> Result<Value, ErrorKind> {
+/// vector of what it leaves, nested quotes included. Its names read the
+/// scope it is evaluated in.
+pub(crate) fn data(v: Value, env: &mut Env) -> Result<Value, ErrorKind> {
     match v {
         Value::Quote(items) => {
             let mut stack = Vec::new();
             for item in items.iter() {
-                exec(&mut stack, item).map_err(|e| e.kind)?;
+                exec(&mut stack, env, item).map_err(|e| e.kind)?;
             }
             stack
                 .into_iter()
-                .map(data)
+                .map(|v| data(v, env))
                 .collect::<Result<_, _>>()
                 .map(Value::Vector)
         }

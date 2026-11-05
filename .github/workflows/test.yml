@@ -142,6 +142,29 @@ jobs:
           set -o pipefail
           cargo run --release --locked -- --check | tee -a "$GITHUB_STEP_SUMMARY"
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      # AR-PERF-007 (AR-VER-226): the compiled kernels built natively and for
+      # wasm32-wasip1 with SIMD128, the WebAssembly build run under Node's
+      # WASI. Its translation validation runs there first: under WebAssembly
+      # a reduction loop takes a branch the native build never runs.
+      - name: The WebAssembly SIMD128 build is validated and within 3 times the native one
+        working-directory: rust
+        run: |
+          set -o pipefail
+          rustup target add wasm32-wasip1
+          RUSTFLAGS="-C target-feature=+simd128" \
+            CARGO_TARGET_WASM32_WASIP1_RUNNER="node --no-warnings $GITHUB_WORKSPACE/scripts/lib/run-wasi.mjs" \
+            cargo test --release --locked -p arare-codegen -p arare-compiled --target wasm32-wasip1
+          RUSTFLAGS="-C target-feature=+simd128" cargo build --release --locked -p arare-timing --target wasm32-wasip1
+          RUSTFLAGS="-C target-cpu=x86-64-v3" cargo build --release --locked -p arare-timing
+          node ../scripts/check-wasm-speed.mjs \
+            --native target/release/arare-timing \
+            --wasm target/wasm32-wasip1/release/arare-timing.wasm | tee -a "$GITHUB_STEP_SUMMARY"
+
   formal-verification-kani:
     name: Formal Verification (Kani)
     runs-on: ubuntu-latest

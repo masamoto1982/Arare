@@ -9,8 +9,8 @@ fn ar_ver_215_table() {
     arare_budget::table::write_table(&mut out).unwrap();
     let text = String::from_utf8(out).unwrap();
     let lines: Vec<&str> = text.lines().collect();
-    // 17 literals under 7 unary Words, then every pair.
-    assert_eq!(lines.len(), 119 + 119 * 119);
+    // 17 literals under 7 unary Words, each coarsened, then every pair.
+    assert_eq!(lines.len(), 119 + 119 + 119 * 119);
     for expected in [
         "L 0 N 0/1 0/1 0/1 0 0", // the integer 0, exactly
         "L 49 N 1/3 1/3 1/768 -8 -8", // 1/3 at 2^-8: code 85, 85/256 − 1/3 = −1/768
@@ -22,7 +22,12 @@ fn ar_ver_215_table() {
         // Those two: the errors add (1/768 + 1/1000 = 221/96000); the product's
         // is (1/3 + 1/768)·1/1000 + 1/1000·1/768 = 43/128000; a divisor that
         // may round to zero bounds nothing; the join takes the hull.
-        "P 49 84 N 1003/3000 1003/3000 221/96000 -8 -8 | N 997/3000 997/3000 221/96000 -8 -8 | N 1/3000 1/3000 43/128000 -8 -8 | T | N 1/1000 1/3 1/768 -8 0",
+        // Coarsened (AR-LLR-030): the product's range and error rounded
+        // outward to eighths.
+        "P 49 84 N 1003/3000 1003/3000 221/96000 -8 -8 | N 997/3000 997/3000 221/96000 -8 -8 | N 1/3000 1/3000 43/128000 -8 -8 | T | N 1/1000 1/3 1/768 -8 0 | N 0/1 1/8 1/8 -8 -8 | T",
+        // 1/3 within 1/768, coarsened to units, quarters and 32nds: a
+        // denominator of 3 is kept where it does not exceed the grid's.
+        "C 49 N 0/1 1/1 1/1 -8 -8 | N 1/3 1/3 1/4 -8 -8 | N 1/3 1/3 1/32 -8 -8",
     ] {
         assert!(lines.contains(&expected), "missing line: {expected}");
     }

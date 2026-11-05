@@ -10,7 +10,11 @@
 //! fraction = "-"? digit+ "/" digit+        (a zero denominator is a wheel point)
 //! ```
 //!
-//! Any other token is a Word name.
+//! A token written between single quotes, `'X'`, is a name as text: what
+//! BIND reads (AR-LLR-028). It may not hold whitespace, a bracket, `#` or a
+//! quote, and the closing quote ends the token.
+//!
+//! Any other token is a Word or a bound name.
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum TokenKind {
@@ -20,6 +24,9 @@ pub enum TokenKind {
     Decimal,
     Fraction,
     Name,
+    /// `'X'`: the text between the quotes, which may be malformed; the parser
+    /// checks it.
+    Text,
 }
 
 #[derive(Clone, PartialEq, Eq, Debug)]
@@ -34,7 +41,7 @@ fn digits(s: &str) -> bool {
     !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit())
 }
 
-fn classify(text: &str) -> TokenKind {
+pub(crate) fn classify(text: &str) -> TokenKind {
     let body = text.strip_prefix('-').unwrap_or(text);
     if digits(body) {
         TokenKind::Integer
@@ -74,6 +81,31 @@ pub fn lex(source: &str) -> Vec<Token> {
                 tokens.push(Token {
                     kind,
                     text: c.to_string(),
+                    line: l + 1,
+                    column,
+                });
+            } else if c == '\'' {
+                chars.next();
+                let mut end = line.len();
+                let mut closed = false;
+                while let Some(&(i, d)) = chars.peek() {
+                    chars.next();
+                    if d == '\'' {
+                        end = i;
+                        closed = true;
+                        break;
+                    }
+                }
+                let body = &line[start + 1..end];
+                tokens.push(Token {
+                    kind: TokenKind::Text,
+                    // An unclosed quote keeps its opening mark, so the parser
+                    // can tell it from a closed one.
+                    text: if closed {
+                        body.to_string()
+                    } else {
+                        line[start..].to_string()
+                    },
                     line: l + 1,
                     column,
                 });

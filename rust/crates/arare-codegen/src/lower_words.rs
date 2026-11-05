@@ -2,14 +2,44 @@
 //! adds, following the interpreter's rule for the Word (`arare-interp`'s
 //! `words.rs`) on symbols instead of values.
 
+use crate::ir::N;
 use crate::ir::{Kind, Op};
 use crate::lower::{no, width_of, Lower, Sym, Unsupported};
+use arare_front::Item;
 use arare_front::Word;
 use arare_kernel::MAX_SCALE;
 
 impl Lower {
-    pub(crate) fn word(&mut self, w: Word, stack: &mut Vec<Sym>) -> Result<Sym, Unsupported> {
-        Ok(match w {
+    /// FOLD (AR-LLR-029): the accumulator is carried through the loop over
+    /// the lanes. The block must give back a value of the accumulator's own
+    /// width and scale, so every iteration is the same code; its bound is
+    /// then the width's, and a step that leaves the width is checked.
+    fn fold(&mut self, code: &[Item], x: N, init: N) -> Result<Sym, Unsupported> {
+        let kind = self.node(init).kind;
+        let bound = match kind {
+            Kind::Num { width, .. } => width.max_finite() as u128,
+            Kind::Bool => 0,
+        };
+        let late = self.node(init).late;
+        let acc = self.add(Op::Acc, kind, bound, true, late)?;
+        let step = match self.block(code, vec![Sym::Scalar(acc), Sym::Scalar(x)])?[..] {
+            [Sym::Scalar(r)] if self.node(r).kind == kind => r,
+            [Sym::Scalar(_)] => {
+                return no("a FOLD block that changes the accumulator's width or scale")
+            }
+            _ => return no("a FOLD block that does not leave one scalar"),
+        };
+        let n = self.add(Op::Fold { acc, init, step }, kind, bound, false, true)?;
+        Ok(Sym::Scalar(n))
+    }
+
+    /// The symbol a Word leaves; BIND leaves none.
+    pub(crate) fn word(
+        &mut self,
+        w: Word,
+        stack: &mut Vec<Sym>,
+    ) -> Result<Option<Sym>, Unsupported> {
+        Ok(Some(match w {
             Word::True | Word::False => {
                 Sym::Scalar(self.add(Op::Bool(w == Word::True), Kind::Bool, 0, false, false)?)
             }
@@ -169,18 +199,32 @@ impl Lower {
                 if !x.vector {
                     return no("MAP over a scalar");
                 }
-                let x = x.n;
-                let mut inner = vec![Sym::Scalar(x)];
-                for item in code.iter() {
-                    self.exec(&mut inner, item)?;
-                }
-                match inner[..] {
+                match self.block(&code, vec![Sym::Scalar(x.n)])?[..] {
                     [Sym::Scalar(r)] => Sym::Vector(r),
                     _ => return no("a MAP block that does not leave one scalar"),
                 }
             }
-            Word::Filter | Word::Fold => return no("FILTER and FOLD are not compiled in Phase 4a"),
+            Word::Fold => {
+                let mut o = self.pop(stack, 3)?;
+                let Some(Sym::Quote(code)) = o.pop() else {
+                    return no("FOLD without a block");
+                };
+                let init = self.data(o.pop().expect("three operands"))?;
+                let x = self.data(o.pop().expect("three operands"))?;
+                if !x.vector {
+                    return no("FOLD over a scalar");
+                }
+                if init.vector {
+                    return no("FOLD from a vector");
+                }
+                self.fold(&code, x.n, init.n)?
+            }
+            Word::Filter => return no("FILTER is not compiled"),
             Word::Nil => return no("a literal NIL"),
-        })
+            Word::Bind => {
+                self.bind(stack)?;
+                return Ok(None);
+            }
+        }))
     }
 }

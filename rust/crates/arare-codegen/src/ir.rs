@@ -1,5 +1,5 @@
-//! The intermediate representation (AR-LLR-024, refining AR-HLR-030): a
-//! program, for one signature, as a graph of typed nodes.
+//! The intermediate representation (AR-LLR-024 and AR-LLR-029, refining
+//! AR-HLR-030): a program, for one signature, as a graph of typed nodes.
 //!
 //! Every node has the width and scale the kernel gives its result — computed
 //! by the kernel's own operations on placeholder numbers, so that the two
@@ -77,6 +77,16 @@ pub enum Op {
     },
     /// SUM of a lane node over the loop.
     Sum(N),
+    /// FOLD's accumulator inside its block: the value carried from the
+    /// previous lane, `init` before the first.
+    Acc,
+    /// FOLD's result after the loop: `acc` starts at `init`, and each lane
+    /// replaces it with `step`, the block's result.
+    Fold {
+        acc: N,
+        init: N,
+        step: N,
+    },
 }
 
 /// A node's type: a number of a width and scale, or a truth value.
@@ -163,7 +173,8 @@ impl Op {
     /// The nodes this one reads; each comes before it.
     pub fn operands(self) -> Vec<N> {
         match self {
-            Op::Arg(_) | Op::Lane(_) | Op::Const(_) | Op::Bool(_) => vec![],
+            Op::Arg(_) | Op::Lane(_) | Op::Const(_) | Op::Bool(_) | Op::Acc => vec![],
+            Op::Fold { init, step, .. } => vec![init, step],
             Op::Add { a, b, .. }
             | Op::Sub { a, b, .. }
             | Op::Div { a, b, .. }

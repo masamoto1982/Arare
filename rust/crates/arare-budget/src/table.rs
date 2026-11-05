@@ -1,5 +1,6 @@
 //! The checker printed over the grid of `formal/BudgetTable.lean`, for the
-//! Lean job of CI to diff against the Lean checker (AR-LLR-019, AR-VER-215).
+//! Lean job of CI to diff against the Lean checker (AR-LLR-019, AR-LLR-030,
+//! AR-VER-215).
 
 use crate::info::{self, Info};
 use arare_kernel::{Num, Width};
@@ -63,6 +64,13 @@ pub fn write_table(out: &mut impl Write) -> io::Result<()> {
     for (i, x) in xs.iter().enumerate() {
         writeln!(out, "L {i} {}", show(*x))?;
     }
+    for (i, &x) in xs.iter().enumerate() {
+        let c: Vec<String> = [0, 2, 5]
+            .into_iter()
+            .map(|d| show(info::coarsen(x, d)))
+            .collect();
+        writeln!(out, "C {i} {}", c.join(" | "))?;
+    }
     for (i, &a) in xs.iter().enumerate() {
         for (j, &b) in xs.iter().enumerate() {
             let r = [
@@ -71,6 +79,8 @@ pub fn write_table(out: &mut impl Write) -> io::Result<()> {
                 info::mul(a, b),
                 info::div(a, b),
                 info::join(a, b),
+                info::coarsen(info::mul(a, b), 3),
+                info::coarsen(info::div(a, b), 3),
             ];
             let shown: Vec<String> = r.into_iter().map(show).collect();
             writeln!(out, "P {i} {j} {}", shown.join(" | "))?;

@@ -1,5 +1,5 @@
-//! The ahead-of-time compiler (AR-LLR-023 to AR-LLR-026, refining
-//! AR-HLR-030 and AR-HLR-031).
+//! The ahead-of-time compiler (AR-LLR-023 to AR-LLR-026 and AR-LLR-029,
+//! refining AR-HLR-030 to AR-HLR-032).
 //!
 //! Quality level QL-A (docs/quality/PLAN_OVERVIEW.md). A program and a
 //! signature — the widths and scales of the inputs it is handed — are lowered
@@ -12,6 +12,7 @@
 pub mod emit;
 pub mod ir;
 pub mod lower;
+mod lower_names;
 mod lower_words;
 mod node;
 pub mod rt;

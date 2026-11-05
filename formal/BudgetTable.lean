@@ -6,8 +6,9 @@ import Arare
 Prints what the Lean checker `Arare.Budget.analyze` infers over a fixed grid
 of expressions: a set of literals (integers, quantized rationals that round
 and that do not, a literal out of its width, the two wheel points), each under
-seven unary Words, and every pair of those under ADD, SUB, MUL, DIV and the
-join. The Rust checker prints the same grid
+seven unary Words, each coarsened to three grids, and every pair of those
+under ADD, SUB, MUL, DIV and the join, with the product and the quotient
+coarsened. The Rust checker prints the same grid
 (`rust/crates/arare-budget/examples/budget_table.rs`) and the Lean job of CI
 diffs the two outputs: the model-to-code layer for the error budget
 (AR-LLR-019, verification case AR-VER-215).
@@ -45,8 +46,12 @@ def main : IO Unit := do
   let xs := level1.zipIdx
   for (x, i) in xs do
     out.putStrLn s!"L {i} {showI (analyze Mw x)}"
+  for (x, i) in xs do
+    let c := [0, 2, 5].map (fun d => showI (coarsen d (analyze Mw x)))
+    out.putStrLn s!"C {i} {String.intercalate " | " c}"
   for (a, i) in xs do
     for (b, j) in xs do
       let r := [analyze Mw (.add a b), analyze Mw (.sub a b), analyze Mw (.mul a b),
-        analyze Mw (.div a b), join (analyze Mw a) (analyze Mw b)]
+        analyze Mw (.div a b), join (analyze Mw a) (analyze Mw b),
+        coarsen 3 (analyze Mw (.mul a b)), coarsen 3 (analyze Mw (.div a b))]
       out.putStrLn s!"P {i} {j} {String.intercalate " | " (r.map showI)}"

@@ -55,6 +55,40 @@ pub(crate) fn storage(w: Width) -> (&'static str, &'static str) {
     }
 }
 
+/// Lanes a reduction sums in step, each into a partial of its own.
+pub const GROUP: usize = 16;
+
+/// One lane of the loop: its nodes, the reductions' partials (`slot` names
+/// the partial), and the vector outputs.
+fn lane_body(
+    e: &mut Emit,
+    indent: usize,
+    lane_nodes: &[N],
+    sums: &[(N, N)],
+    vectors: &[(usize, N)],
+    slot: &str,
+) {
+    for &n in lane_nodes {
+        e.node(indent, n);
+    }
+    for &(s, x) in sums {
+        let t = rty(CHUNK * e.bound(x));
+        e.line(
+            indent,
+            &format!("p{s}[{slot}] = p{s}[{slot}].wrapping_add(v{x} as {t});"),
+        );
+    }
+    for &(k, n) in vectors {
+        match e.ir.nodes[n].kind {
+            Kind::Num { width, .. } => {
+                let (st, _) = storage(width);
+                e.line(indent, &format!("q{k}[i] = v{n} as {st};"));
+            }
+            Kind::Bool => e.line(indent, &format!("q{k}[i] = v{n};")),
+        }
+    }
+}
+
 /// The nodes the outputs need. A node's operands come before it, so one
 /// sweep from the last node marks them all.
 fn needed(ir: &Ir) -> Vec<bool> {
@@ -143,6 +177,30 @@ fn fast(ir: &Ir, name: &str) -> String {
             e.node(1, n);
         }
     }
+    // FOLD accumulators (AR-LLR-029), from their initial values.
+    let folds: Vec<(N, N)> = ir
+        .nodes
+        .iter()
+        .enumerate()
+        .filter_map(|(n, node)| match node.op {
+            Op::Fold { acc, init, step } if need[n] => {
+                let t = e.ty(acc);
+                e.line(1, &format!("let mut f{acc}: {t} = v{init} as {t};"));
+                Some((acc, step))
+            }
+            _ => None,
+        })
+        .collect();
+    // One vector output and nothing else: written straight into the output
+    // in one pass over the lanes, as a hand-written loop would be.
+    let single = ir.sums.is_empty()
+        && folds.is_empty()
+        && ir
+            .outputs
+            .iter()
+            .filter(|o| matches!(o, Output::Vector(_)))
+            .count()
+            == 1;
     // Vector outputs.
     for (k, o) in ir.outputs.iter().enumerate() {
         if let Output::Vector(n) = o {
@@ -155,14 +213,18 @@ fn fast(ir: &Ir, name: &str) -> String {
                         1,
                         &format!("let mut o{k}: Vec<{st}> = Vec::with_capacity(n);"),
                     );
-                    e.line(1, &format!("let mut b{k} = [0 as {st}; {CHUNK}];"));
+                    if !single {
+                        e.line(1, &format!("let mut b{k} = [0 as {st}; {CHUNK}];"));
+                    }
                 }
                 Kind::Bool => {
                     e.line(
                         1,
                         &format!("let mut o{k}: Vec<bool> = Vec::with_capacity(n);"),
                     );
-                    e.line(1, &format!("let mut b{k} = [false; {CHUNK}];"));
+                    if !single {
+                        e.line(1, &format!("let mut b{k} = [false; {CHUNK}];"));
+                    }
                 }
             }
         }
@@ -171,18 +233,21 @@ fn fast(ir: &Ir, name: &str) -> String {
         .filter(|&n| need[n] && ir.nodes[n].lane)
         .collect();
     if !lane_nodes.is_empty() {
+        // Chunks bound a reduction's partials; without one, the loop is one
+        // pass over every lane.
+        let end = if single {
+            "n".to_string()
+        } else {
+            format!("(c + {CHUNK}).min(n)")
+        };
         e.line(
             1,
-            &format!(
-                "let mut c = 0usize;\n    while c < n {{\n        let end = (c + {CHUNK}).min(n);"
-            ),
+            &format!("let mut c = 0usize;\n    while c < n {{\n        let end = {end};"),
         );
         let sums: Vec<(N, N)> = ir.sums.iter().map(|s| (s.node, s.elem)).collect();
         for &(s, x) in &sums {
-            e.line(
-                2,
-                &format!("let mut p{s}: {} = 0;", rty(CHUNK * e.bound(x))),
-            );
+            let t = rty(CHUNK * e.bound(x));
+            e.line(2, &format!("let mut p{s}: [{t}; {GROUP}] = [0; {GROUP}];"));
         }
         // Each chunk as slices of one length, so that the loop needs no
         // bounds checks and vectorizes.
@@ -190,13 +255,6 @@ fn fast(ir: &Ir, name: &str) -> String {
         for &i in &columns {
             e.line(2, &format!("let x{i} = &a{i}[c..end];"));
         }
-        let single = sums.is_empty()
-            && ir
-                .outputs
-                .iter()
-                .filter(|o| matches!(o, Output::Vector(_)))
-                .count()
-                == 1;
         if !single {
             for (k, o) in ir.outputs.iter().enumerate() {
                 if let Output::Vector(_) = o {
@@ -213,7 +271,7 @@ fn fast(ir: &Ir, name: &str) -> String {
                 Output::Scalar(_) => None,
             })
             .collect();
-        if let ([(k, v)], true) = (&vectors[..], sums.is_empty()) {
+        if let ([(k, v)], true) = (&vectors[..], single) {
             // One vector and nothing else: the lanes are written straight
             // into the output, which is never zeroed first.
             let st = match ir.nodes[*v].kind {
@@ -226,36 +284,52 @@ fn fast(ir: &Ir, name: &str) -> String {
             }
             e.line(3, &format!("v{v} as {st}"));
             e.line(2, "}));");
+        } else if !sums.is_empty() && folds.is_empty() {
+            // A reduction. Under WebAssembly the lanes go in groups of GROUP,
+            // each summed into a partial of its own, so that the loop loads
+            // a whole vector at a time (one partial would let it load four
+            // lanes: a vector holds four i32s); natively one partial
+            // vectorizes better (AR-LLR-025, AR-PERF-007).
+            e.line(2, "if cfg!(target_arch = \"wasm32\") {");
+            e.line(3, &format!("let g = len / {GROUP} * {GROUP};"));
+            e.line(3, &format!("for i0 in (0..g).step_by({GROUP}) {{"));
+            for &i in &columns {
+                e.line(4, &format!("let x{i} = &x{i}[i0..i0 + {GROUP}];"));
+            }
+            for &(k, _) in &vectors {
+                e.line(4, &format!("let q{k} = &mut q{k}[i0..i0 + {GROUP}];"));
+            }
+            e.line(4, &format!("for i in 0..{GROUP} {{"));
+            lane_body(&mut e, 5, &lane_nodes, &sums, &vectors, "i");
+            e.line(4, "}");
+            e.line(3, "}");
+            e.line(3, "for i in g..len {");
+            lane_body(&mut e, 4, &lane_nodes, &sums, &vectors, "0");
+            e.line(3, "}");
+            e.line(2, "} else {");
+            e.line(3, "for i in 0..len {");
+            lane_body(&mut e, 4, &lane_nodes, &sums, &vectors, "0");
+            e.line(3, "}");
+            e.line(2, "}");
         } else {
             e.line(2, "for i in 0..len {");
-            for &n in &lane_nodes {
-                e.node(3, n);
-            }
-            for &(s, x) in &sums {
-                e.line(
-                    3,
-                    &format!(
-                        "p{s} = p{s}.wrapping_add(v{x} as {});",
-                        rty(CHUNK * e.bound(x))
-                    ),
-                );
-            }
-            for &(k, n) in &vectors {
-                match ir.nodes[n].kind {
-                    Kind::Num { width, .. } => {
-                        let (st, _) = storage(width);
-                        e.line(3, &format!("q{k}[i] = v{n} as {st};"));
-                    }
-                    Kind::Bool => e.line(3, &format!("q{k}[i] = v{n};")),
-                }
+            lane_body(&mut e, 3, &lane_nodes, &sums, &vectors, "0");
+            for &(acc, step) in &folds {
+                let t = e.ty(acc);
+                e.line(3, &format!("f{acc} = v{step} as {t};"));
             }
             e.line(2, "}");
+        }
+        if !single {
             for &(k, _) in &vectors {
                 e.line(2, &format!("o{k}.extend_from_slice(&b{k}[..len]);"));
             }
         }
         for &(s, _) in &sums {
-            e.line(2, &format!("t{s} = t{s}.wrapping_add(p{s} as i64);"));
+            e.line(
+                2,
+                &format!("t{s} = p{s}.iter().fold(t{s}, |t, &p| t.wrapping_add(p as i64));"),
+            );
         }
         e.line(2, "c = end;");
         e.line(1, "}");

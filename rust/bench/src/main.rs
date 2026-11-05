@@ -68,6 +68,20 @@ fn exact(out: &[Out]) -> String {
     }
 }
 
+/// Whether `|ours − exact| ≤ num/den`, each `p/q` as printed, in big
+/// integers.
+fn within_budget(ours: &str, exact: &str, num: i128, den: i128) -> bool {
+    use num_bigint::BigInt;
+    let rat = |s: &str| -> (BigInt, BigInt) {
+        let (p, q) = s.split_once('/').unwrap_or((s, "1"));
+        (p.parse().unwrap(), q.parse().unwrap())
+    };
+    let ((a, b), (p, q)) = (rat(ours), rat(exact));
+    // |a/b − p/q| ≤ num/den  ⇔  |a·q − p·b|·den ≤ num·b·q, with b, q, den > 0.
+    let diff = (&a * &q - &p * &b).magnitude().clone();
+    BigInt::from(diff) * BigInt::from(den) <= BigInt::from(num) * b * q
+}
+
 struct Row {
     id: &'static str,
     what: &'static str,
@@ -159,6 +173,48 @@ fn main() {
         limit: "≥ 300",
         ok: aj / t[0] >= 300.0,
     });
+
+    // AR-PERF-003: twenty steps of the logistic map, x' = (13/4)·x·(1 − x)
+    // from x = 1/2, against Ajisai's exact x₂₀ — a rational of about a
+    // million bits — within the error budget the checker infers for the
+    // same program.
+    let steps = col8(0, (1..=20).collect());
+    let t = race(
+        200,
+        &mut [&mut || {
+            for _ in 0..1000 {
+                black_box(run("logistic", black_box(std::slice::from_ref(&steps))));
+            }
+        }],
+    );
+    let per_run_us = t[0]; // 1000 runs in t[0] ms
+    let source = program("logistic").unwrap().source;
+    let lanes: Vec<String> = (1..=20).map(|k| k.to_string()).collect();
+    let analysis = arare_budget::check::analyze(
+        &arare_front::parse(&format!("[ {} ] {source}", lanes.join(" "))).unwrap(),
+    );
+    let budget = arare_budget::value::budget(analysis.stack.last().unwrap())
+        .expect("the checker bounds the logistic map");
+    let (aj_ms, aj_answer) = ajisai_ms(
+        "",
+        "1 20 RANGE 1/2 [ 'I' BIND 'X' BIND 13/4 X MUL 1 X SUB MUL ] FOLD",
+        1,
+    );
+    let ours = exact(&run("logistic", std::slice::from_ref(&steps)));
+    let within = within_budget(&ours, &aj_answer, budget.num(), budget.den());
+    assert!(
+        within,
+        "the compiled logistic map {ours} is not within {budget} of Ajisai's x₂₀"
+    );
+    rows.push(Row {
+        id: "AR-PERF-003",
+        what: "logistic map, 20 steps, compiled, within its budget of Ajisai's exact x₂₀",
+        figure: per_run_us,
+        unit: "µs",
+        limit: "≤ 1",
+        ok: per_run_us <= 1.0 && within,
+    });
+    eprintln!("(Ajisai native takes {aj_ms:.0} ms for the exact x₂₀)");
 
     // AR-PERF-004: the harmonic sum to k = 20,000.
     let one = Arg::Num(Num::new(arare_kernel::Val::Fin(1 << 30), Width::W32, -30).unwrap());

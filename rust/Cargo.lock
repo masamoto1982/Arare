@@ -67,5 +67,13 @@ name = "arare-spec"
 version = "0.1.0-alpha.0"
 
 [[package]]
+name = "arare-timing"
+version = "0.1.0-alpha.0"
+dependencies = [
+ "arare-compiled",
+ "arare-kernel",
+]
+
+[[package]]
 name = "arare-wasm"
 version = "0.1.0-alpha.0"

@@ -122,12 +122,12 @@
     },
     "rust/crates/arare-front/src/lexer.rs": {
       "branches": {
-        "covered": 32,
-        "count": 32
+        "covered": 40,
+        "count": 40
       },
       "lines": {
-        "covered": 55,
-        "count": 55
+        "covered": 74,
+        "count": 74
       }
     },
     "rust/crates/arare-front/src/lib.rs": {
@@ -136,18 +136,18 @@
         "count": 0
       },
       "lines": {
-        "covered": 12,
-        "count": 12
+        "covered": 14,
+        "count": 14
       }
     },
     "rust/crates/arare-front/src/parser.rs": {
       "branches": {
-        "covered": 18,
-        "count": 18
+        "covered": 32,
+        "count": 32
       },
       "lines": {
-        "covered": 130,
-        "count": 130
+        "covered": 153,
+        "count": 153
       }
     },
     "rust/crates/arare-interp/src/machine.rs": {
@@ -156,8 +156,8 @@
         "count": 4
       },
       "lines": {
-        "covered": 72,
-        "count": 73
+        "covered": 109,
+        "count": 110
       }
     },
     "rust/crates/arare-interp/src/lift.rs": {
@@ -172,32 +172,32 @@
     },
     "rust/crates/arare-interp/src/words.rs": {
       "branches": {
-        "covered": 10,
-        "count": 10
+        "covered": 26,
+        "count": 26
       },
       "lines": {
-        "covered": 176,
-        "count": 177
+        "covered": 236,
+        "count": 237
       }
     },
     "rust/crates/arare-interp/src/value.rs": {
       "branches": {
-        "covered": 2,
-        "count": 2
+        "covered": 4,
+        "count": 4
       },
       "lines": {
-        "covered": 31,
-        "count": 31
+        "covered": 36,
+        "count": 36
       }
     },
     "rust/crates/arare-budget/src/rat.rs": {
       "branches": {
-        "covered": 18,
-        "count": 18
+        "covered": 24,
+        "count": 24
       },
       "lines": {
-        "covered": 98,
-        "count": 98
+        "covered": 122,
+        "count": 122
       }
     },
     "rust/crates/arare-budget/src/info.rs": {
@@ -206,8 +206,8 @@
         "count": 56
       },
       "lines": {
-        "covered": 245,
-        "count": 245
+        "covered": 256,
+        "count": 256
       }
     },
     "rust/crates/arare-budget/src/table.rs": {
@@ -216,8 +216,8 @@
         "count": 0
       },
       "lines": {
-        "covered": 43,
-        "count": 43
+        "covered": 50,
+        "count": 50
       }
     },
     "rust/crates/arare-budget/src/value.rs": {
@@ -232,12 +232,12 @@
     },
     "rust/crates/arare-budget/src/check.rs": {
       "branches": {
-        "covered": 20,
-        "count": 20
+        "covered": 26,
+        "count": 26
       },
       "lines": {
-        "covered": 227,
-        "count": 227
+        "covered": 270,
+        "count": 270
       }
     },
     "rust/crates/arare-budget/src/words.rs": {
@@ -252,12 +252,12 @@
     },
     "rust/crates/arare-codegen/src/rt.rs": {
       "branches": {
-        "covered": 36,
-        "count": 36
+        "covered": 30,
+        "count": 30
       },
       "lines": {
-        "covered": 213,
-        "count": 213
+        "covered": 211,
+        "count": 211
       }
     },
     "rust/crates/arare-codegen/src/ir.rs": {
@@ -266,8 +266,8 @@
         "count": 0
       },
       "lines": {
-        "covered": 25,
-        "count": 25
+        "covered": 26,
+        "count": 26
       }
     },
     "rust/crates/arare-codegen/src/lower.rs": {
@@ -276,28 +276,28 @@
         "count": 32
       },
       "lines": {
-        "covered": 311,
-        "count": 311
+        "covered": 319,
+        "count": 319
       }
     },
     "rust/crates/arare-codegen/src/lower_words.rs": {
       "branches": {
-        "covered": 30,
-        "count": 30
+        "covered": 38,
+        "count": 38
       },
       "lines": {
-        "covered": 143,
-        "count": 145
+        "covered": 171,
+        "count": 173
       }
     },
     "rust/crates/arare-codegen/src/emit.rs": {
       "branches": {
-        "covered": 30,
-        "count": 30
+        "covered": 42,
+        "count": 42
       },
       "lines": {
-        "covered": 220,
-        "count": 220
+        "covered": 274,
+        "count": 274
       }
     },
     "rust/crates/arare-codegen/src/node.rs": {
@@ -306,8 +306,8 @@
         "count": 14
       },
       "lines": {
-        "covered": 79,
-        "count": 79
+        "covered": 81,
+        "count": 81
       }
     },
     "rust/crates/arare-compiled/src/lib.rs": {
@@ -318,6 +318,16 @@
       "lines": {
         "covered": 4,
         "count": 4
+      }
+    },
+    "rust/crates/arare-codegen/src/lower_names.rs": {
+      "branches": {
+        "covered": 12,
+        "count": 12
+      },
+      "lines": {
+        "covered": 60,
+        "count": 60
       }
     }
   }

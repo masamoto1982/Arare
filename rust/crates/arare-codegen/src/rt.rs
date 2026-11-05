@@ -30,11 +30,9 @@ pub fn rescale_i32(k: i32, s: u32) -> i32 {
     // The mask in u32: for s = 31 it is 2^31 − 1, which i32 arithmetic would overflow to reach.
     let r = k & (((1u32 << s) - 1) as i32);
     let half = 1i32 << (s - 1);
-    if r < half || (r == half && q % 2 == 0) {
-        q
-    } else {
-        q + 1
-    }
+    // Up past half, or at half from an odd quotient: without a branch, so
+    // that it vectorizes as compares and adds.
+    q + ((r > half) as i32 | ((r == half) as i32 & q & 1))
 }
 
 // What generated code names, so that it needs no other crate.

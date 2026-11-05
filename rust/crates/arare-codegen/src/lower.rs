@@ -43,11 +43,16 @@ pub(crate) enum Sym {
     Scalar(N),
     Vector(N),
     Quote(Rc<Vec<Item>>),
+    /// `'X'`, for BIND.
+    Text(Rc<str>),
 }
 
 pub(crate) struct Lower {
     nodes: Vec<Node>,
     sums: Vec<Sum>,
+    /// The symbol each name is bound to, scope by scope, as the interpreter's
+    /// `Env` holds values (AR-LLR-028).
+    pub(crate) scopes: Vec<Vec<(Rc<str>, Sym)>>,
 }
 
 /// A number of this width and scale, for asking the kernel what width and
@@ -333,6 +338,7 @@ impl Lower {
             Sym::Scalar(n) => Ok(Data { n, vector: false }),
             Sym::Vector(n) => Ok(Data { n, vector: true }),
             Sym::Quote(_) => no("a vector written as a quote"),
+            Sym::Text(_) => no("a name where a value is expected"),
         }
     }
 
@@ -376,7 +382,15 @@ impl Lower {
                 _ => return no("a literal wheel point"),
             },
             Item::Quote(items) => Sym::Quote(Rc::new(items.clone())),
-            Item::Word(w) => self.word(*w, stack)?,
+            Item::Text(name) => Sym::Text(name.as_str().into()),
+            Item::Name(name) => match self.lookup(name) {
+                Some(sym) => sym.clone(),
+                None => return no(format!("{name}, a name not bound where it runs")),
+            },
+            Item::Word(w) => match self.word(*w, stack)? {
+                Some(sym) => sym,
+                None => return Ok(()),
+            },
         };
         stack.push(sym);
         Ok(())
@@ -397,6 +411,7 @@ pub fn lower(source: &str, inputs: &[Input]) -> Result<Ir, Unsupported> {
     let mut l = Lower {
         nodes: Vec::new(),
         sums: Vec::new(),
+        scopes: vec![Vec::new()],
     };
     let mut stack = Vec::new();
     for (i, input) in inputs.iter().enumerate() {
