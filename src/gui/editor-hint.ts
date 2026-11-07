@@ -95,7 +95,7 @@ export const DESKTOP_EDITOR_HINT: HintSheet = {
 // text, then what types for you, then the stack's own control. The last block
 // is the honest one — five operations have a shortcut and no touch control,
 // and saying so beats letting someone hunt for a button that is not there
-// (spec/gui-semantics.md, rule 4: nothing a surface is reached by goes
+// (Ajisai's spec/gui-semantics.md, rule 4: nothing a surface is reached by goes
 // unsaid, and recall of a submitted program is reached only by Ctrl+Up).
 //
 // Every line is kept short on purpose, so that neither rendering wraps on a

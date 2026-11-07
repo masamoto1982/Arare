@@ -1,0 +1,591 @@
+{
+  "_comment": [
+    "Arare's Words for the Reference and the Playground's Dictionary (AR-HLR-036, AR-LLR-038).",
+    "scripts/generate-word-reference.mjs makes public/docs/en/index.html, public/docs/ja/index.html and",
+    "src/engine/words.generated.json from this file; `--check` fails when they are not current.",
+    "Every Word arare-front knows has exactly one entry, in the order Word::ALL lists them",
+    "(rust/crates/arare-wasm/tests/words.rs, AR-VER-232). Each example runs in the Playground's engine and must",
+    "leave exactly `result`, each value within `budget` (src/engine/reference.test.ts, AR-VER-305).",
+    "`width`, `scale`, `error` and `field` say what the Word does to a number's width, its scale exponent, its",
+    "error budget and the program's field contract (AR-HLR-001, AR-HLR-027, AR-HLR-028)."
+  ],
+  "words": [
+    {
+      "name": "QUANTIZE",
+      "category": "numbers",
+      "requirements": ["AR-HLR-018", "AR-HLR-026"],
+      "syntax": "x width exponent QUANTIZE",
+      "summary": {
+        "en": "Puts x at a width and scale exponent; how a non-integer enters a program.",
+        "ja": "x を指定した幅とスケール指数に置く。整数でない数はこれで書き入れる。"
+      },
+      "width": {
+        "en": "The width named: 8, 16, 32 or 64.",
+        "ja": "指定した幅（8、16、32、64）。"
+      },
+      "scale": {
+        "en": "The exponent named, within ±31.",
+        "ja": "指定した指数（±31 以内）。"
+      },
+      "error": {
+        "en": "Raising the exponent rounds half to even, adding at most half an ulp of the new scale; lowering it is exact. A literal p/q is rounded once, where it is written.",
+        "ja": "指数を上げると最近接偶数に丸め、新しいスケールの 1/2 ulp 以下の誤差が加わる。下げるときは厳密。リテラル p/q は書いた場所で一度だけ丸める。"
+      },
+      "field": {
+        "en": "Open (mayOverflow) when the value may not fit the width: it is then 1/0. Writing 1/0 or 0/0 is open (wheelPoint).",
+        "ja": "値が幅に収まらないおそれがあれば open（mayOverflow）。収まらない値は 1/0 になる。1/0 や 0/0 を書くと open（wheelPoint）。"
+      },
+      "examples": [
+        { "source": "1/3 8 -6 QUANTIZE", "result": ["21/64"], "budget": ["1/192"] },
+        { "source": "2.75 8 -1 QUANTIZE", "result": ["3/1"], "budget": ["1/4"] },
+        { "source": "1 8 -7 QUANTIZE", "result": ["1/0"], "budget": [null] }
+      ]
+    },
+    {
+      "name": "ADD",
+      "category": "arithmetic",
+      "requirements": ["AR-HLR-003", "AR-HLR-005", "AR-HLR-022"],
+      "syntax": "a b ADD",
+      "summary": {
+        "en": "The exact sum, lane by lane.",
+        "ja": "厳密な和。ベクトルはレーンごと。"
+      },
+      "width": {
+        "en": "Widened to the narrowest width that holds the sum of the operands' ranges; int64 at most.",
+        "ja": "両辺の範囲の和が収まる最も狭い幅に広げる。上限は int64。"
+      },
+      "scale": {
+        "en": "The smaller of the two exponents: the other operand is shifted to it exactly.",
+        "ja": "2つの指数の小さいほう。もう一方を厳密にずらして揃える。"
+      },
+      "error": {
+        "en": "Exact: the result's budget is the sum of the operands' budgets.",
+        "ja": "厳密。結果の誤差予算は両辺の予算の和。"
+      },
+      "field": {
+        "en": "Open when the sum may leave int64 (mayOverflow) or an operand is a wheel point.",
+        "ja": "和が int64 を超えるおそれがあるか、どちらかが輪の点なら open。"
+      },
+      "examples": [
+        { "source": "126 1 ADD", "result": ["127/1"], "budget": ["0/1"] },
+        { "source": "0.5 8 -1 QUANTIZE 3 ADD", "result": ["7/2"], "budget": ["0/1"] },
+        { "source": "[ 1 2 3 ] [ 10 ] ADD", "result": ["[ 11/1 12/1 13/1 ]"], "budget": ["0/1"] }
+      ]
+    },
+    {
+      "name": "SUB",
+      "category": "arithmetic",
+      "requirements": ["AR-HLR-003", "AR-HLR-005", "AR-HLR-022"],
+      "syntax": "a b SUB",
+      "summary": {
+        "en": "The exact difference a − b, lane by lane.",
+        "ja": "厳密な差 a − b。ベクトルはレーンごと。"
+      },
+      "width": {
+        "en": "As ADD: the narrowest width holding the difference of the ranges.",
+        "ja": "ADD と同じく、範囲の差が収まる最も狭い幅。"
+      },
+      "scale": {
+        "en": "The smaller of the two exponents.",
+        "ja": "2つの指数の小さいほう。"
+      },
+      "error": {
+        "en": "Exact: the budgets add.",
+        "ja": "厳密。誤差予算は足し合わされる。"
+      },
+      "field": {
+        "en": "As ADD.",
+        "ja": "ADD と同じ。"
+      },
+      "examples": [
+        { "source": "7 3 SUB", "result": ["4/1"], "budget": ["0/1"] },
+        { "source": "[ 5 6 ] [ 1 2 ] SUB", "result": ["[ 4/1 4/1 ]"], "budget": ["0/1"] }
+      ]
+    },
+    {
+      "name": "MUL",
+      "category": "arithmetic",
+      "requirements": ["AR-HLR-003", "AR-HLR-006", "AR-HLR-022"],
+      "syntax": "a b MUL",
+      "summary": {
+        "en": "The exact product, lane by lane.",
+        "ja": "厳密な積。ベクトルはレーンごと。"
+      },
+      "width": {
+        "en": "Widened to the narrowest width holding the product of the ranges: int8 × int8 is int16.",
+        "ja": "範囲の積が収まる最も狭い幅に広げる。int8 × int8 は int16。"
+      },
+      "scale": {
+        "en": "The sum of the two exponents; an exponent beyond ±31 is an ERROR.",
+        "ja": "2つの指数の和。±31 を超えると ERROR。"
+      },
+      "error": {
+        "en": "Exact: each operand's budget is scaled by the other's range, as the product propagates it.",
+        "ja": "厳密。各辺の誤差予算に相手の範囲を掛けたものが伝わる。"
+      },
+      "field": {
+        "en": "Open when the product may leave int64 or an operand is a wheel point.",
+        "ja": "積が int64 を超えるおそれがあるか、輪の点が入れば open。"
+      },
+      "examples": [
+        { "source": "100 100 MUL", "result": ["10000/1"], "budget": ["0/1"] },
+        { "source": "[ 1 2 3 ] [ 4 5 6 ] MUL", "result": ["[ 4/1 10/1 18/1 ]"], "budget": ["0/1"] },
+        { "source": "1/3 8 -6 QUANTIZE [ 1 2 ] MUL", "result": ["[ 21/64 21/32 ]"], "budget": ["1/96"] }
+      ]
+    },
+    {
+      "name": "DIV",
+      "category": "arithmetic",
+      "requirements": ["AR-HLR-007", "AR-HLR-022"],
+      "syntax": "a b DIV",
+      "summary": {
+        "en": "The quotient a / b, rounded: one of Arare's three rounding points.",
+        "ja": "商 a / b を丸めたもの。Arare で丸めが起きる3か所の一つ。"
+      },
+      "width": {
+        "en": "The narrowest width holding the dividend's range shifted by the divisor's exponent.",
+        "ja": "被除数の範囲を除数の指数でずらしたものが収まる最も狭い幅。"
+      },
+      "scale": {
+        "en": "The dividend's exponent: write the dividend at a finer scale for a finer quotient.",
+        "ja": "被除数の指数。細かい商が欲しければ被除数を細かいスケールで書く。"
+      },
+      "error": {
+        "en": "Rounds half to even: adds at most half an ulp of the result's scale.",
+        "ja": "最近接偶数に丸め、結果のスケールの 1/2 ulp 以下の誤差が加わる。"
+      },
+      "field": {
+        "en": "Open (divisorMayBeZero) when the divisor may be 0: x/0 is 1/0 and 0/0 is ⊥.",
+        "ja": "除数が 0 のおそれがあれば open（divisorMayBeZero）。x/0 は 1/0、0/0 は ⊥。"
+      },
+      "examples": [
+        { "source": "7 2 DIV", "result": ["4/1"], "budget": ["1/2"] },
+        { "source": "1 8 -6 QUANTIZE 3 DIV", "result": ["21/64"], "budget": ["1/128"] },
+        { "source": "1 0 DIV 0 0 DIV", "result": ["1/0", "0/0"], "budget": ["0/1", "0/1"] }
+      ]
+    },
+    {
+      "name": "NEG",
+      "category": "arithmetic",
+      "requirements": ["AR-HLR-002", "AR-HLR-003", "AR-HLR-022"],
+      "syntax": "a NEG",
+      "summary": {
+        "en": "The negation; 1/0 and 0/0 are their own.",
+        "ja": "符号の反転。1/0 と 0/0 はそれ自身。"
+      },
+      "width": {
+        "en": "Unchanged: finite ranges are symmetric.",
+        "ja": "変わらない。有限の範囲は対称。"
+      },
+      "scale": {
+        "en": "Unchanged.",
+        "ja": "変わらない。"
+      },
+      "error": {
+        "en": "Exact: the budget is the operand's.",
+        "ja": "厳密。誤差予算は元のまま。"
+      },
+      "field": {
+        "en": "Open only when the operand is a wheel point.",
+        "ja": "輪の点が入ったときだけ open。"
+      },
+      "examples": [
+        { "source": "1 2 SUB NEG", "result": ["1/1"], "budget": ["0/1"] }
+      ]
+    },
+    {
+      "name": "RESCALE",
+      "category": "numbers",
+      "requirements": ["AR-HLR-008", "AR-HLR-022"],
+      "syntax": "x s RESCALE",
+      "summary": {
+        "en": "Raises x's exponent by s bits (0 to 62), rounding: one of the three rounding points.",
+        "ja": "x の指数を s ビット（0〜62）上げて丸める。丸めが起きる3か所の一つ。"
+      },
+      "width": {
+        "en": "Unchanged.",
+        "ja": "変わらない。"
+      },
+      "scale": {
+        "en": "Raised by s.",
+        "ja": "s だけ上がる。"
+      },
+      "error": {
+        "en": "Rounds half to even: adds at most half an ulp of the new scale; a value already on the grid is unchanged.",
+        "ja": "最近接偶数に丸め、新しいスケールの 1/2 ulp 以下の誤差が加わる。すでに格子上の値は変わらない。"
+      },
+      "field": {
+        "en": "No effect of its own; a wheel point passes through.",
+        "ja": "それ自体は影響しない。輪の点はそのまま通る。"
+      },
+      "examples": [
+        { "source": "1000 2 RESCALE", "result": ["1000/1"], "budget": ["2/1"] },
+        { "source": "0.75 8 -2 QUANTIZE 1 RESCALE", "result": ["1/1"], "budget": ["1/4"] }
+      ]
+    },
+    {
+      "name": "NARROW",
+      "category": "numbers",
+      "requirements": ["AR-HLR-009", "AR-HLR-022"],
+      "syntax": "x width NARROW",
+      "summary": {
+        "en": "Fits x into a narrower width; a value that does not fit is 1/0, never clamped.",
+        "ja": "x を狭い幅に収める。収まらない値は 1/0 になり、上限に張り付くことはない。"
+      },
+      "width": {
+        "en": "The width named.",
+        "ja": "指定した幅。"
+      },
+      "scale": {
+        "en": "Unchanged.",
+        "ja": "変わらない。"
+      },
+      "error": {
+        "en": "Exact when the value fits.",
+        "ja": "収まるなら厳密。"
+      },
+      "field": {
+        "en": "Open (mayOverflow) when the value may not fit the width.",
+        "ja": "幅に収まらないおそれがあれば open（mayOverflow）。"
+      },
+      "examples": [
+        { "source": "100 100 MUL 100 SUB 16 NARROW", "result": ["9900/1"], "budget": ["0/1"] },
+        { "source": "300 8 NARROW", "result": ["1/0"], "budget": [null] }
+      ]
+    },
+    {
+      "name": "EQ",
+      "category": "comparison",
+      "requirements": ["AR-HLR-010", "AR-HLR-022"],
+      "syntax": "a b EQ",
+      "summary": {
+        "en": "Whether two values denote the same, whatever their widths and scales; always TRUE or FALSE.",
+        "ja": "2つの値が同じものを表すか。幅やスケールが違っても値で比べる。答えは必ず TRUE か FALSE。"
+      },
+      "width": {
+        "en": "A truth value, not a number.",
+        "ja": "真偽値を返す（数ではない）。"
+      },
+      "scale": {
+        "en": "Operands are aligned exactly before they are compared.",
+        "ja": "比べる前に厳密に揃える。"
+      },
+      "error": {
+        "en": "The checker says whether Arare's answer agrees with Ajisai's: it does when the values are exact or their ranges, widened by their budgets, are apart.",
+        "ja": "検査器は Ajisai と答えが一致するかを言う。値が厳密か、予算で広げた範囲が離れていれば一致する。"
+      },
+      "field": {
+        "en": "No effect of its own.",
+        "ja": "それ自体は影響しない。"
+      },
+      "examples": [
+        { "source": "2 0.5 8 -1 QUANTIZE 4 MUL EQ", "result": ["TRUE"], "budget": ["0/1"] },
+        { "source": "[ 1 2 ] [ 2 1 ] EQ", "result": ["FALSE"], "budget": ["0/1"] }
+      ]
+    },
+    {
+      "name": "LT",
+      "category": "comparison",
+      "requirements": ["AR-HLR-011", "AR-HLR-022"],
+      "syntax": "a b LT",
+      "summary": {
+        "en": "Whether a < b, lane by lane; asked of a wheel point, UNKNOWN.",
+        "ja": "a < b かどうか（レーンごと）。輪の点に問うと UNKNOWN。"
+      },
+      "width": {
+        "en": "A truth value, not a number.",
+        "ja": "真偽値を返す（数ではない）。"
+      },
+      "scale": {
+        "en": "Operands are aligned exactly before they are compared.",
+        "ja": "比べる前に厳密に揃える。"
+      },
+      "error": {
+        "en": "Agrees with Ajisai when both values are exact or their ranges, widened by their budgets, are apart.",
+        "ja": "両方が厳密か、予算で広げた範囲が離れていれば Ajisai と一致する。"
+      },
+      "field": {
+        "en": "No effect of its own.",
+        "ja": "それ自体は影響しない。"
+      },
+      "examples": [
+        { "source": "1 2 LT 2 1 LT", "result": ["TRUE", "FALSE"], "budget": ["0/1", "0/1"] },
+        { "source": "1 0 DIV 1 LT", "result": ["NIL"], "budget": ["0/1"] }
+      ]
+    },
+    {
+      "name": "AND",
+      "category": "truth",
+      "requirements": ["AR-HLR-012", "AR-HLR-013", "AR-HLR-022"],
+      "syntax": "a b AND",
+      "summary": {
+        "en": "Strong Kleene conjunction: FALSE settles it, NIL reads as UNKNOWN.",
+        "ja": "strong Kleene の論理積。FALSE で決まり、NIL は UNKNOWN として読む。"
+      },
+      "width": {
+        "en": "Truth values only.",
+        "ja": "真偽値だけを扱う。"
+      },
+      "scale": {
+        "en": "—",
+        "ja": "—"
+      },
+      "error": {
+        "en": "Agrees with Ajisai when its operands do.",
+        "ja": "両辺が一致していれば Ajisai と一致する。"
+      },
+      "field": {
+        "en": "No effect.",
+        "ja": "影響しない。"
+      },
+      "examples": [
+        { "source": "TRUE NIL AND FALSE NIL AND", "result": ["NIL", "FALSE"], "budget": ["0/1", "0/1"] }
+      ]
+    },
+    {
+      "name": "NOT",
+      "category": "truth",
+      "requirements": ["AR-HLR-012", "AR-HLR-013", "AR-HLR-022"],
+      "syntax": "a NOT",
+      "summary": {
+        "en": "Strong Kleene negation: UNKNOWN stays UNKNOWN.",
+        "ja": "strong Kleene の否定。UNKNOWN は UNKNOWN のまま。"
+      },
+      "width": {
+        "en": "Truth values only.",
+        "ja": "真偽値だけを扱う。"
+      },
+      "scale": {
+        "en": "—",
+        "ja": "—"
+      },
+      "error": {
+        "en": "Agrees with Ajisai when its operand does.",
+        "ja": "元が一致していれば Ajisai と一致する。"
+      },
+      "field": {
+        "en": "No effect.",
+        "ja": "影響しない。"
+      },
+      "examples": [
+        { "source": "FALSE NOT NIL NOT", "result": ["TRUE", "NIL"], "budget": ["0/1", "0/1"] }
+      ]
+    },
+    {
+      "name": "FILTER",
+      "category": "blocks",
+      "requirements": ["AR-HLR-014", "AR-HLR-024"],
+      "syntax": "vector [ predicate ] FILTER",
+      "summary": {
+        "en": "Keeps the elements the block calls TRUE; FALSE, UNKNOWN and NIL drop them, as SQL's WHERE does.",
+        "ja": "ブロックが TRUE と言った要素だけを残す。FALSE、UNKNOWN、NIL は SQL の WHERE と同じく落とす。"
+      },
+      "width": {
+        "en": "The elements keep theirs.",
+        "ja": "要素の幅はそのまま。"
+      },
+      "scale": {
+        "en": "The elements keep theirs.",
+        "ja": "要素のスケールはそのまま。"
+      },
+      "error": {
+        "en": "The elements keep their budgets.",
+        "ja": "要素の誤差予算はそのまま。"
+      },
+      "field": {
+        "en": "Whatever the block does.",
+        "ja": "ブロックの中身による。"
+      },
+      "examples": [
+        { "source": "[ 5 1 4 2 ] [ 3 LT ] FILTER", "result": ["[ 1/1 2/1 ]"], "budget": ["0/1"] }
+      ]
+    },
+    {
+      "name": "MAP",
+      "category": "blocks",
+      "requirements": ["AR-HLR-024"],
+      "syntax": "vector [ block ] MAP",
+      "summary": {
+        "en": "Replaces each element with what the block leaves for it.",
+        "ja": "各要素を、ブロックがその要素について残した値に置き換える。"
+      },
+      "width": {
+        "en": "What the block gives.",
+        "ja": "ブロックが返す幅。"
+      },
+      "scale": {
+        "en": "What the block gives.",
+        "ja": "ブロックが返すスケール。"
+      },
+      "error": {
+        "en": "What the block gives each element.",
+        "ja": "ブロックが各要素に与える誤差。"
+      },
+      "field": {
+        "en": "Whatever the block does.",
+        "ja": "ブロックの中身による。"
+      },
+      "examples": [
+        { "source": "[ 1 2 3 ] [ 10 MUL ] MAP", "result": ["[ 10/1 20/1 30/1 ]"], "budget": ["0/1"] }
+      ]
+    },
+    {
+      "name": "FOLD",
+      "category": "blocks",
+      "requirements": ["AR-HLR-024"],
+      "syntax": "vector initial [ block ] FOLD",
+      "summary": {
+        "en": "Threads an accumulator through the block, element by element from the left.",
+        "ja": "累積値を左から要素ごとにブロックへ通す。"
+      },
+      "width": {
+        "en": "What the block gives the accumulator.",
+        "ja": "ブロックが累積値に与える幅。"
+      },
+      "scale": {
+        "en": "What the block gives the accumulator.",
+        "ja": "ブロックが累積値に与えるスケール。"
+      },
+      "error": {
+        "en": "Accumulated step by step; the checker coarsens long loops so a budget stays computable.",
+        "ja": "1歩ずつ積み上がる。長いループでも予算が計算できるよう、検査器は粗く丸める。"
+      },
+      "field": {
+        "en": "Whatever the block does at any step.",
+        "ja": "どの歩でもブロックの中身による。"
+      },
+      "examples": [
+        { "source": "[ 1 2 3 4 ] 0 [ ADD ] FOLD", "result": ["10/1"], "budget": ["0/1"] }
+      ]
+    },
+    {
+      "name": "SUM",
+      "category": "blocks",
+      "requirements": ["AR-HLR-016"],
+      "syntax": "vector SUM",
+      "summary": {
+        "en": "The sum of a vector's elements, skipping NIL as SQL does; all NIL is NIL.",
+        "ja": "ベクトルの要素の和。SQL と同じく NIL を飛ばす。すべて NIL なら NIL。"
+      },
+      "width": {
+        "en": "Widened to hold the sum of every lane.",
+        "ja": "全レーンの和が収まる幅に広げる。"
+      },
+      "scale": {
+        "en": "The elements' exponent.",
+        "ja": "要素の指数。"
+      },
+      "error": {
+        "en": "Exact: the lanes' budgets add.",
+        "ja": "厳密。各レーンの予算が足し合わされる。"
+      },
+      "field": {
+        "en": "Open when the sum may leave int64.",
+        "ja": "和が int64 を超えるおそれがあれば open。"
+      },
+      "examples": [
+        { "source": "[ 1 NIL 2 ] SUM", "result": ["3/1"], "budget": ["0/1"] },
+        { "source": "[ NIL NIL ] SUM", "result": ["NIL"], "budget": ["0/1"] }
+      ]
+    },
+    {
+      "name": "SELECT",
+      "category": "truth",
+      "requirements": ["AR-HLR-015", "AR-HLR-022"],
+      "syntax": "then else condition SELECT",
+      "summary": {
+        "en": "THEN where the condition is TRUE, ELSE otherwise: UNKNOWN takes ELSE, as SQL's CASE does.",
+        "ja": "条件が TRUE なら THEN、それ以外は ELSE。UNKNOWN は SQL の CASE と同じく ELSE に進む。"
+      },
+      "width": {
+        "en": "Wide enough for either side.",
+        "ja": "どちらの側も収まる幅。"
+      },
+      "scale": {
+        "en": "Either side's.",
+        "ja": "選ばれた側のスケール。"
+      },
+      "error": {
+        "en": "Either side's budget, when the condition agrees with Ajisai's.",
+        "ja": "条件が Ajisai と一致するとき、選ばれうる側の予算。"
+      },
+      "field": {
+        "en": "No effect of its own.",
+        "ja": "それ自体は影響しない。"
+      },
+      "examples": [
+        { "source": "1 2 NIL SELECT", "result": ["2/1"], "budget": ["0/1"] },
+        { "source": "[ 1 2 ] [ 0 0 ] [ TRUE FALSE ] SELECT", "result": ["[ 1/1 0/1 ]"], "budget": ["0/1"] }
+      ]
+    },
+    {
+      "name": "TRUE",
+      "category": "literals",
+      "requirements": ["AR-HLR-012"],
+      "syntax": "TRUE",
+      "summary": {
+        "en": "The truth value TRUE.",
+        "ja": "真偽値 TRUE。"
+      },
+      "width": { "en": "—", "ja": "—" },
+      "scale": { "en": "—", "ja": "—" },
+      "error": { "en": "None.", "ja": "なし。" },
+      "field": { "en": "No effect.", "ja": "影響しない。" },
+      "examples": [
+        { "source": "TRUE", "result": ["TRUE"], "budget": ["0/1"] }
+      ]
+    },
+    {
+      "name": "FALSE",
+      "category": "literals",
+      "requirements": ["AR-HLR-012"],
+      "syntax": "FALSE",
+      "summary": {
+        "en": "The truth value FALSE.",
+        "ja": "真偽値 FALSE。"
+      },
+      "width": { "en": "—", "ja": "—" },
+      "scale": { "en": "—", "ja": "—" },
+      "error": { "en": "None.", "ja": "なし。" },
+      "field": { "en": "No effect.", "ja": "影響しない。" },
+      "examples": [
+        { "source": "FALSE", "result": ["FALSE"], "budget": ["0/1"] }
+      ]
+    },
+    {
+      "name": "NIL",
+      "category": "literals",
+      "requirements": ["AR-HLR-013", "AR-HLR-020", "AR-HLR-023"],
+      "syntax": "NIL",
+      "summary": {
+        "en": "Absence. In truth position it reads as UNKNOWN; it is never a number.",
+        "ja": "欠損。真偽の位置では UNKNOWN として読む。数ではない。"
+      },
+      "width": { "en": "—", "ja": "—" },
+      "scale": { "en": "—", "ja": "—" },
+      "error": { "en": "None: a NIL is NIL in both languages.", "ja": "なし。NIL はどちらの言語でも NIL。" },
+      "field": { "en": "No effect.", "ja": "影響しない。" },
+      "examples": [
+        { "source": "NIL 1 ADD", "result": ["NIL"], "budget": ["0/1"] }
+      ]
+    },
+    {
+      "name": "BIND",
+      "category": "names",
+      "requirements": ["AR-HLR-032"],
+      "syntax": "value 'X' BIND",
+      "summary": {
+        "en": "Names a value; X then pushes it until the scope that bound it ends.",
+        "ja": "値に名前を付ける。束縛したスコープが終わるまで、X と書けばその値が積まれる。"
+      },
+      "width": { "en": "The value keeps its own.", "ja": "値の幅はそのまま。" },
+      "scale": { "en": "The value keeps its own.", "ja": "値のスケールはそのまま。" },
+      "error": { "en": "The value keeps its budget.", "ja": "値の誤差予算はそのまま。" },
+      "field": { "en": "No effect.", "ja": "影響しない。" },
+      "examples": [
+        { "source": "3 'X' BIND X X MUL", "result": ["9/1"], "budget": ["0/1"] },
+        { "source": "[ 1 2 ] [ 'A' 'B' ] BIND B A SUB", "result": ["1/1"], "budget": ["0/1"] }
+      ]
+    }
+  ]
+}

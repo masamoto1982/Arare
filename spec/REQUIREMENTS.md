@@ -398,6 +398,42 @@ BIND names a value, as in Ajisai: `value 'X' BIND` consumes both operands, and t
 - Refined by: AR-LLR-028, AR-LLR-029
 - Planned: Verified through AR-LLR-028 and AR-LLR-029, and against Ajisai by the oracle corpus (AR-VER-209).
 
+### AR-HLR-033 — One Playground shell, two engines
+
+The Playground is one shell that drives an engine through one interface (PlaygroundEngine): run a program, read the stack, snapshot and restore a session, list the Words and their documentation. Arare is the engine it runs by default; Ajisai runs in the same shell as the oracle when chosen. The engine is chosen once per page load — `?engine=` in the URL, else the last choice, else Arare — and the stack, the saved session and the worker pool all belong to that engine, so a saved Arare session is never offered to Ajisai or the other way round. What an engine can do beyond the interface (User Words, names across steps, error budgets) is stated by its descriptor, not probed.
+
+- Level: QL-D
+- Refines: AR-SYS-013
+- Refined by: AR-LLR-034, AR-LLR-035
+- Planned: Verified through AR-LLR-034 and AR-LLR-035.
+
+### AR-HLR-034 — Arare in the Playground: Run and Step
+
+The Playground runs Arare's reference interpreter and shows what it leaves on the stack, each number with its width and scale. A session is the programs run in it so far that succeeded: a later Run sees the stack and the names they left, and a failed Run leaves the session as it was. The editor runs in one of two modes, chosen by a switch and remembered: Run executes the whole source, Step executes one top-level item of the program per press, highlighting the item about to run; a quantized literal such as `0.75 8 -2 QUANTIZE` is one item, and a name bound by one step is bound in the next. An error is reported with its category and the line and column of the item that raised it.
+
+- Level: QL-B
+- Refines: AR-SYS-013, AR-SYS-004, AR-SYS-001
+- Refined by: AR-LLR-031, AR-LLR-032, AR-LLR-033, AR-LLR-034, AR-LLR-036
+- Planned: Verified through AR-LLR-031 to AR-LLR-034 and AR-LLR-036.
+
+### AR-HLR-035 — Error budgets beside the oracle
+
+After a Run on Arare the Playground shows the field contract the checker decides for the session (field=closed, or field=open with the items that open it), each number's error budget beside it, and a comparison panel that runs the same programs on Ajisai and shows, per stack position, Arare's value, its budget, Ajisai's value, their distance, and whether the distance is within the budget. The comparison is the one `npm run check:oracle` makes (ADR-0007, ADR-0008), computed by the same code.
+
+- Level: QL-D
+- Refines: AR-SYS-013, AR-SYS-012
+- Refined by: AR-LLR-032, AR-LLR-037
+- Planned: Verified through AR-LLR-032 and AR-LLR-037.
+
+### AR-HLR-036 — A generated Reference
+
+The Reference (`public/docs/`, in English and Japanese) is generated from `spec/words.json`, which lists every Word the interpreter has, in its order: each entry gives the Word's syntax and what it does to widths, scales, error and the field contract, with examples whose results are those Arare gives. Each example links to the Playground with its source loaded into the editor. The Playground's Word list and documentation popups are generated from the same file.
+
+- Level: QL-C
+- Refines: AR-SYS-013, AR-SYS-001
+- Refined by: AR-LLR-038
+- Planned: Verified through AR-LLR-038.
+
 ## Low-level requirements
 
 ### AR-LLR-001 — The executable specification mirrors the Lean model
@@ -715,6 +751,84 @@ coarsen d rounds a number's range [lo, hi] outward and its error up to multiples
 - Tested in `rust/crates/arare-budget/tests/table.rs` — **AR-VER-215**
 - Tested in `formal/BudgetTable.lean` — **AR-VER-215**
 - Tested in `rust/crates/arare-budget/tests/bind.rs` — **AR-VER-229**
+
+### AR-LLR-031 — Where each item of a program is written
+
+parse_spanned returns, with the program, the span of each of its top-level items: the line and column (1-based, in characters) of its first character and of the character after its last. A literal folded with its width, exponent and QUANTIZE is one item from the literal to QUANTIZE; a block is one item from `[` to its `]`; a closed text item ends after its closing quote. parse returns the same program as parse_spanned.
+
+- Level: QL-B
+- Refines: AR-HLR-034
+- Implemented in: `rust/crates/arare-front/src/parser.rs`, `rust/crates/arare-front/src/lib.rs`
+- Tested in `rust/crates/arare-front/tests/spans.rs` — **AR-VER-230**
+
+### AR-LLR-032 — The engine command
+
+arare-wasm is a command built for wasm32-wasip1 (ADR-0013). It reads a request on standard input — a session's programs separated by NUL, the last being the one to run — and the command named by its first argument, and writes one JSON document. `run` runs the programs in order on one machine, stopping at the first error, and answers the stack (each number with its width, scale and inferred budget, each NIL with its reason, each block with its source text), the field contract and the spans of the last program's items; an error answers its message, category, Word and the line and column within the last program. `items` answers the spans only; `version` the crate's version. Any other command, or input that is not UTF-8, exits with status 2.
+
+- Level: QL-B
+- Refines: AR-HLR-034, AR-HLR-035
+- Implemented in: `rust/crates/arare-wasm/src/lib.rs`, `rust/crates/arare-wasm/src/json.rs`, `rust/crates/arare-wasm/src/main.rs`
+- Tested in `rust/crates/arare-wasm/tests/protocol.rs` — **AR-VER-231**
+- Tested in `rust/crates/arare-wasm/tests/command.rs` — **AR-VER-231**
+
+### AR-LLR-033 — A WASI host in the browser
+
+runWasiCommand instantiates a compiled wasm32-wasip1 module synchronously with the seven preview 1 imports a Rust command uses — args, environment, fd_read on standard input, fd_write on standard output and error, proc_exit — answers EBADF for any other descriptor and ENOSYS for every other import, runs `_start`, and returns the exit status and what was written to standard output and error.
+
+- Level: QL-B
+- Refines: AR-HLR-034
+- Derived: A browser has no WASI; the command boundary of ADR-0013 needs a host for it, and the smallest one that runs Rust's standard library is the one the Playground carries.
+- Implemented in: `src/engine/wasi.ts`
+- Tested in `src/engine/arare-engine.test.ts` — **AR-VER-301**
+
+### AR-LLR-034 — Arare behind the Playground's interface
+
+ArareEngine implements PlaygroundEngine on the engine command. Its session is the list of programs that succeeded and the stack and field contract the last of them left; execute sends the session's programs and the new one, and on success appends it, on failure leaves the session unchanged. step_pieces converts the engine's item spans to offsets in the source. A snapshot is the session as JSON, and restoring one that is not an Arare session is refused. It has no User Words: their lists are empty and restoring one is refused for each word.
+
+- Level: QL-B
+- Refines: AR-HLR-033, AR-HLR-034
+- Implemented in: `src/engine/arare-engine.ts`, `src/wasm-interpreter-types.ts`
+- Tested in `src/engine/arare-engine.test.ts` — **AR-VER-301**
+- Tested in `src/engine/arare-engine.test.ts` — **AR-VER-302**
+
+### AR-LLR-035 — Choosing the engine
+
+selectEngineKind takes `?engine=` when it names an engine, else the stored choice when it names one, else Arare; switchEngine stores the choice and reloads with it in the URL. The engine's module is compiled once per page and handed to every worker, which instantiates the same engine on it. Persistence is scoped by engine: the web host keys its record by the engine (`interpreter_state:<engine>`), the Tauri host writes `arare-playground-<engine>.json`. detectRuntimeKind classifies the host as Tauri when the build says so or the Tauri internals are present, else as the web. The header badge, the engine selector and the Reference link name the page's engine.
+
+- Level: QL-D
+- Refines: AR-HLR-033
+- Implemented in: `src/engine/registry.ts`, `src/workers/execution-worker-manager.ts`, `src/workers/interpreter-execution-worker.ts`, `src/platform/index.ts`, `src/platform/web.ts`, `src/platform/tauri.ts`, `src/entry/entry-common.ts`, `src/gui/gui-application.ts`, `src/gui/interpreter-state-persistence.ts`
+- Tested in `src/engine/registry.test.ts` — **AR-VER-306**
+- Tested in `src/platform/index.test.ts` — **AR-VER-001-A**
+
+### AR-LLR-036 — Run and Step
+
+The execution-mode switch holds Run or Step, remembers it, and runs the editor's source the chosen way when the execute button is pressed. Step mode splits the source with the engine's step_pieces when it has one, and runs the whole source once when the engine cannot split it (a syntax error), so the error is the one Run gives; it refuses a program that uses BIND only on an engine whose names do not last across steps.
+
+- Level: QL-D
+- Refines: AR-HLR-034
+- Implemented in: `src/gui/execution-mode.ts`, `src/gui/step-executor.ts`, `src/gui/execution-controller.ts`, `src/gui/gui-application.ts`
+- Tested in `src/gui/execution-mode.test.ts` — **AR-VER-303**
+
+### AR-LLR-037 — The budget panel and the comparison
+
+compareStacks pairs Arare's stack with Ajisai's position by position and gives each a verdict: within (|Δ| no larger than the budget), outside, noBudget (Arare inferred none), or missing (one side has no value there); scripts/lib/oracle.mjs uses the same function. runOracle runs the session's programs after the oracle prelude on the Ajisai bundle, loaded only when the panel needs it. The stack display labels each number with its width, scale and budget, and the panel shows the field contract and the table of verdicts.
+
+- Level: QL-D
+- Refines: AR-HLR-035
+- Implemented in: `src/engine/oracle-compare.mjs`, `src/engine/ajisai-oracle.ts`, `src/gui/oracle-panel.ts`, `src/gui/output-display-renderer.ts`, `src/gui/gui-application.ts`
+- Tested in `src/engine/oracle-compare.test.ts` — **AR-VER-304**
+- Tested in `src/gui/output-display-renderer.test.ts` — **AR-VER-304**
+
+### AR-LLR-038 — Generating the Reference
+
+scripts/generate-word-reference.mjs reads spec/words.json and writes the English and Japanese Reference pages, one section per Word with an anchor `word-<NAME>`, and src/engine/words.generated.json for the Playground; each example links to `index.html#code=` with its source; `--check` fails when any output differs. spec/words.json lists exactly the interpreter's Words in Word::ALL's order, and each example's result and budgets are what the engine answers.
+
+- Level: QL-C
+- Refines: AR-HLR-036
+- Implemented in: `scripts/generate-word-reference.mjs`, `spec/words.json`
+- Tested in `src/engine/reference.test.ts` — **AR-VER-305**
+- Tested in `rust/crates/arare-wasm/tests/words.rs` — **AR-VER-232**
 
 ## Performance requirements
 

@@ -6,7 +6,7 @@ import {
 } from '../workers/execution-contract';
 import { getPlatform } from '../platform';
 import type {
-    AjisaiInterpreter,
+    PlaygroundEngine,
     ExecuteResult,
     ProtocolError,
     UserWord,
@@ -50,7 +50,7 @@ export const renderErrorReport = (error: ProtocolError): string => {
 // Every User word with its definition and description, looked up by name.
 // `restore_user_words` skips a definition-less word, so a lookup that missed
 // here would run the worker without the user's words.
-export const collectUserWords = (interpreter: AjisaiInterpreter): UserWord[] =>
+export const collectUserWords = (interpreter: PlaygroundEngine): UserWord[] =>
     interpreter.collect_user_words_info().map(([name]) => ({
         name,
         definition: interpreter.lookup_word_definition(name),
@@ -66,7 +66,7 @@ export const isFailure = (result: ExecuteResult): boolean =>
 // `userWords` may be passed in when the caller has just collected them for
 // its own before/after view, so the dictionary is read once per run.
 export const createExecutionSnapshot = (
-    interpreter: AjisaiInterpreter,
+    interpreter: PlaygroundEngine,
     userWords: UserWord[] = collectUserWords(interpreter)
 ): InterpreterSnapshot => ({
     // Carry the lossless snapshot into the worker so exact values on the
@@ -107,7 +107,7 @@ export const describeTimeoutDiagnosis = (limitMs: number): string =>
     + `limit executionTimeoutMs: ${limitMs} (wall clock, this host only)`;
 
 export const syncInterpreterState = (
-    interpreter: AjisaiInterpreter,
+    interpreter: PlaygroundEngine,
     result: ExecuteResult
 ): void => {
     if (isFailure(result)) return;
@@ -220,7 +220,7 @@ export const detectExecutionSurfaceChanges = (
 
     // Any emission changes Output, an empty or whitespace-only one included:
     // `'' PRINT` writes a line, so the surface it wrote to is shown
-    // (spec/gui-semantics.md, "a Run shows each surface it changed").
+    // (Ajisai's spec/gui-semantics.md, "a Run shows each surface it changed").
     return {
         outputChanged: hasError || Boolean(result.output),
         stackChanged: !checkValuesEqual(before.stack, after.stack),

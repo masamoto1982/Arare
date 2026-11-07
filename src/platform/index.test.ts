@@ -3,7 +3,7 @@
 // DUT: src/platform/index.ts, detectRuntimeKind()
 //
 //     export function detectRuntimeKind(): RuntimeKind {
-//         if (typeof __AJISAI_TARGET__ !== 'undefined' && __AJISAI_TARGET__ === 'tauri') {
+//         if (typeof __ARARE_TARGET__ !== 'undefined' && __ARARE_TARGET__ === 'tauri') {
 //             return 'tauri';                                                       // (1)
 //         }
 //         if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
@@ -16,8 +16,8 @@
 // classifier across three reachable outcomes.
 //
 // Decision (1) — build-time injection guard:
-//   A1 = (typeof __AJISAI_TARGET__ !== 'undefined')
-//   A2 = (__AJISAI_TARGET__ === 'tauri')
+//   A1 = (typeof __ARARE_TARGET__ !== 'undefined')
+//   A2 = (__ARARE_TARGET__ === 'tauri')
 //
 // Decision (2) — runtime DOM-detection fallback (only reached when A1&&A2 is F):
 //   B1 = (typeof window !== 'undefined')
@@ -37,13 +37,13 @@
 //   Pair (4, 5) with B2 held T: B1 flips T->F -> outcome flips.
 //   Pair (4, 6) with B1 held T: B2 flips T->F -> outcome flips.
 //
-// Trace: docs/quality/TRACEABILITY_MATRIX.md, requirement AR-INH-001.
+// Trace: docs/quality/TRACEABILITY_MATRIX.md, requirement AR-LLR-035.
 
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { detectRuntimeKind } from './index';
 
-// `__AJISAI_TARGET__` is declared as a build-time const in index.ts
-// but the runtime check uses `typeof __AJISAI_TARGET__ !== 'undefined'`,
+// `__ARARE_TARGET__` is declared as a build-time const in index.ts
+// but the runtime check uses `typeof __ARARE_TARGET__ !== 'undefined'`,
 // which falls back to a global lookup at runtime. Tests can therefore
 // drive A1 by setting / deleting properties on globalThis. We use Reflect
 // to bypass DOM lib's strict typing of `window` (defined as
@@ -69,19 +69,19 @@ describe('AR-VER-001-A detectRuntimeKind classifier', () => {
     let hadWindow: boolean;
 
     beforeEach(() => {
-        hadTarget = hasGlobal('__AJISAI_TARGET__');
+        hadTarget = hasGlobal('__ARARE_TARGET__');
         hadWindow = hasGlobal('window');
-        originalTarget = readGlobal('__AJISAI_TARGET__');
+        originalTarget = readGlobal('__ARARE_TARGET__');
         originalWindow = readGlobal('window');
-        deleteGlobal('__AJISAI_TARGET__');
+        deleteGlobal('__ARARE_TARGET__');
         deleteGlobal('window');
     });
 
     afterEach(() => {
         if (hadTarget) {
-            setGlobal('__AJISAI_TARGET__', originalTarget);
+            setGlobal('__ARARE_TARGET__', originalTarget);
         } else {
-            deleteGlobal('__AJISAI_TARGET__');
+            deleteGlobal('__ARARE_TARGET__');
         }
         if (hadWindow) {
             setGlobal('window', originalWindow);
@@ -92,12 +92,12 @@ describe('AR-VER-001-A detectRuntimeKind classifier', () => {
 
     describe('build-time injection guard (A1 && A2)', () => {
         test('row 1 (A1=T, A2=T) -> tauri via build-time injection', () => {
-            setGlobal('__AJISAI_TARGET__', 'tauri');
+            setGlobal('__ARARE_TARGET__', 'tauri');
             expect(detectRuntimeKind()).toBe('tauri');
         });
 
         test('row 2 (A1=F, A2=*) -> falls through to runtime detection', () => {
-            // A1=F: __AJISAI_TARGET__ undefined. A2 is short-circuited and
+            // A1=F: __ARARE_TARGET__ undefined. A2 is short-circuited and
             // not evaluated. With no window either, detection returns 'web'.
             // Pair (row 1, row 2) flips A1 with A2 held T -> outcome flips.
             expect(detectRuntimeKind()).toBe('web');
@@ -106,7 +106,7 @@ describe('AR-VER-001-A detectRuntimeKind classifier', () => {
         test('row 3 (A1=T, A2=F) -> falls through to runtime detection', () => {
             // A1=T but A2=F: defined but not 'tauri'. Pair (row 1, row 3)
             // flips A2 with A1 held T -> outcome flips.
-            setGlobal('__AJISAI_TARGET__', 'web');
+            setGlobal('__ARARE_TARGET__', 'web');
             expect(detectRuntimeKind()).toBe('web');
         });
     });
@@ -134,7 +134,7 @@ describe('AR-VER-001-A detectRuntimeKind classifier', () => {
     test('build-time injection takes precedence over runtime detection', () => {
         // Cross-decision invariant: if decision 1 returns 'tauri', decision 2
         // is unreachable. Set both signals: decision 1 should win.
-        setGlobal('__AJISAI_TARGET__', 'tauri');
+        setGlobal('__ARARE_TARGET__', 'tauri');
         setGlobal('window', {}); // would otherwise produce 'web' via decision 2
         expect(detectRuntimeKind()).toBe('tauri');
     });

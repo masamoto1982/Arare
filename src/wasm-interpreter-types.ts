@@ -1,6 +1,14 @@
 
+// The Playground's engine seam (AR-HLR-033, AR-LLR-034, WORK_ORDER.md D-13):
+// what the shell asks of whichever engine it runs. Two implementations answer
+// it — Ajisai's wasm-bindgen class, the oracle, whose shape this interface
+// was generalised from, and `ArareEngine` (src/engine/arare-engine.ts), which
+// drives Arare's engine command. What an engine can do beyond the shared
+// surface (User Words, names that outlive a step, error budgets) is said by
+// its descriptor (src/engine/registry.ts), not probed on the instance.
+
 export interface AjisaiInterpreterClass {
-    new(): AjisaiInterpreter;
+    new(): PlaygroundEngine;
 }
 
 /**
@@ -13,7 +21,7 @@ export type UserWordInfo = [name: string, hasDependents: boolean];
  * One entry of `collect_core_words_info`. `hoverSummary` is the button title
  * ("WORD — short verb phrase"); `hoverSyntax` is the shortest useful
  * invocation, operands included. See Ajisai's
- * docs/dev/three-layer-documentation-model.md §4 (at the commit UPSTREAM.md names).
+ * Ajisai's docs/dev/three-layer-documentation-model.md §4 (at the commit UPSTREAM.md names).
  */
 export type CoreWordInfo = [name: string, hoverSummary: string, hoverSyntax: string];
 
@@ -34,8 +42,16 @@ export interface UserWord {
     description?: string | null;
 }
 
-export interface AjisaiInterpreter {
+export interface PlaygroundEngine {
     execute(code: string): Promise<ExecuteResult>;
+    /**
+     * Where each top-level item of `code` is written, for step mode to run
+     * one item at a time (AR-LLR-036). Only an engine whose items are not
+     * whitespace-separated atoms needs it — Arare's quantized literal is four
+     * tokens and one item — so Ajisai's class has none, and step mode then
+     * splits the source itself.
+     */
+    step_pieces?(code: string): StepPieces;
     /**
      * The resource ceilings this interpreter is running under, as a JSON
      * `HostProfile`. Read from the live interpreter, so what a host displays
@@ -64,7 +80,7 @@ export interface AjisaiInterpreter {
      *
      * `documentation` is a Core Word's reference text and `definition` a User
      * Word's reconstructed `DEF` source. Both are prose to read and go to the
-     * Output surface (spec/gui-semantics.md, Lookup): the cursor can be
+     * Output surface (Ajisai's spec/gui-semantics.md, Lookup): the cursor can be
      * anywhere in a program still being written, so a lookup never writes
      * into the editor. `null` means the dictionary does not hold the name.
      */
@@ -140,7 +156,7 @@ export function parseHostProfile(json: string): HostProfile | null {
 
 /**
  * What an ERROR carries beside its message (LANG.OBSERVATION.DIAGNOSIS): its
- * spec/outcomes.json category, the ceiling that refused it, the Word it is
+ * Ajisai's spec/outcomes.json category, the ceiling that refused it, the Word it is
  * attributed to, and the top-level source position that reached it — the
  * object the CLI reports as `error`.
  */
@@ -190,8 +206,30 @@ export interface ProtocolValueSemantics {
     exactTerms?: ReadonlyArray<ExactTerm>;
 }
 
+/**
+ * The pieces step mode runs: each with its offsets in the source, or the
+ * error that keeps the source from being split (a syntax error, reported
+ * as a run of the whole source would report it).
+ */
+export type StepPieces =
+    | { readonly ok: true; readonly pieces: ReadonlyArray<{ readonly start: number; readonly end: number }> }
+    | { readonly ok: false; readonly error: ExecuteResult };
+
+/**
+ * What Arare's error-budget checker says of a run (AR-HLR-027, AR-HLR-028):
+ * the program's field contract and, when it is open, each Word whose result
+ * the checker cannot bound and why. Each value's own budget travels on its
+ * node (`Value.budget`).
+ */
+export interface BudgetReport {
+    readonly field: 'closed' | 'open';
+    readonly open: ReadonlyArray<{ readonly word: string | null; readonly why: string }>;
+}
+
 export interface ExecuteResult {
     status: 'OK' | 'ERROR';
+    /** Arare only: the checker's report on the session's program. */
+    budgetReport?: BudgetReport;
     output?: string;
     message?: string;
     error?: boolean;
@@ -234,6 +272,15 @@ export interface Value {
     type: string;
     value: any | Fraction | Value[];
     semantics?: ProtocolValueSemantics;
+    /**
+     * Arare only (spec/host-protocol.schema.json): a number's width in bits
+     * and scale exponent, and on a value of the stack itself the error budget
+     * the checker infers for it — the most it may differ from Ajisai's exact
+     * value, as a rational `p/q` — or `null` when it knows nothing.
+     */
+    width?: number;
+    scale?: number;
+    budget?: string | null;
     /**
      * On a vector in `collect_stack`'s view, cut to its leading elements (the
      * most the Stack area draws of one collection): what was left out, stated

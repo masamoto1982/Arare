@@ -5,7 +5,7 @@
 // rather than receiving the engine's string. Nothing but this test stops the
 // two drifting, and a display is expected to be source: the empty Vector is
 // `[ ]`, because `[]` is a source error — a bracket must stand alone
-// (`spec/grammar.json`, `bracketMustStandAlone`).
+// (Ajisai's `spec/grammar.json`, `bracketMustStandAlone`).
 //
 // Every expectation below is a string captured from the engine by running the
 // named program through `ajisai run`, not one written by hand to match the
@@ -13,6 +13,7 @@
 
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 import {
+    describeQuantization,
     describeNilNode,
     describePointNode,
     formatValue,
@@ -521,7 +522,7 @@ describe('renderStack', () => {
     });
 
     // The engine hands over a long Vector cut to the elements drawn, with its
-    // real length in `truncated` (rust/src/agent/stack_view.rs).
+    // real length in `truncated` (Ajisai's rust/src/agent/stack_view.rs).
     const truncated = (length: number, overrides: Partial<NonNullable<Value['truncated']>> = {}): Value => ({
         ...vec(...Array.from({ length: MAX_RENDERED_ELEMENTS_PER_COLLECTION }, (_, i) => num(i))),
         truncated: { length, holdsNil: false, holdsRecord: false, digest: '0000000000000000', ...overrides }
@@ -557,5 +558,22 @@ describe('renderStack', () => {
         expect(nullity.title).toBe('0/0 · the point with no order: it absorbs every operation');
         expect(nodes[2]!.classes).not.toContain('stack-node-point');
         expect(nodes[2]!.title).toBe('');
+    });
+});
+
+// AR-VER-304: an Arare value's width, scale and budget, and a quote left on
+// the stack (AR-LLR-037).
+describe('Arare values', () => {
+    test('a number states its width and scale, and a value of the stack its budget', () => {
+        expect(describeQuantization({ ...num(21, 64), width: 8, scale: -6, budget: '1/192' }))
+            .toBe('int8 · scale 2^-6 · error budget ± 1/192');
+        expect(describeQuantization({ ...num(1, 0), width: 8, scale: 0, budget: null }))
+            .toBe('int8 · scale 2^0 · no error budget');
+        expect(describeQuantization({ ...vec(num(1)), budget: '0/1' })).toBe('error budget ± 0/1');
+        expect(describeQuantization(num(1))).toBeNull();
+    });
+
+    test('a quote no Word consumed is drawn as its source text', () => {
+        expect(formatValue({ type: 'block', value: '[ 2 MUL ]' }, 0)).toBe('[ 2 MUL ]');
     });
 });

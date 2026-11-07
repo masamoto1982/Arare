@@ -1,7 +1,7 @@
 // The Dictionary panel: the Core and User word sheets, their buttons, the
 // search filter, and deletion of a User word.
 
-import type { AjisaiInterpreter, CoreWordInfo, ExecuteResult, UserWordInfo } from '../wasm-interpreter-types';
+import type { PlaygroundEngine, CoreWordInfo, ExecuteResult, UserWordInfo } from '../wasm-interpreter-types';
 import { isFailure, toError } from './interpreter-execution-utils';
 
 // ── Element builders ────────────────────────────────────────────────────────
@@ -151,12 +151,12 @@ export interface VocabularyManager {
 // The tooltip text for a User Word: what its author wrote for a reader
 // (`#:contract`), or its source when nothing was written. Empty when the
 // interpreter has neither.
-const lookupUserWordTooltip = (interpreter: AjisaiInterpreter, name: string): string =>
+const lookupUserWordTooltip = (interpreter: PlaygroundEngine, name: string): string =>
     interpreter.lookup_word_description(name)
     ?? interpreter.lookup_word_definition(name)
     ?? '';
 
-// DEL's refusal of a Word other Words still reference (spec/outcomes.json).
+// DEL's refusal of a Word other Words still reference (Ajisai's spec/outcomes.json).
 // Matched by category, never by the message, which is display text.
 const DEPENDENCY_DELETE_CATEGORY = 'definitionConflict';
 
@@ -165,7 +165,7 @@ const DEPENDENCY_DELETE_CATEGORY = 'definitionConflict';
 // the name it was handed on the stack, where the next Run picked it up and
 // saved it. A refusal is not a stack edit: the stack is put back as it was.
 export const deleteUserWord = async (
-    interpreter: AjisaiInterpreter,
+    interpreter: PlaygroundEngine,
     wordName: string
 ): Promise<ExecuteResult> => {
     const stackBefore = interpreter.snapshot_stack();
@@ -195,7 +195,7 @@ const createDeleteContextMenuElement = (onDelete: () => void): HTMLDivElement =>
 };
 
 export const createVocabularyManager = (
-    interpreter: AjisaiInterpreter,
+    interpreter: PlaygroundEngine,
     elements: VocabularyElements,
     callbacks: VocabularyCallbacks
 ): VocabularyManager => {

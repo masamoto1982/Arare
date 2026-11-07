@@ -1,5 +1,5 @@
 {
-  "description": "Regression corpus for the Ajisai GUI source formatter (src/gui/code-formatter.ts). There is currently no second (e.g. Rust-side) implementation reading this file, so it pins that one module's behavior rather than cross-checking two implementations; its cases must be kept honest against the real tokenizer (rust/src/tokenizer.rs) by hand. `expected` is the content-level result (no trailing newline).",
+  "description": "Regression corpus for the Ajisai GUI source formatter (src/gui/code-formatter.ts). There is currently no second (e.g. Rust-side) implementation reading this file, so it pins that one module's behavior rather than cross-checking two implementations; its cases must be kept honest against the real tokenizer (Ajisai's rust/src/tokenizer.rs) by hand. `expected` is the content-level result (no trailing newline).",
   "cases": [
     { "name": "empty", "input": "", "expected": "" },
     { "name": "pad vector brackets", "input": "[1 2 3]", "expected": "[ 1 2 3 ]" },

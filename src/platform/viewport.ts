@@ -1,5 +1,5 @@
 // The one place the mobile breakpoint is written in TypeScript. It is device
-// tuning, not semantics (spec/gui-semantics.md: "the breakpoint at which the
+// tuning, not semantics (Ajisai's spec/gui-semantics.md: "the breakpoint at which the
 // layout switches ... is tuning"), and must agree with the `768px` media
 // queries in src/styles.
 

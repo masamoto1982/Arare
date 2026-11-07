@@ -53,7 +53,7 @@ const splitSign = (numerator: string): { readonly negative: boolean; readonly ma
 /**
  * Elements drawn from any one collection before the rest is summarized. The
  * engine hands the Stack area no more than this of any Vector
- * (`rust/src/agent/stack_view.rs`, `VIEW_ELEMENTS_PER_COLLECTION`), so it
+ * (Ajisai's `rust/src/agent/stack_view.rs`, `VIEW_ELEMENTS_PER_COLLECTION`), so it
  * may not grow past 100 without that growing too.
  */
 export const MAX_RENDERED_ELEMENTS_PER_COLLECTION = 100;
@@ -151,13 +151,13 @@ const formatPhraseElementAt = (item: Value, depth: number): string =>
     item.type === 'symbol' ? `[ ${String(item.value)} ] 0 GET` : formatElementAt(item, depth);
 
 // A Vector renders as source that rebuilds it, matching the engine's own
-// renderer (`rust/src/types/display.rs`): a bracket literal when every
+// renderer (Ajisai's `rust/src/types/display.rs`): a bracket literal when every
 // element has a literal, and otherwise — when it holds a Record, which has
 // no literal — its elements followed by `n COLLECT`, since inside `[ ]` the
 // Record's own phrase would be read as data.
 //
 // The empty Vector is `[ ]` and not `[]`: a bracket must stand alone
-// (`spec/grammar.json`, `bracketMustStandAlone`), so `[]` is a source error
+// (Ajisai's `spec/grammar.json`, `bracketMustStandAlone`), so `[]` is a source error
 // rather than an empty Vector.
 const formatVector = (value: unknown, depth: number): string => {
     if (!Array.isArray(value) || value.length === 0) return '[ ]';
@@ -179,10 +179,10 @@ const createElisionSpan = (elided: number): HTMLSpanElement => {
 };
 
 // An irrational's normal form Σ c·√r written exactly as the engine writes it
-// (`rust/src/types/display.rs::render_algebraic_terms`): one spaceless token,
+// (Ajisai's `rust/src/types/display.rs::render_algebraic_terms`): one spaceless token,
 // terms in the normal form's order, `sqrt(r)` for a unit coefficient,
 // `n/d*sqrt(r)` otherwise, and the rational term as `n/d` — the canonical
-// display the Stack surface is required to show (spec/gui-semantics.md).
+// display the Stack surface is required to show (Ajisai's spec/gui-semantics.md).
 const formatNormalForm = (terms: ReadonlyArray<ExactTerm> | undefined): string | null => {
     if (!terms || terms.length === 0) return null;
     let out = '';
@@ -278,6 +278,7 @@ const renderStackValueNode = (item: Value, depth: number, budget: RenderBudget):
         const children = item.value as Value[];
         const length = item.truncated?.length ?? children.length;
         if (holdsRecord(item)) return renderPhraseNode(node, children, length, depth, budget);
+        annotateQuantization(node, item);
         return renderCollectionNode(node, '[', ']', children, length, depth, budget);
     }
 
@@ -301,7 +302,29 @@ const renderStackValueNode = (item: Value, depth: number, budget: RenderBudget):
     node.textContent = formatValue(item, depth);
     if (item.type === 'nil') annotateNilNode(node, item);
     if (item.type === 'number') annotatePointNode(node, item);
+    annotateQuantization(node, item);
     return node;
+};
+
+// An Arare number carries its width and scale, and a value of the stack its
+// error budget (spec/host-protocol.schema.json; AR-LLR-037). The text stays
+// the exact rational the engine writes; the rest is the tooltip, after
+// whatever a point already says. Exported for `output-display-renderer.test.ts`.
+export const describeQuantization = (item: Value): string | null => {
+    const parts: string[] = [];
+    if (typeof item.width === 'number' && typeof item.scale === 'number') {
+        parts.push(`int${item.width} · scale 2^${item.scale}`);
+    }
+    if (item.budget !== undefined) {
+        parts.push(item.budget === null ? 'no error budget' : `error budget ± ${item.budget}`);
+    }
+    return parts.length > 0 ? parts.join(' · ') : null;
+};
+
+const annotateQuantization = (node: HTMLElement, item: Value): void => {
+    const label = describeQuantization(item);
+    if (label === null) return;
+    node.title = node.title ? `${node.title}\n${label}` : label;
 };
 
 // A NIL's reason is its observable content (LANG.VALUES.NIL): `-1 SQRT` is a
@@ -369,7 +392,7 @@ const formatNumberNode = (item: Value): string => {
 };
 
 // Exported for `output-display-renderer.test.ts`, which pins these strings
-// against the ones `rust/src/types/display.rs` produces. The two renderers
+// against the ones Ajisai's `rust/src/types/display.rs` produces. The two renderers
 // are separate implementations of one display, and nothing but that test
 // stops them drifting.
 export const formatValue = (item: Value, depth: number): string => {
@@ -390,6 +413,9 @@ export const formatValue = (item: Value, depth: number): string => {
             return formatRecord(item.value, depth);
         case 'nil':
             return 'NIL';
+        case 'block':
+            // Arare's quote no Word consumed, as its source text.
+            return String(item.value);
         default:
             return JSON.stringify(item.value);
     }
@@ -398,7 +424,7 @@ export const formatValue = (item: Value, depth: number): string => {
 // A Record (LANG.RECORDS.STRUCTURE) crosses the protocol as two aligned
 // arrays of nodes, and renders as the phrase that builds it — its keys and
 // its values, each as a Vector, then `RECORD` — which is the same display the
-// engine's own stack rendering produces (`rust/src/types/display.rs`) and
+// engine's own stack rendering produces (Ajisai's `rust/src/types/display.rs`) and
 // reads back as the same value. The empty Record is `[ ] [ ] RECORD`, which
 // needs no case of its own.
 //
@@ -639,13 +665,13 @@ export const valueToLatex = (item: Value): string | null => {
     }
 };
 
-// Math view (Ajisai's docs/dev/gui-current-design-memory.md, at the commit
+// Math view (Ajisai's Ajisai's docs/dev/gui-current-design-memory.md, at the commit
 // UPSTREAM.md names): an alternate KaTeX
 // rendering of stack values, derived from the structured protocol form.
 // Presentation only — the canonical display strings stay untouched and
 // remain the conformance observation; the toggle swaps the view, never
 // the value. Output text is never scanned for delimiters.
-const MATH_VIEW_STORAGE_KEY = 'ajisai-stack-math-view';
+const MATH_VIEW_STORAGE_KEY = 'arare-stack-math-view';
 
 // The canonical protocol strings are the standard rendering; Math view is
 // an opt-in alternate so Ajisai's observable surface never depends on

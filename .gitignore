@@ -29,3 +29,6 @@ Thumbs.db
 # その他
 *.log
 
+
+# Arare engine for the Playground, built by scripts/build-engine.mjs (ADR-0013)
+src/wasm/arare/

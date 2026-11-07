@@ -92,6 +92,13 @@ jobs:
       - name: Playground colours meet WCAG contrast
         run: npm run check:contrast
 
+      # The Playground's TypeScript suites run Arare's real engine command
+      # (ADR-0013), so it is built for wasm32-wasip1 before them.
+      - name: Build the Playground's engine
+        run: |
+          (cd rust && rustup target add wasm32-wasip1)
+          npm run build:engine
+
       - name: TypeScript check
         run: npm run check
 

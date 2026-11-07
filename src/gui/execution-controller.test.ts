@@ -10,7 +10,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
-    AjisaiInterpreter,
+    PlaygroundEngine,
     ExecuteResult,
     UserWord,
     Value
@@ -41,7 +41,7 @@ vi.mock('../workers/execution-worker-manager', () => ({
 const createFakeInterpreter = () => {
     let stack: Value[] = [];
     const words = new Map<string, string>();
-    const fake: Partial<AjisaiInterpreter> = {
+    const fake: Partial<PlaygroundEngine> = {
         collect_stack: () => stack,
         collect_user_words_info: () =>
             [...words.keys()].map(name => [name, false] as [string, boolean]),
@@ -63,7 +63,7 @@ const createFakeInterpreter = () => {
             name === 'DIV' ? { kind: 'documentation', text: 'DIV — divide values' } : null
     };
     return {
-        interpreter: fake as AjisaiInterpreter,
+        interpreter: fake as PlaygroundEngine,
         setStack: (next: Value[]) => { stack = next; },
         words
     };

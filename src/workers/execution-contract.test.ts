@@ -4,7 +4,7 @@
 
 import { describe, expect, test, vi } from 'vitest';
 import { applyInterpreterSnapshot } from './execution-contract';
-import type { AjisaiInterpreter } from '../wasm-interpreter-types';
+import type { PlaygroundEngine } from '../wasm-interpreter-types';
 
 const makeMock = () => {
     const fns = {
@@ -13,7 +13,7 @@ const makeMock = () => {
         restore_user_words: vi.fn(() => []),
         set_max_execution_steps: vi.fn(),
     };
-    return { fns, interpreter: fns as unknown as AjisaiInterpreter };
+    return { fns, interpreter: fns as unknown as PlaygroundEngine };
 };
 
 describe('applyInterpreterSnapshot robustness', () => {

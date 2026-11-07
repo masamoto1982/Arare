@@ -1,12 +1,17 @@
 [package]
 name = "arare-wasm"
-description = "Arare's wasm-bindgen boundary for the Playground"
+description = "Arare's engine boundary for the Playground: a wasm32-wasip1 command speaking JSON (ADR-0013)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
 rust-version.workspace = true
 publish = false
+
+[dependencies]
+arare-front = { path = "../arare-front" }
+arare-interp = { path = "../arare-interp" }
+arare-budget = { path = "../arare-budget" }
 
 [lints]
 workspace = true

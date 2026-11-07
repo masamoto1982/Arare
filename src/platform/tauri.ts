@@ -1,4 +1,4 @@
-// The Tauri host: one JSON document in the app-data directory for
+// The Tauri host (AR-LLR-035): one JSON document in the app-data directory for
 // persistence, and the native dialogs and filesystem for file I/O.
 
 import type {
@@ -9,7 +9,7 @@ import type {
     SaveResult,
     StoredInterpreterState
 } from './index';
-import { WEB_PERSISTENCE, formatJsonDocument, readInterpreterStateSnapshot } from './web';
+import { WEB_PERSISTENCE, formatJsonDocument, readInterpreterStateSnapshot, readPersistenceScope } from './web';
 
 // Resolved only at runtime inside the Tauri WebView; `@vite-ignore` keeps the
 // web build from trying to bundle the Tauri SDK.
@@ -23,7 +23,8 @@ interface StoredData {
     interpreterState: StoredInterpreterState | null;
 }
 
-const STATE_FILE = 'ajisai-state.json';
+// One file per engine, as the web store keeps one record per engine.
+const stateFile = (): string => `arare-playground-${readPersistenceScope()}.json`;
 
 const cloneEmptyData = (): StoredData => ({
     interpreterState: null
@@ -32,7 +33,7 @@ const cloneEmptyData = (): StoredData => ({
 async function readStoredData(): Promise<StoredData> {
     const { readTextFile, exists, BaseDirectory } = await dynamicImport('@tauri-apps/plugin-fs');
 
-    const fileExists = await exists(STATE_FILE, { baseDir: BaseDirectory.AppData });
+    const fileExists = await exists(stateFile(), { baseDir: BaseDirectory.AppData });
     if (!fileExists) {
         return cloneEmptyData();
     }
@@ -40,12 +41,12 @@ async function readStoredData(): Promise<StoredData> {
     // A file that is not a JSON object — truncated, or holding `null` — is no
     // saved state, as an unreadable document is on the web, rather than an
     // error that starts the session without the Example Words.
-    const raw = await readTextFile(STATE_FILE, { baseDir: BaseDirectory.AppData });
+    const raw = await readTextFile(stateFile(), { baseDir: BaseDirectory.AppData });
     let parsed: unknown;
     try {
         parsed = JSON.parse(raw);
     } catch (error) {
-        console.warn(`${STATE_FILE} is not JSON; starting without saved state:`, error);
+        console.warn(`${stateFile()} is not JSON; starting without saved state:`, error);
         return cloneEmptyData();
     }
     if (typeof parsed !== 'object' || parsed === null) {
@@ -60,7 +61,7 @@ async function readStoredData(): Promise<StoredData> {
 async function writeStoredData(data: StoredData): Promise<void> {
     const { writeTextFile, BaseDirectory } = await dynamicImport('@tauri-apps/plugin-fs');
 
-    await writeTextFile(STATE_FILE, formatJsonDocument(data), { baseDir: BaseDirectory.AppData });
+    await writeTextFile(stateFile(), formatJsonDocument(data), { baseDir: BaseDirectory.AppData });
 }
 
 export class TauriPersistence implements Persistence {
@@ -73,7 +74,7 @@ export class TauriPersistence implements Persistence {
 
         const { exists, BaseDirectory } = await dynamicImport('@tauri-apps/plugin-fs');
 
-        const alreadyExists = await exists(STATE_FILE, { baseDir: BaseDirectory.AppData });
+        const alreadyExists = await exists(stateFile(), { baseDir: BaseDirectory.AppData });
         if (!alreadyExists) {
             await writeStoredData(cloneEmptyData());
             // A first launch inherits whatever the web playground had stored in

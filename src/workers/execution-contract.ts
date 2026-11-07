@@ -8,7 +8,7 @@
 // should have to construct a worker pool, and none of which runs in a browser
 // during the tests.
 
-import type { AjisaiInterpreter, UserWord } from '../wasm-interpreter-types';
+import type { PlaygroundEngine, UserWord } from '../wasm-interpreter-types';
 
 // Per-task wall-clock cap on worker execution. The recursion guard returns an
 // AjisaiError immediately for blown-stack programs; this is the second line of
@@ -68,7 +68,7 @@ export interface InterpreterSnapshot {
 }
 
 export const applyInterpreterSnapshot = (
-    interpreter: AjisaiInterpreter,
+    interpreter: PlaygroundEngine,
     snapshot?: Partial<InterpreterSnapshot> | null
 ): void => {
     // A session reset reinitializes the session but keeps the cross-reset
