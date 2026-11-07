@@ -1,5 +1,5 @@
-//! Lexer and parser (AR-LLR-011, AR-LLR-012, refining AR-HLR-018 and
-//! AR-HLR-021).
+//! Lexer and parser (AR-LLR-011, AR-LLR-012 and AR-LLR-031, refining
+//! AR-HLR-018, AR-HLR-021 and AR-HLR-034).
 //!
 //! Quality level QL-B (docs/quality/PLAN_OVERVIEW.md). Source text becomes a
 //! [`Program`]: integer literals, Words, quotes, and quantized literals that
@@ -16,7 +16,7 @@ mod lexer;
 mod parser;
 
 pub use lexer::{lex, Token, TokenKind};
-pub use parser::{is_name, parse, Item, Program, Word};
+pub use parser::{is_name, parse, parse_spanned, Item, Program, Span, Word};
 
 /// Why the front end refused a source text, and where.
 #[derive(Clone, PartialEq, Eq, Debug)]

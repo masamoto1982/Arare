@@ -200,13 +200,15 @@ fn sequence(
     at: &mut usize,
     top: bool,
     texts: &[&str],
+    mut spans: Option<&mut Vec<(usize, usize)>>,
 ) -> Result<Vec<Item>, FrontError> {
     let mut items = Vec::new();
     while *at < tokens.len() {
+        let first = *at;
         let t = &tokens[*at];
         *at += 1;
         match t.kind {
-            TokenKind::Open => items.push(Item::Quote(sequence(tokens, at, false, texts)?)),
+            TokenKind::Open => items.push(Item::Quote(sequence(tokens, at, false, texts, None)?)),
             TokenKind::Close if top => return Err(error(t, FrontErrorKind::UnexpectedClose)),
             TokenKind::Close => return Ok(items),
             TokenKind::Integer => {
@@ -230,6 +232,9 @@ fn sequence(
             }
             TokenKind::Text if is_name(&t.text) => items.push(Item::Text(t.text.clone())),
             TokenKind::Text => return Err(error(t, FrontErrorKind::BadName(t.text.clone()))),
+        }
+        if let Some(spans) = spans.as_deref_mut() {
+            spans.push((first, *at));
         }
     }
     if top {
@@ -266,6 +271,32 @@ fn quantized(tokens: &[Token], at: &mut usize, t: &Token) -> Result<Item, FrontE
 
 /// Parse a source text.
 pub fn parse(source: &str) -> Result<Program, FrontError> {
+    parse_spanned(source).map(|(program, _)| program)
+}
+
+/// Where a top-level item is written (AR-LLR-031): from the line and column
+/// of its first character to those just past its last, 1-based, columns
+/// counted in characters. A quote spans its brackets and a quantized literal
+/// its `<width> <exponent> QUANTIZE`.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct Span {
+    pub line: usize,
+    pub column: usize,
+    pub end_line: usize,
+    pub end_column: usize,
+}
+
+/// The column just past a token: a text token also spans its quotes. Only an
+/// item that parsed has a span, and an unclosed text never parses, so every
+/// text token here is closed.
+fn end_column(t: &Token) -> usize {
+    let quotes = if t.kind == TokenKind::Text { 2 } else { 0 };
+    t.column + t.text.chars().count() + quotes
+}
+
+/// Parse a source text, and say where each top-level item is written, one
+/// span per item in order (AR-LLR-031): what the Playground steps through.
+pub fn parse_spanned(source: &str) -> Result<(Program, Vec<Span>), FrontError> {
     let tokens = lex(source);
     let texts: Vec<&str> = tokens
         .iter()
@@ -273,7 +304,19 @@ pub fn parse(source: &str) -> Result<Program, FrontError> {
         .map(|t| t.text.as_str())
         .collect();
     let mut at = 0;
-    Ok(Program {
-        items: sequence(&tokens, &mut at, true, &texts)?,
-    })
+    let mut ranges = Vec::new();
+    let items = sequence(&tokens, &mut at, true, &texts, Some(&mut ranges))?;
+    let spans = ranges
+        .into_iter()
+        .map(|(first, end)| {
+            let (a, b) = (&tokens[first], &tokens[end - 1]);
+            Span {
+                line: a.line,
+                column: a.column,
+                end_line: b.line,
+                end_column: end_column(b),
+            }
+        })
+        .collect();
+    Ok((Program { items }, spans))
 }
