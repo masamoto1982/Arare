@@ -1,4 +1,4 @@
-import type { AjisaiInterpreter } from '../wasm-interpreter-types';
+import type { PlaygroundEngine } from '../wasm-interpreter-types';
 import { createDisplay, type Display } from './output-display-renderer';
 import { createVocabularyManager, type VocabularyManager } from './vocabulary-state-controller';
 import { createEditor, createEditorHistory, type Editor } from './code-input-editor';
@@ -27,6 +27,13 @@ import {
 } from './gui-layout-state';
 import { trimSource } from './source-text';
 import { syncEditorHintScroll } from './editor-hint';
+import type { StepToken } from './step-executor';
+import { createExecutionModeSwitch } from './execution-mode';
+import { buildComparisonView, renderComparisonView } from './oracle-panel';
+import { ArareEngine } from '../engine/arare-engine';
+import { runOracle } from '../engine/ajisai-oracle';
+import type { EngineDescriptor } from '../engine/registry';
+import { setPersistenceScope } from '../platform/web';
 
 // ── The page's elements ─────────────────────────────────────────────────────
 
@@ -198,6 +205,18 @@ function bindInteractionEvents(context: GuiEventBindingContext): void {
         executionController.executeCode(source);
     };
 
+    // Run or Step, as the switch says (AR-LLR-036): the Execute button and
+    // the touch gesture follow it; Shift+Enter and Ctrl+Enter keep their own.
+    const modeSwitch = createExecutionModeSwitch(
+        {
+            runRadio: requireElement('#exec-mode-run', HTMLButtonElement),
+            stepRadio: requireElement('#exec-mode-step', HTMLButtonElement),
+            executeButton: requireElement('#execute-btn', HTMLButtonElement)
+        },
+        { run: runEditorCode, step: () => void executionController.executeStep() },
+        typeof localStorage === 'undefined' ? null : localStorage
+    );
+
     // Ctrl+Up / Ctrl+Down walk the session's submitted programs back into the
     // editor. The plain arrows are left alone — they are how you move the caret
     // through a multi-line program, and the suggestion panel already uses them
@@ -253,7 +272,7 @@ function bindInteractionEvents(context: GuiEventBindingContext): void {
     });
 
     // Triple-tap the editor to Run — on mobile the one route, which the Input
-    // surface's own text names (spec/gui-semantics.md, rule 4). A gesture that
+    // surface's own text names (Ajisai's spec/gui-semantics.md, rule 4). A gesture that
     // shares its shape with the OS's own paragraph-select must therefore be
     // deliberate, so a tap here is a touch that went down and came up in the
     // same place, on its own: the end of a drag-to-select and one release out
@@ -302,10 +321,11 @@ function bindInteractionEvents(context: GuiEventBindingContext): void {
                 const { selectionEnd } = elements.codeInput;
                 elements.codeInput.setSelectionRange(selectionEnd, selectionEnd);
                 elements.codeInput.blur();
-                // Run; the post-execution auto-navigation (applyExecutionAreaState)
-                // chooses the destination surface from what actually changed, so
-                // we deliberately do not force a switch to Stack here.
-                runEditorCode();
+                // Run or step, as the switch says; the post-execution
+                // auto-navigation (applyExecutionAreaState) chooses the
+                // destination surface from what actually changed, so we
+                // deliberately do not force a switch to Stack here.
+                modeSwitch.execute();
             }
         }, { passive: true });
     }
@@ -385,11 +405,21 @@ export interface GUI {
     readonly init: () => Promise<void>;
 }
 
-export const createGUI = (interpreter: AjisaiInterpreter): GUI => {
+export const createGUI = (interpreter: PlaygroundEngine, engine: EngineDescriptor): GUI => {
     const init = async (): Promise<void> => {
         console.log('[GUI] Initializing GUI...');
 
         const elements = cacheElements();
+        // Each engine keeps its own saved session (AR-LLR-035).
+        setPersistenceScope(engine.kind);
+        // An engine without User Words has no User sheet, and nothing to
+        // export or import.
+        if (!engine.userWords) {
+            elements.dictionarySheetSelect.querySelector('option[value="user"]')?.remove();
+        }
+        const oraclePanel = requireElement('#oracle-panel', HTMLElement);
+        const oracleDisplay = requireElement('#oracle-display', HTMLElement);
+        oraclePanel.hidden = !engine.budgets;
         const layoutState = createLayoutState();
         const display = createDisplay(elements);
         display.init();
@@ -445,8 +475,29 @@ export const createGUI = (interpreter: AjisaiInterpreter): GUI => {
         // drawn from the interpreter; a run passes the view it has already
         // read back and what it changed, so only the changed panel is rebuilt
         // and the stack is not collected a second time for the drawing.
+        // The budget panel and Ajisai's answer (AR-LLR-037). Ajisai answers
+        // asynchronously; an answer that arrives after a newer stack is
+        // dropped, so the panel never pairs one stack with another's oracle.
+        let oracleTicket = 0;
+        const refreshOraclePanel = (): void => {
+            if (!engine.budgets || !(interpreter instanceof ArareEngine)) return;
+            const ticket = ++oracleTicket;
+            const stack = interpreter.collect_stack();
+            const report = interpreter.budget_report();
+            const programs = interpreter.session_programs();
+            if (programs.length === 0) {
+                renderComparisonView(oracleDisplay, buildComparisonView([], null, { ok: true, stack: [] }));
+                return;
+            }
+            void runOracle(programs).then((answer) => {
+                if (ticket !== oracleTicket) return;
+                renderComparisonView(oracleDisplay, buildComparisonView(stack, report, answer));
+            });
+        };
+
         const updateAllDisplays = (after?: ExecutionStateView, changes?: ExecutionSurfaceChanges): void => {
             const redrawStack = changes?.stackChanged ?? true;
+            if (redrawStack) refreshOraclePanel();
             const redrawDictionary = changes?.dictionaryChanged ?? true;
             if (redrawDictionary) autocompleteWordsCache = null;
             try {
@@ -463,7 +514,8 @@ export const createGUI = (interpreter: AjisaiInterpreter): GUI => {
             updateDisplays: updateAllDisplays,
             showInfo,
             readActiveDictionarySheet: () => sheetSelect.value,
-            runExclusive: (task) => executionController.runExclusive(task)
+            runExclusive: (task) => executionController.runExclusive(task),
+            ...(engine.userWords ? {} : { exampleWords: [] })
         });
         await persistence.init();
 
@@ -502,6 +554,13 @@ export const createGUI = (interpreter: AjisaiInterpreter): GUI => {
             }, RUN_STATUS_DELAY_MS);
         };
 
+        // Step mode's pieces, from the engine where it splits them itself.
+        const splitSteps = (code: string): StepToken[] | null => {
+            const split = interpreter.step_pieces!(code);
+            if (!split.ok) return null;
+            return split.pieces.map(({ start, end }) => ({ text: code.slice(start, end), start, end }));
+        };
+
         const executionController = createExecutionController(interpreter, {
             // Step mode (the sole consumer of this callback) splits the
             // extracted source on whitespace and feeds each piece to the
@@ -524,14 +583,16 @@ export const createGUI = (interpreter: AjisaiInterpreter): GUI => {
             fullReset: () => persistence.fullReset(),
             updateView: (mode) => layoutController.setArea(mode),
             updateAfterExecution: (changes) => applyExecutionAreaState(layoutDeps, changes),
-            showRunStatus
+            showRunStatus,
+            namesAcrossSteps: engine.namesAcrossSteps,
+            ...(interpreter.step_pieces ? { splitSteps } : {})
         });
 
         // Clearing the stack keeps the dictionary — that is what separates it
         // from Reset — so it is the interpreter's `clear_stack` and nothing
         // else, followed by a redraw and a save. One definition for both
         // routes to it: the Stack area's `×` and `Ctrl+Alt+S`. It has no typed
-        // spelling (spec/gui-semantics.md, "Operations without a typed spelling").
+        // spelling (Ajisai's spec/gui-semantics.md, "Operations without a typed spelling").
         // Pressed during a run, it clears the stack that run leaves.
         const clearStack = (): void => {
             void executionController.runExclusive(() => {

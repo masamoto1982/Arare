@@ -51,11 +51,23 @@ const withObjectStore = <T>(
 // was created, cleared, exported and migrated for years without anything
 // ever writing a row to it; version 5 drops it.
 const STATE_STORE = 'interpreter_state';
-const STATE_KEY = 'interpreter_state';
+// One record per engine (AR-LLR-035): each engine's snapshot is its own
+// format, so an Arare session and an Ajisai session never read each other's.
+// The scope is the page's engine, set once at startup (setPersistenceScope).
+let stateScope = 'arare';
+const stateKey = (): string => `interpreter_state:${stateScope}`;
+
+/** Which engine's session the stores read and write (src/engine/registry.ts). */
+export const setPersistenceScope = (scope: string): void => {
+    stateScope = scope;
+};
+
+/** The scope set by setPersistenceScope. */
+export const readPersistenceScope = (): string => stateScope;
 const RETIRED_TABLES_STORE = 'tables';
 
 class WebPersistence implements Persistence {
-    private dbName = 'AjisaiDB';
+    private dbName = 'ArarePlayground';
     private version = 5;
     private db: IDBDatabase | null = null;
     private openPromise: Promise<IDBDatabase> | null = null;
@@ -109,7 +121,7 @@ class WebPersistence implements Persistence {
 
         return withObjectStore(this.db!, STATE_STORE, 'readwrite', async store => {
             const stateData: StoredInterpreterState = {
-                key: STATE_KEY,
+                key: stateKey(),
                 ...state,
                 updatedAt: new Date().toISOString()
             };
@@ -133,7 +145,7 @@ class WebPersistence implements Persistence {
         if (!this.db) await this.open();
 
         return withObjectStore(this.db!, STATE_STORE, 'readonly', async store =>
-            ((await promisifyRequest(store.get(STATE_KEY))) as StoredInterpreterState | undefined) ?? null
+            ((await promisifyRequest(store.get(stateKey()))) as StoredInterpreterState | undefined) ?? null
         );
     }
 }

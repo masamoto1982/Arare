@@ -17,7 +17,7 @@ import {
     summarizeImport,
     EXAMPLE_USER_WORDS
 } from './interpreter-state-persistence';
-import type { AjisaiInterpreter, UserWord } from '../wasm-interpreter-types';
+import type { PlaygroundEngine, UserWord } from '../wasm-interpreter-types';
 
 describe('parseImportDocument robustness', () => {
     const malformed = [
@@ -134,14 +134,14 @@ describe('normalizeWordEntry', () => {
 
 // `createExportData` does not filter: every User Word it is given comes out.
 describe('createExportData', () => {
-    const fakeInterpreter = (words: string[]): AjisaiInterpreter => ({
+    const fakeInterpreter = (words: string[]): PlaygroundEngine => ({
         collect_user_words_info: () =>
             words.map(name => [name, false] as [string, boolean]),
         collect_word_identities: () =>
             words.map(name => [name, `id-${name}`] as [string, string]),
         lookup_word_definition: (name: string) => `[ '${name}' ]`,
         lookup_word_description: () => null,
-    } as unknown as AjisaiInterpreter);
+    } as unknown as PlaygroundEngine);
 
     test('exports every user word', () => {
         const data = createExportData(fakeInterpreter(['ALPHA', 'BETA']));
@@ -195,7 +195,7 @@ const STRUCTURAL_TOKENS = ['[', ']'];
 // spellings of the arithmetic and comparison Words, all retired.
 const RETIRED_SYMBOLS = [',,', '<=', '>=', '<>', '&', '!', '..', '~', '+', '-', '*', '/', '%', '=', '<', '>', '?', '^'];
 
-// The canonical Word-name grammar (spec/words.schema.json `name`).
+// The canonical Word-name grammar (Ajisai's spec/words.schema.json `name`).
 const WORD_NAME = /^(?:[A-Z][A-Z0-9@?-]*(?:@[A-Z][A-Z0-9@?-]*)?|>[A-Z][A-Z0-9@?-]*)$/;
 // Integers, fractions and decimals; digits are required on both sides of a point.
 const NUMBER_LITERAL = /^-?\d+(?:\/\d+|\.\d+)?$/;

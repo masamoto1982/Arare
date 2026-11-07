@@ -2,7 +2,7 @@
 // needs it, and the formatter that tidies source into its canonical form.
 //
 // The scanner is the one behind the formatter and step mode, mirroring
-// rust/src/tokenizer.rs so the two never disagree with each other or with it.
+// Ajisai's rust/src/tokenizer.rs so the two never disagree with each other or with it.
 //
 // Whitespace is the sole delimiter. At a fresh atom position (after whitespace
 // or at the start of the source):
@@ -32,7 +32,7 @@ export interface Atom {
     readonly closed: boolean;
 }
 
-// The whitespace class of spec/grammar.json (characterClasses.whitespace):
+// The whitespace class of Ajisai's spec/grammar.json (characterClasses.whitespace):
 // Unicode White_Space, enumerated. ECMAScript's `\s` is not that class — it
 // counts U+FEFF as whitespace, which the grammar makes an ordinary name
 // character (a byte-order mark glues to the first word), and leaves out U+0085,
@@ -149,8 +149,8 @@ export const scanAtoms = (source: string): Atom[] => {
 
 const INDENT_UNIT = '  ';
 
-// `[` and `]` are the one delimiter pair of spec/grammar.json, and like every
-// other word they must stand alone: the tokenizer (rust/src/tokenizer.rs)
+// `[` and `]` are the one delimiter pair of Ajisai's spec/grammar.json, and like every
+// other word they must stand alone: the tokenizer (Ajisai's rust/src/tokenizer.rs)
 // rejects a bracket glued to adjacent text rather than splitting it off. The
 // formatter supplies that whitespace proactively, so `[1 2 3]` becomes valid,
 // canonical source instead of a tokenizer error. No other character is split
@@ -241,7 +241,7 @@ const renderLines = (lines: string[][]): string => {
 
 // Format Ajisai source into its canonical written form. Returns the input
 // unchanged when it cannot be reformatted without risking a semantic change.
-export const formatAjisaiSource = (source: string): string => {
+export const formatSource = (source: string): string => {
     const lines = scanLines(source);
     if (lines === null) return source;
     return renderLines(lines);

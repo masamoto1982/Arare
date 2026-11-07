@@ -1,5 +1,5 @@
 // The GUI's one scanner of Ajisai source, checked against the rules of
-// rust/src/tokenizer.rs: whitespace is the sole delimiter, and `#` and `'` are
+// Ajisai's rust/src/tokenizer.rs: whitespace is the sole delimiter, and `#` and `'` are
 // special only at the start of an atom.
 
 import { describe, expect, test } from 'vitest';
@@ -9,7 +9,7 @@ import {
     scanAtoms,
     trimSource,
     trimSourceEnd,
-    formatAjisaiSource
+    formatSource
 } from './source-text';
 import corpus from '../../tests/formatter-corpus.json';
 
@@ -71,7 +71,7 @@ describe('scanAtoms', () => {
     });
 });
 
-// spec/grammar.json, characterClasses.whitespace: Unicode White_Space,
+// Ajisai's spec/grammar.json, characterClasses.whitespace: Unicode White_Space,
 // enumerated because host predicates disagree at the edges — ECMAScript's `\s`
 // counts U+FEFF as whitespace and U+0085 as not, and the grammar says the
 // opposite of both.
@@ -123,38 +123,38 @@ describe('trimSource', () => {
 // There is currently no second implementation reading it (no Rust-side
 // formatter exists in this repo), so it is not itself a cross-implementation
 // drift check; treat it as a regression corpus for this module only, and keep
-// its cases honest against the real tokenizer (rust/src/tokenizer.rs) by hand.
-describe('formatAjisaiSource shared corpus', () => {
+// its cases honest against the real tokenizer (Ajisai's rust/src/tokenizer.rs) by hand.
+describe('formatSource shared corpus', () => {
     for (const c of corpus.cases) {
         test(`corpus: ${c.name}`, () => {
-            expect(formatAjisaiSource(c.input)).toBe(c.expected);
+            expect(formatSource(c.input)).toBe(c.expected);
         });
     }
 });
 
-describe('formatAjisaiSource', () => {
+describe('formatSource', () => {
     test('returns empty string unchanged', () => {
-        expect(formatAjisaiSource('')).toBe('');
+        expect(formatSource('')).toBe('');
     });
 
     test('pads the inside of vector brackets', () => {
-        expect(formatAjisaiSource('[1 2 3]')).toBe('[ 1 2 3 ]');
+        expect(formatSource('[1 2 3]')).toBe('[ 1 2 3 ]');
     });
 
     test('separates nested brackets into standalone tokens', () => {
-        expect(formatAjisaiSource('[[1 2][3 4]]')).toBe('[ [ 1 2 ] [ 3 4 ] ]');
+        expect(formatSource('[[1 2][3 4]]')).toBe('[ [ 1 2 ] [ 3 4 ] ]');
     });
 
     test('collapses runs of spaces between tokens', () => {
-        expect(formatAjisaiSource('[ 1    2   3 ]')).toBe('[ 1 2 3 ]');
+        expect(formatSource('[ 1    2   3 ]')).toBe('[ 1 2 3 ]');
     });
 
     test('trims leading and trailing whitespace on a line', () => {
-        expect(formatAjisaiSource('   [ 1 ] PRINT   ')).toBe('[ 1 ] PRINT');
+        expect(formatSource('   [ 1 ] PRINT   ')).toBe('[ 1 ] PRINT');
     });
 
     test('splits brackets that are glued to adjacent words', () => {
-        expect(formatAjisaiSource('[1 2 3]PRINT')).toBe('[ 1 2 3 ] PRINT');
+        expect(formatSource('[1 2 3]PRINT')).toBe('[ 1 2 3 ] PRINT');
     });
 
     test('does not split a glued caret or bar out of a word', () => {
@@ -162,24 +162,24 @@ describe('formatAjisaiSource', () => {
         // token only at whitespace or a bracket, same as `~`), so forcing
         // spaces around one glued to a name would turn one Symbol token into
         // three — exactly the meaning change this formatter must not make.
-        expect(formatAjisaiSource('a^c')).toBe('a^c');
-        expect(formatAjisaiSource('a|c')).toBe('a|c');
-        expect(formatAjisaiSource('a~b')).toBe('a~b');
+        expect(formatSource('a^c')).toBe('a^c');
+        expect(formatSource('a|c')).toBe('a|c');
+        expect(formatSource('a~b')).toBe('a~b');
     });
 
     test('keeps a hash or quote glued to a word as part of the word', () => {
         // Only at the start of an atom do `#` and `'` start a comment or a
-        // string (rust/src/tokenizer.rs); inside a word they are name
+        // string (Ajisai's rust/src/tokenizer.rs); inside a word they are name
         // characters, and splitting them out would change the program.
-        expect(formatAjisaiSource('a#b 1')).toBe('a#b 1');
-        expect(formatAjisaiSource("a'b c")).toBe("a'b c");
+        expect(formatSource('a#b 1')).toBe('a#b 1');
+        expect(formatSource("a'b c")).toBe("a'b c");
     });
 
     test('still pads an already-standalone bar between spaced tokens', () => {
         // Written with its own whitespace, `|` already scans as its own
         // token; the formatter just normalizes the spacing around it, same as
         // any other token-to-token gap.
-        expect(formatAjisaiSource('[ a   |   b ]')).toBe('[ a | b ]');
+        expect(formatSource('[ a   |   b ]')).toBe('[ a | b ]');
     });
 
     test('leaves a string not closed before a following > or = untouched', () => {
@@ -187,8 +187,8 @@ describe('formatAjisaiSource', () => {
         // before one does not close the string either; the real tokenizer
         // reports an unclosed literal for this input, and the formatter
         // refuses to reformat what it cannot safely rewrite.
-        expect(formatAjisaiSource("'foo'>bar")).toBe("'foo'>bar");
-        expect(formatAjisaiSource("'foo'=bar")).toBe("'foo'=bar");
+        expect(formatSource("'foo'>bar")).toBe("'foo'>bar");
+        expect(formatSource("'foo'=bar")).toBe("'foo'=bar");
     });
 
     test('leaves a string glued to a following bracket untouched', () => {
@@ -196,35 +196,35 @@ describe('formatAjisaiSource', () => {
         // string that runs right into it — the real tokenizer finds no real
         // close and reports an unclosed literal, and the formatter must
         // refuse to reformat rather than confidently splitting off `[1]`.
-        expect(formatAjisaiSource("'foo'[1]")).toBe("'foo'[1]");
+        expect(formatSource("'foo'[1]")).toBe("'foo'[1]");
     });
 
     test('is idempotent on already-canonical input', () => {
         const canonical = '[ [ 1 ] [ 2 ] ADD ] \'ADD12\' DEF';
-        expect(formatAjisaiSource(canonical)).toBe(canonical);
+        expect(formatSource(canonical)).toBe(canonical);
     });
 
     test('keeps the contents of a string literal verbatim', () => {
-        expect(formatAjisaiSource("[ 'a  b   c' ]")).toBe("[ 'a  b   c' ]");
+        expect(formatSource("[ 'a  b   c' ]")).toBe("[ 'a  b   c' ]");
     });
 
     test('does not pad brackets that live inside a string', () => {
-        expect(formatAjisaiSource("'[not code]'")).toBe("'[not code]'");
+        expect(formatSource("'[not code]'")).toBe("'[not code]'");
     });
 
     test('keeps comment text (including spacing) verbatim', () => {
-        expect(formatAjisaiSource('[ 1 ]   #   keep   spacing'))
+        expect(formatSource('[ 1 ]   #   keep   spacing'))
             .toBe('[ 1 ] #   keep   spacing');
     });
 
     test('preserves a comment-only line', () => {
-        expect(formatAjisaiSource('# ===== header ====='))
+        expect(formatSource('# ===== header ====='))
             .toBe('# ===== header =====');
     });
 
     test('preserves significant line breaks between statements', () => {
         const input = '[1]PRINT\n[2]PRINT';
-        expect(formatAjisaiSource(input)).toBe('[ 1 ] PRINT\n[ 2 ] PRINT');
+        expect(formatSource(input)).toBe('[ 1 ] PRINT\n[ 2 ] PRINT');
     });
 
     test('indents the body of a multi-line block and dedents its close', () => {
@@ -242,64 +242,64 @@ describe('formatAjisaiSource', () => {
             '  SELECT',
             "] 'SIZE' DEF",
         ].join('\n');
-        expect(formatAjisaiSource(input)).toBe(expected);
+        expect(formatSource(input)).toBe(expected);
     });
 
     test('indents nested multi-line blocks by depth', () => {
         const input = '[\n[\n[ 1 ]\n]\n]';
         const expected = '[\n  [\n    [ 1 ]\n  ]\n]';
-        expect(formatAjisaiSource(input)).toBe(expected);
+        expect(formatSource(input)).toBe(expected);
     });
 
     test('collapses multiple blank lines and trims surrounding blanks', () => {
         const input = '\n\n[ 1 ]\n\n\n[ 2 ]\n\n';
-        expect(formatAjisaiSource(input)).toBe('[ 1 ]\n\n[ 2 ]');
+        expect(formatSource(input)).toBe('[ 1 ]\n\n[ 2 ]');
     });
 
     test('leaves an unterminated string untouched', () => {
         const input = "[ 'oops ]";
-        expect(formatAjisaiSource(input)).toBe(input);
+        expect(formatSource(input)).toBe(input);
     });
 
     test('leaves a newline inside a string untouched', () => {
         const input = "'line one\nline two'";
-        expect(formatAjisaiSource(input)).toBe(input);
+        expect(formatSource(input)).toBe(input);
     });
 
     test('does not expand the ; modifier sugar', () => {
-        expect(formatAjisaiSource('[ 1 ] ;')).toBe('[ 1 ] ;');
+        expect(formatSource('[ 1 ] ;')).toBe('[ 1 ] ;');
     });
 
     test('keeps a two-character comparison spelling intact', () => {
         // `>` is not split, so `>=` survives as one token rather than becoming
         // `> =` (GT followed by EQ).
-        expect(formatAjisaiSource('[ 1 ] [ 3 ] >=')).toBe('[ 1 ] [ 3 ] >=');
-        expect(formatAjisaiSource('[ 1 ] [ 3 ] <>')).toBe('[ 1 ] [ 3 ] <>');
+        expect(formatSource('[ 1 ] [ 3 ] >=')).toBe('[ 1 ] [ 3 ] >=');
+        expect(formatSource('[ 1 ] [ 3 ] <>')).toBe('[ 1 ] [ 3 ] <>');
     });
 
     test('formatting is idempotent on a multi-line block', () => {
         const messy = "[\n[ [ 5 ]   GT ]\n] 'SIZE' DEF";
-        const once = formatAjisaiSource(messy);
-        expect(formatAjisaiSource(once)).toBe(once);
+        const once = formatSource(messy);
+        expect(formatSource(once)).toBe(once);
     });
 });
 
 // The formatter adds no line break of its own: line structure is purely the
 // author's, which is what makes the line-break rule of LANG.SOURCE.TEXT safe
 // to leave alone.
-describe('formatAjisaiSource line structure', () => {
+describe('formatSource line structure', () => {
     test('a branch written on one line stays on one line', () => {
         const source = "[ 'big' ] [ 'small' ] [ 5 ] [ 3 ] GT SELECT";
-        expect(formatAjisaiSource(source)).toBe(source);
+        expect(formatSource(source)).toBe(source);
     });
 
     test('a branch written across lines keeps every break', () => {
         const source = "[ 'big' ]\n[ 'small' ]\n[ 5 ] [ 3 ] GT\nSELECT";
-        expect(formatAjisaiSource(source)).toBe(source);
+        expect(formatSource(source)).toBe(source);
     });
 
     test('an ordinary vector is not rearranged', () => {
-        expect(formatAjisaiSource('[ 1 2 ] [ 1 MUL ] MAP [ 2 MUL ] MAP'))
+        expect(formatSource('[ 1 2 ] [ 1 MUL ] MAP [ 2 MUL ] MAP'))
             .toBe('[ 1 2 ] [ 1 MUL ] MAP [ 2 MUL ] MAP');
     });
 });
@@ -307,14 +307,14 @@ describe('formatAjisaiSource line structure', () => {
 
 // The formatter runs before every Run in the GUI, so where it disagrees with
 // the tokenizer about what whitespace is, the GUI runs a different program
-// from the CLI. spec/grammar.json enumerates the class: U+FEFF is a name
+// from the CLI. Ajisai's spec/grammar.json enumerates the class: U+FEFF is a name
 // character, U+0085 is whitespace; ECMAScript's `\s` says the opposite.
-describe('formatAjisaiSource whitespace class', () => {
+describe('formatSource whitespace class', () => {
     test('keeps a byte-order mark glued to the first word, as the tokenizer reads it', () => {
-        expect(formatAjisaiSource('﻿1 2 ADD')).toBe('﻿1 2 ADD');
+        expect(formatSource('﻿1 2 ADD')).toBe('﻿1 2 ADD');
     });
 
     test('separates words on U+0085 like any other whitespace', () => {
-        expect(formatAjisaiSource('1\u00852 ADD')).toBe('1 2 ADD');
+        expect(formatSource('1\u00852 ADD')).toBe('1 2 ADD');
     });
 });

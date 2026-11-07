@@ -49,7 +49,7 @@ describe('separateWord', () => {
 });
 
 // The word under the cursor, as Lookup (Ctrl+Alt+L) and the suggestion panel
-// read it. A name is any run of non-whitespace (spec/grammar.json), so Lookup
+// read it. A name is any run of non-whitespace (Ajisai's spec/grammar.json), so Lookup
 // must hand the dictionary the same name execution would.
 describe('extractToken', () => {
     const at = (text: string, cursor: number): ReturnType<typeof extractToken> =>

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Arare Playground - running the pinned Ajisai oracle until the Arare engine is connected">
+    <meta name="description" content="Arare Playground - run Arare beside the Ajisai oracle, with each value's error budget">
     <meta name="theme-color" content="#6b5b95">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
     <title>Arare</title>
@@ -21,7 +21,7 @@
             <img src="./images/QR_341216.png" alt="" class="splash-logo">
             <div class="splash-heading">
                 <p class="splash-title">Arare</p>
-                <span class="version">Playground · Ajisai oracle</span>
+                <span class="version">Playground</span>
             </div>
             <p class="splash-version-line" id="splash-version-line" hidden></p>
             <p class="splash-note" id="splash-host-profile" hidden></p>
@@ -39,10 +39,17 @@
                     </a>
                     <!-- Carries the full build and resource-limit detail in its
                          tooltip (the splash shows only a curated summary). -->
-                    <span class="version">Playground · Ajisai oracle</span>
+                    <span class="version">Playground</span>
                 </div>
             </div>
             <div class="header-actions">
+                <!-- Which engine runs (src/engine/registry.ts): Arare, or the
+                     Ajisai oracle on its own. Changing it reloads the page. -->
+                <label for="engine-select" class="visually-hidden">Engine</label>
+                <select id="engine-select" class="engine-select" title="Engine (reloads the Playground)">
+                    <option value="arare">Arare</option>
+                    <option value="ajisai">Ajisai (oracle)</option>
+                </select>
                 <!-- The MCP setup instructions live in one place (the server's
                      README); this links there rather than repeating them. -->
                 <a id="mcp-link" href="https://github.com/masamoto1982/Ajisai/blob/main/tools/mcp-server/README.md#install-and-connect" class="btn" target="_blank" rel="noopener noreferrer">
@@ -90,6 +97,16 @@
                         <option value="output">Output</option>
                     </select>
                 </div>
+                <!-- Run or Step (src/gui/execution-mode.ts): what the Execute
+                     button and the touch gesture do. Shift+Enter always runs and
+                     Ctrl+Enter always steps. -->
+                <div class="exec-toolbar" role="group" aria-label="Execution">
+                    <div class="exec-mode" role="radiogroup" aria-label="Execution mode">
+                        <button type="button" id="exec-mode-run" class="exec-mode-option" role="radio" aria-checked="true">Run</button>
+                        <button type="button" id="exec-mode-step" class="exec-mode-option" role="radio" aria-checked="false">Step</button>
+                    </div>
+                    <button type="button" id="execute-btn" class="btn execute-btn">Run</button>
+                </div>
                 <section id="output-panel" class="output-area" aria-label="Output" tabindex="0" hidden>
                     <h2 class="visually-hidden">Output</h2>
                     <div id="output-display" class="display-area" aria-live="polite" aria-atomic="false"></div>
@@ -128,6 +145,12 @@
                     <!-- Clears the values and leaves the dictionary — what separates
                          this from Reset. -->
                     <button id="stack-clear-btn" type="button" class="inline-clear-btn" aria-label="Clear stack" title="Clear stack (Ctrl+Alt+S)">&times;</button>
+                    <!-- Each value's error budget and Ajisai's exact value on the
+                         same session (src/gui/oracle-panel.ts). Arare only. -->
+                    <details id="oracle-panel" class="oracle-panel" open hidden>
+                        <summary>Budget and Ajisai</summary>
+                        <div id="oracle-display" class="oracle-display" aria-live="polite"></div>
+                    </details>
                 </section>
 
                 <section id="dictionary-panel" class="dictionary-area" aria-label="Dictionary" tabindex="0" hidden>

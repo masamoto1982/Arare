@@ -6,6 +6,8 @@
 // `getPlatform` assembles the adapter for the host `detectRuntimeKind`
 // classifies. Everything the two hosts share — the runtime seam, the empty
 // execution config — is built once here rather than copied per host.
+//
+// Which host answers is part of the engine-neutral shell (AR-LLR-035).
 
 import type { UserWord } from '../wasm-interpreter-types';
 import { TauriFileIO, TauriPersistence } from './tauri';
@@ -92,10 +94,10 @@ export interface PlatformAdapter {
     readonly executionConfig: ExecutionConfig;
 }
 
-declare const __AJISAI_TARGET__: RuntimeKind;
+declare const __ARARE_TARGET__: RuntimeKind;
 
 export function detectRuntimeKind(): RuntimeKind {
-    if (typeof __AJISAI_TARGET__ !== 'undefined' && __AJISAI_TARGET__ === 'tauri') {
+    if (typeof __ARARE_TARGET__ !== 'undefined' && __ARARE_TARGET__ === 'tauri') {
         return 'tauri';
     }
 

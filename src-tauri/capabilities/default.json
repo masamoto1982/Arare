@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Default capability for Ajisai",
+  "description": "Default capability for the Arare Playground",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -12,7 +12,7 @@
   ],
   "scope": {
     "fs": [
-      "$APPDATA/ajisai-state.json"
+      "$APPDATA/arare-playground-*.json"
     ]
   }
 }

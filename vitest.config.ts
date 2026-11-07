@@ -1,6 +1,6 @@
 import { defineConfig } from 'vitest/config';
 
-// AR-INH-001 / AR-VER-001 — Vitest configuration for TypeScript-side
+// AR-LLR-035 / AR-VER-001 — Vitest configuration for TypeScript-side
 // MC/DC tests. Kept intentionally minimal to mirror the Rust-side
 // `cargo test` ergonomics: no globals, no UI. Coverage is opt-in
 // (`npm run test:coverage`), measured with istanbul so the counts the
@@ -11,8 +11,8 @@ export default defineConfig({
     // persistence layer) does not throw a ReferenceError at module load. This
     // only defines build-time constants; it adds no DOM tooling.
     define: {
-        __AJISAI_BUILD_TIMESTAMP__: JSON.stringify('test'),
-        __AJISAI_RELEASE_VERSION__: JSON.stringify('test'),
+        __ARARE_BUILD_TIMESTAMP__: JSON.stringify('test'),
+        __ARARE_RELEASE_VERSION__: JSON.stringify('test'),
     },
     test: {
         // Co-locate tests with source: src/**/*.test.ts.

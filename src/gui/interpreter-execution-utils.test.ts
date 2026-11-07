@@ -15,7 +15,7 @@
 
 import { describe, expect, it } from 'vitest';
 import type {
-    AjisaiInterpreter,
+    PlaygroundEngine,
     ExecuteResult,
     UserWord,
     Value
@@ -34,7 +34,7 @@ import {
 import { ExecutionTimeoutError } from '../workers/execution-contract';
 import { num } from '../test-support';
 
-interface FakeInterpreter extends AjisaiInterpreter {
+interface FakeInterpreter extends PlaygroundEngine {
     readonly words: Map<string, string>;
     setStack(stack: Value[]): void;
 }

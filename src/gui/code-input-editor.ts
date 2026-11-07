@@ -4,7 +4,7 @@
 import { isMobileViewport } from '../platform/viewport';
 import {
     countLeadingSourceWhitespace,
-    formatAjisaiSource,
+    formatSource,
     isSourceWhitespace,
     splitBrackets,
     trimSource
@@ -228,7 +228,7 @@ const copyCaretMirrorStyle = (
 };
 
 // The word the cursor touches, as Lookup and the suggestion panel read it.
-// A name is any run of non-whitespace (spec/grammar.json,
+// A name is any run of non-whitespace (Ajisai's spec/grammar.json,
 // characterClasses.nameCharacter), so a User Word spelled `X.Y`, `A|B` or
 // `合計` is one word here, and Lookup identifies the entry execution would —
 // an ASCII letter class used to hand Lookup `X` for a cursor on `X.Y`, and
@@ -511,7 +511,7 @@ export const createEditor = (
 
     const format = (): void => {
         const wasFocused = document.activeElement === element;
-        const formatted = formatAjisaiSource(element.value);
+        const formatted = formatSource(element.value);
 
         refocus(wasFocused);
 

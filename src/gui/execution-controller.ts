@@ -1,5 +1,5 @@
 import { WORKER_MANAGER } from '../workers/execution-worker-manager';
-import type { AjisaiInterpreter, ExecuteResult } from '../wasm-interpreter-types';
+import type { PlaygroundEngine, ExecuteResult } from '../wasm-interpreter-types';
 import {
     createExecutionSnapshot,
     collectUserWords,
@@ -12,7 +12,7 @@ import {
     toError,
     type ExecutionStateView
 } from './interpreter-execution-utils';
-import { createStepExecutor, StepExecutor } from './step-executor';
+import { createStepExecutor, type StepExecutor, type StepToken } from './step-executor';
 import { EXECUTION_TIMEOUT_MS } from '../workers/execution-contract';
 import type { ExecutionSurfaceChanges, ViewMode } from './gui-layout-state';
 
@@ -56,6 +56,10 @@ export interface ExecutionCallbacks {
     // none is. Input is the surface a run is started from, so it is the one
     // on screen while the run has not answered yet.
     readonly showRunStatus: (text: string | null) => void;
+    // Step mode's split of the source, and whether names outlive a step: the
+    // engine's (src/gui/step-executor.ts, AR-LLR-036).
+    readonly splitSteps?: (code: string) => StepToken[] | null;
+    readonly namesAcrossSteps?: boolean;
 }
 
 export interface ExecutionController {
@@ -76,7 +80,7 @@ export interface ExecutionController {
 }
 
 export const createExecutionController = (
-    interpreter: AjisaiInterpreter,
+    interpreter: PlaygroundEngine,
     callbacks: ExecutionCallbacks
 ): ExecutionController => {
     const {
@@ -93,7 +97,9 @@ export const createExecutionController = (
         fullReset,
         updateView,
         updateAfterExecution,
-        showRunStatus
+        showRunStatus,
+        splitSteps,
+        namesAcrossSteps
     } = callbacks;
 
     // Answer a lookup from the dictionary for `name`, without running
@@ -108,7 +114,7 @@ export const createExecutionController = (
         if (!name) return;
         const found = interpreter.resolve_host_lookup(name);
         // An unknown word is an answer too, and it goes where every answer
-        // goes (spec/gui-semantics.md, Lookup).
+        // goes (Ajisai's spec/gui-semantics.md, Lookup).
         if (found) {
             showDocumentation(found.text);
         } else {
@@ -251,7 +257,9 @@ export const createExecutionController = (
         extractEditorValue,
         showInfo,
         highlightSourceRange,
-        executeSource: (code) => executeSource('StepExecutor', code, null)
+        executeSource: (code) => executeSource('StepExecutor', code, null),
+        ...(splitSteps ? { splitSteps } : {}),
+        ...(namesAcrossSteps !== undefined ? { namesAcrossSteps } : {})
     });
 
     const executeCode = async (code: string): Promise<void> => {

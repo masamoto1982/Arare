@@ -98,6 +98,16 @@ export interface StepExecutorCallbacks {
     // diagnosis included, and surfaces what it changed. Resolves whether the
     // step completed.
     readonly executeSource: (code: string) => Promise<boolean>;
+    // The engine's own split of `code` into steps (AR-LLR-036), where its
+    // items are not the balanced atoms `tokenizeWithOffsets` finds: Arare's
+    // quantized literal `0.75 8 -2 QUANTIZE` is four atoms and one item.
+    // `null` when the engine cannot split it — a syntax error — and step mode
+    // then runs the whole source once, which reports the error as Run does.
+    readonly splitSteps?: (code: string) => StepToken[] | null;
+    // Whether a name bound by one step is still bound in the next. When it
+    // is not, step mode refuses a program that uses BIND rather than give it
+    // another meaning.
+    readonly namesAcrossSteps?: boolean;
 }
 
 export interface StepExecutor {
@@ -138,7 +148,9 @@ export const createStepExecutor = (callbacks: StepExecutorCallbacks): StepExecut
         extractEditorValue,
         showInfo,
         highlightSourceRange,
-        executeSource
+        executeSource,
+        splitSteps,
+        namesAcrossSteps = false
     } = callbacks;
 
     let state: StepState = INITIAL_STATE;
@@ -171,19 +183,25 @@ export const createStepExecutor = (callbacks: StepExecutorCallbacks): StepExecut
         const code = extractEditorValue();
         if (!code) return;
 
-        const tokens = tokenizeWithOffsets(code);
+        const split = splitSteps ? splitSteps(code) : tokenizeWithOffsets(code);
+        if (split === null) {
+            await executeSource(code);
+            return;
+        }
+        const tokens = split;
 
         if (tokens.length === 0) {
             showInfo('No code', true);
             return;
         }
 
-        // A binding lasts for the rest of the frame that made it, and every
-        // piece runs as a program of its own, so a name bound by one piece is
-        // gone in the next: `5 'N' BIND N N ADD` is 10 when Run and an unknown
-        // word when stepped. Rather than give a stepped program another
-        // meaning, step mode refuses it.
-        if (tokens.some((token) => checkIsWord(token, 'BIND'))) {
+        // On an engine that runs every piece as a program of its own (Ajisai),
+        // a name bound by one piece is gone in the next: `5 'N' BIND N N ADD`
+        // is 10 when Run and an unknown word when stepped. Rather than give a
+        // stepped program another meaning, step mode refuses it there. Arare
+        // runs a session's earlier programs again first (ADR-0013), so its
+        // names carry over and nothing is refused.
+        if (!namesAcrossSteps && tokens.some((token) => checkIsWord(token, 'BIND'))) {
             showInfo('Step mode cannot run a program that uses BIND: a name it binds would be gone by the next step. Run it with Shift+Enter instead.', true);
             return;
         }

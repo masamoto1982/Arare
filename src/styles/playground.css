@@ -1400,3 +1400,116 @@ footer {
         }
     }
 }
+
+
+/* ── Engine, Run/Step and the budget panel (Phase 5) ─────────────────────── */
+
+/* The engine selector in the header (src/engine/registry.ts). */
+.engine-select {
+    font-family: var(--font-stack-primary);
+    font-size: var(--text-sm);
+    min-height: 2.125rem;
+    padding: var(--space-2xs) var(--space-xs);
+    border: var(--border-main);
+    border-radius: var(--radius-button);
+    background: var(--color-white);
+    color: var(--color-text);
+    cursor: pointer;
+}
+
+/* Run or Step, and the button that does it (src/gui/execution-mode.ts). */
+.exec-toolbar {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-xs);
+}
+
+.exec-mode {
+    display: inline-flex;
+    border: var(--border-main);
+    border-radius: var(--radius-button);
+    overflow: hidden;
+}
+
+.exec-mode-option {
+    font-family: var(--font-stack-primary);
+    font-size: var(--text-xs);
+    padding: var(--space-2xs) var(--space-sm);
+    border: none;
+    background: var(--color-white);
+    color: var(--color-text);
+    cursor: pointer;
+
+    &[aria-checked="true"] {
+        background: var(--color-primary);
+        color: var(--color-white);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: -2px;
+    }
+}
+
+.execute-btn {
+    align-self: center;
+}
+
+/* Each value's budget beside Ajisai's exact value (src/gui/oracle-panel.ts). */
+.oracle-panel {
+    flex-shrink: 0;
+    max-height: 40%;
+    overflow-y: auto;
+    border: var(--border-main);
+    background: var(--color-white);
+    color: var(--color-text);
+    font-size: var(--text-xs);
+
+    & summary {
+        cursor: pointer;
+        padding: var(--space-2xs) var(--space-xs);
+        color: var(--color-text);
+    }
+}
+
+.oracle-display {
+    padding: 0 var(--space-xs) var(--space-xs);
+
+    & p {
+        margin: var(--space-2xs) 0;
+    }
+}
+
+.oracle-summary {
+    color: var(--color-text-light);
+}
+
+.oracle-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: var(--font-stack-mono);
+
+    & th,
+    & td {
+        border-bottom: var(--border-main);
+        padding: var(--space-2xs) var(--space-xs);
+        text-align: left;
+        vertical-align: top;
+        overflow-wrap: anywhere;
+    }
+}
+
+.oracle-verdict-within {
+    color: var(--color-non-dependency);
+}
+
+.oracle-verdict-outside {
+    color: var(--color-output-error);
+}
+
+.oracle-verdict-noBudget,
+.oracle-verdict-missing {
+    color: var(--color-text-light);
+}

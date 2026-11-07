@@ -1,62 +1,143 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://ajisai.dev/spec/host-protocol.schema.json",
-  "title": "Ajisai Host Protocol",
-  "description": "The value wire format shared by every host surface. The node is built by one mapping, rust/src/types/value_protocol.rs::value_to_protocol, and its `semantics` bag by one rendering, rust/src/agent/report.rs::semantics_json, which the WASM boundary converts rather than rebuilding (rust/src/wasm_interpreter_bindings/mod.rs::protocol_to_js). Both the CLI/MCP agent surface (the `stack` array inside `ajisai agent compute|check|infer-contracts --json`; the enclosing envelope is documented informally in docs/dev/agent-cli-output-contract.md, non-canonical) and the WASM/GUI boundary (each of AjisaiInterpreter's collect_stack/execute/... methods, with no enclosing envelope of its own) emit arrays of the observedValue node this schema defines. This file is enforced, not only described: tools/mcp-server/sync-assets.js copies its definitions into the MCP result schema (as protocolNode and its neighbours), and the MCP self-test validates every stack the live server returns against them. There is no protocol-version field on this shape today: the CLI envelope around it carries a plain integer `schemaVersion`; the WASM boundary carries no version signal at all. String-valued vocabularies inside `semantics` (a reason) are left open (no enum) because they are owned by the Rust source and spec/outcomes.json, not duplicated here as a second, narrower list (the cause of a previous, now-corrected drift: see spec/language-semantics.md LANG.OBSERVATION.PROTOCOL).",
+  "$id": "https://github.com/masamoto1982/Arare/spec/host-protocol.schema.json",
+  "title": "Playground Host Protocol",
+  "description": "The value wire format between the Playground shell and an engine (AR-HLR-033, AR-LLR-032, AR-LLR-034). Both engines emit arrays of the observedValue node this schema defines: Ajisai's wasm-bindgen class (the oracle, src/wasm/ajisai-oracle/), whose shape this was taken from, and Arare's engine command (rust/crates/arare-wasm), whose answers src/engine/arare-engine.test.ts holds to this schema (AR-VER-302). Fields Arare adds are optional and absent from Ajisai's nodes: `width` and `scale` on a number, `budget` on a value of the stack itself, and the `block` type for a quote left unconsumed. References to LANG.* clauses and to rust/src/ paths name Ajisai's specification and source at the commit UPSTREAM.md records. String-valued vocabularies inside `semantics` (a reason) are left open (no enum): each engine owns its own list.",
   "$ref": "#/$defs/observedValue",
   "$defs": {
     "observedValue": {
       "type": "object",
-      "required": ["type", "value"],
+      "required": [
+        "type",
+        "value"
+      ],
       "additionalProperties": false,
       "description": "One stack value as observed at the host boundary. Every field is derived from the value itself, never from the Word that produced it (LANG.VALUES.DENOTATION). A vector's own elements are observedValue nodes in turn (see `value` below), so this definition is recursive.",
       "properties": {
         "type": {
-          "description": "The value's domain (LANG.VALUES.DISJOINT), discriminating `value`'s shape. A NIL is `nil` wherever it stands, including in truth position, where it reads as UNKNOWN (LANG.VALUES.TRUTH).",
-          "enum": ["nil", "boolean", "number", "string", "vector", "symbol", "record"]
+          "description": "The value's domain (LANG.VALUES.DISJOINT), discriminating `value`'s shape. A NIL is `nil` wherever it stands, including in truth position, where it reads as UNKNOWN (LANG.VALUES.TRUTH). `block` is Arare's: a quote no Word consumed, data or code by what consumes it (AR-HLR-021), whose `value` is its source text.",
+          "enum": [
+            "nil",
+            "boolean",
+            "number",
+            "string",
+            "vector",
+            "symbol",
+            "record",
+            "block"
+          ]
         },
         "value": {
           "description": "Shape depends on `type`: nil -> null; boolean -> boolean; number -> {numerator, denominator} (arbitrary-precision decimal strings, the pair reduced and the denominator non-negative: zero exactly for the two points over zero, `1/0` and `0/0`, LANG.VALUES.EXACT); string or symbol -> string (a symbol's bare name); vector -> an array of observedValue; record -> {keys, values}, two arrays of observedValue of equal length, aligned position by position (LANG.RECORDS.STRUCTURE). null for any type when `elided` is present.",
           "oneOf": [
-            { "type": "null" },
-            { "type": "boolean" },
-            { "type": "string" },
+            {
+              "type": "null"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string"
+            },
             {
               "type": "object",
-              "required": ["numerator", "denominator"],
+              "required": [
+                "numerator",
+                "denominator"
+              ],
               "additionalProperties": false,
               "properties": {
-                "numerator": { "$ref": "#/$defs/integerString" },
-                "denominator": { "$ref": "#/$defs/nonNegativeIntegerString" }
+                "numerator": {
+                  "$ref": "#/$defs/integerString"
+                },
+                "denominator": {
+                  "$ref": "#/$defs/nonNegativeIntegerString"
+                }
               }
             },
-            { "type": "array", "items": { "$ref": "#/$defs/observedValue" } },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/observedValue"
+              }
+            },
             {
               "type": "object",
-              "required": ["keys", "values"],
+              "required": [
+                "keys",
+                "values"
+              ],
               "additionalProperties": false,
               "properties": {
-                "keys": { "type": "array", "items": { "$ref": "#/$defs/observedValue" } },
-                "values": { "type": "array", "items": { "$ref": "#/$defs/observedValue" } }
+                "keys": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/observedValue"
+                  }
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/observedValue"
+                  }
+                }
               }
             }
           ]
         },
-        "semantics": { "$ref": "#/$defs/semantics" },
-        "elided": { "$ref": "#/$defs/elided" },
-        "truncated": { "$ref": "#/$defs/truncated" }
+        "semantics": {
+          "$ref": "#/$defs/semantics"
+        },
+        "elided": {
+          "$ref": "#/$defs/elided"
+        },
+        "truncated": {
+          "$ref": "#/$defs/truncated"
+        },
+        "width": {
+          "description": "Arare only: a number's width in bits (AR-HLR-001).",
+          "enum": [
+            8,
+            16,
+            32,
+            64
+          ]
+        },
+        "scale": {
+          "description": "Arare only: a number's scale exponent e, its value being its code times 2^e (AR-HLR-001).",
+          "type": "integer",
+          "minimum": -31,
+          "maximum": 31
+        },
+        "budget": {
+          "description": "Arare only, on a value of the stack itself: the error budget the checker infers (AR-HLR-027), the most the value may differ from Ajisai's exact one, as a rational `p/q`; null when the checker knows nothing.",
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^-?[0-9]+/[0-9]+$"
+            }
+          ]
+        }
       }
     },
     "semantics": {
-      "description": "Present on every node, a Vector nested in a Vector included: how a value is stored does not decide what its node says (LANG.AUTHORITY.FREEDOM). Every field is optional. Both host surfaces emit the same set, because both render it with one function (rust/src/agent/report.rs::semantics_json).",
+      "description": "Present on every node, a Vector nested in a Vector included: how a value is stored does not decide what its node says (LANG.AUTHORITY.FREEDOM). Every field is optional. Both host surfaces emit the same set, because both render it with one function (Ajisai's rust/src/agent/report.rs::semantics_json).",
       "type": "object",
       "additionalProperties": false,
       "properties": {
         "truthValue": {
-          "description": "Present on a Boolean node, and only there (rust/src/types/value_absence.rs::truth_value). UNKNOWN is a NIL (LANG.VALUES.TRUTH) and is observed through `absence`, not here.",
-          "enum": ["true", "false"]
+          "description": "Present on a Boolean node, and only there (Ajisai's rust/src/types/value_absence.rs::truth_value). UNKNOWN is a NIL (LANG.VALUES.TRUTH) and is observed through `absence`, not here.",
+          "enum": [
+            "true",
+            "false"
+          ]
         },
-        "absence": { "$ref": "#/$defs/absence" },
+        "absence": {
+          "$ref": "#/$defs/absence"
+        },
         "approximate": {
           "description": "true when the node is an irrational scalar (LANG.VALUES.EXACT), whose `value` is therefore a rational approximation: the best convergent the observation budget affords, or, for a value too large to afford even one, a term-by-term one. `exactTerms` is the value. Never present otherwise.",
           "const": true
@@ -65,52 +146,100 @@
           "description": "An irrational scalar's exact multiquadratic normal form, structured for computation: one term per {numerator, denominator, radicand}. The stack display writes the same terms as one token (`sqrt(2)`, `1/1+sqrt(2)`).",
           "type": "array",
           "minItems": 1,
-          "items": { "$ref": "#/$defs/exactTerm" }
+          "items": {
+            "$ref": "#/$defs/exactTerm"
+          }
         }
       }
     },
     "absence": {
-      "description": "Present only on a nil-type node. `reason` is the stable, machine-readable identifier LANG.VALUES.NIL calls the entire observable content of a NIL (one of spec/outcomes.json's NIL reasons); it is absent only for a NIL an implementation could not yet label. `detail` is the text a `userDeclared` reason carries, which is part of that reason.",
+      "description": "Present only on a nil-type node. `reason` is the stable, machine-readable identifier LANG.VALUES.NIL calls the entire observable content of a NIL (one of Ajisai's spec/outcomes.json's NIL reasons); it is absent only for a NIL an implementation could not yet label. `detail` is the text a `userDeclared` reason carries, which is part of that reason.",
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "reason": { "type": "string" },
-        "detail": { "type": "string" }
+        "reason": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        }
       }
     },
     "exactTerm": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["numerator", "denominator", "radicand"],
+      "required": [
+        "numerator",
+        "denominator",
+        "radicand"
+      ],
       "description": "One term c·√m of the normal form: the rational coefficient numerator/denominator and the square-free radicand m (1 for the rational term).",
       "properties": {
-        "numerator": { "$ref": "#/$defs/integerString" },
-        "denominator": { "$ref": "#/$defs/positiveIntegerString" },
-        "radicand": { "$ref": "#/$defs/positiveIntegerString" }
+        "numerator": {
+          "$ref": "#/$defs/integerString"
+        },
+        "denominator": {
+          "$ref": "#/$defs/positiveIntegerString"
+        },
+        "radicand": {
+          "$ref": "#/$defs/positiveIntegerString"
+        }
       }
     },
     "elided": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["reason", "approxBytes"],
-      "description": "Present only in the stack of a CLI/MCP agent report, on a slot whose value was dropped to keep the report deliverable (rust/src/agent/error_stack.rs): under the fixed error budget every error report applies (`errorStackBudget`), or under the stack budget a host chose for successful results (`valueStackBudget`, the agent profile's; the trusted profile sets none). `type` and `semantics` still describe what the value was (less an algebraic value's `exactTerms`, whose count moves here); `value` is null. Tell it apart from a genuine NIL by `type`, which names the real domain, and by this field's presence.",
+      "required": [
+        "reason",
+        "approxBytes"
+      ],
+      "description": "Present only in the stack of a CLI/MCP agent report, on a slot whose value was dropped to keep the report deliverable (Ajisai's rust/src/agent/error_stack.rs): under the fixed error budget every error report applies (`errorStackBudget`), or under the stack budget a host chose for successful results (`valueStackBudget`, the agent profile's; the trusted profile sets none). `type` and `semantics` still describe what the value was (less an algebraic value's `exactTerms`, whose count moves here); `value` is null. Tell it apart from a genuine NIL by `type`, which names the real domain, and by this field's presence.",
       "properties": {
-        "reason": { "enum": ["errorStackBudget", "valueStackBudget"] },
-        "approxBytes": { "type": "integer", "minimum": 0 },
-        "elements": { "type": "integer", "minimum": 0 },
-        "algebraicTerms": { "type": "integer", "minimum": 0 }
+        "reason": {
+          "enum": [
+            "errorStackBudget",
+            "valueStackBudget"
+          ]
+        },
+        "approxBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "elements": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "algebraicTerms": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
     "truncated": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["length", "holdsNil", "holdsRecord", "digest"],
-      "description": "Present only in the playground's stack view (AjisaiInterpreter.collect_stack, rust/src/agent/stack_view.rs), on a vector cut to its first 100 elements, the most the playground draws of one collection; never in a CLI/MCP agent report. `value` holds those leading elements, each a full observedValue (cut in turn if it is a long vector). This field describes what was left out, so a host decides from the view what it would decide from the whole value: `length` is the vector's element count; `holdsNil` and `holdsRecord` say whether a NIL or a Record sits anywhere in the left-out elements; `digest` is a 64-bit hash of the left-out elements under value equality, so the views of two different values differ. Presentation only: the value on the stack stays whole.",
+      "required": [
+        "length",
+        "holdsNil",
+        "holdsRecord",
+        "digest"
+      ],
+      "description": "Present only in the playground's stack view (AjisaiInterpreter.collect_stack, Ajisai's rust/src/agent/stack_view.rs), on a vector cut to its first 100 elements, the most the playground draws of one collection; never in a CLI/MCP agent report. `value` holds those leading elements, each a full observedValue (cut in turn if it is a long vector). This field describes what was left out, so a host decides from the view what it would decide from the whole value: `length` is the vector's element count; `holdsNil` and `holdsRecord` say whether a NIL or a Record sits anywhere in the left-out elements; `digest` is a 64-bit hash of the left-out elements under value equality, so the views of two different values differ. Presentation only: the value on the stack stays whole.",
       "properties": {
-        "length": { "type": "integer", "minimum": 101 },
-        "holdsNil": { "type": "boolean" },
-        "holdsRecord": { "type": "boolean" },
-        "digest": { "type": "string", "pattern": "^[0-9a-f]{16}$" }
+        "length": {
+          "type": "integer",
+          "minimum": 101
+        },
+        "holdsNil": {
+          "type": "boolean"
+        },
+        "holdsRecord": {
+          "type": "boolean"
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$"
+        }
       }
     },
     "integerString": {

@@ -1,4 +1,4 @@
-import type { AjisaiInterpreter, UserWord } from '../wasm-interpreter-types';
+import type { PlaygroundEngine, UserWord } from '../wasm-interpreter-types';
 import type { InterpreterStateSnapshot } from '../platform';
 import { getPlatform } from '../platform';
 import { collectUserWords, toError } from './interpreter-execution-utils';
@@ -67,6 +67,12 @@ export interface PersistenceCallbacks {
     readonly readActiveDictionarySheet?: () => string;
     // Takes an import in turn with runs, so a run in flight cannot undo it.
     readonly runExclusive?: <T>(task: () => Promise<T>) => Promise<T>;
+    /**
+     * The Words a fresh session is seeded with: the engine's (AR-LLR-035).
+     * Defaults to EXAMPLE_USER_WORDS; an engine without User Words (Arare)
+     * passes none, and a fresh session then starts empty and says nothing.
+     */
+    readonly exampleWords?: UserWord[];
 }
 
 export interface Persistence {
@@ -79,7 +85,7 @@ export interface Persistence {
 }
 
 const collectCurrentState = (
-    interpreter: AjisaiInterpreter,
+    interpreter: PlaygroundEngine,
     activeDictionarySheet: string | undefined
 ): InterpreterStateSnapshot => ({
     stateVersion: STATE_FORMAT_VERSION,
@@ -110,7 +116,7 @@ interface ExportDocument {
 }
 
 // Keyed by name, as `collect_word_identities` reports it.
-const collectWordIdentityMap = (interpreter: AjisaiInterpreter): Map<string, string> => {
+const collectWordIdentityMap = (interpreter: PlaygroundEngine): Map<string, string> => {
     const map = new Map<string, string>();
     for (const [name, id] of interpreter.collect_word_identities()) {
         map.set(buildWordKey(name), id);
@@ -120,7 +126,7 @@ const collectWordIdentityMap = (interpreter: AjisaiInterpreter): Map<string, str
 
 // Every User Word, unconditionally: User is the only exportable tier, so there
 // is nothing to filter by.
-export const createExportData = (interpreter: AjisaiInterpreter): ExportDocument => {
+export const createExportData = (interpreter: PlaygroundEngine): ExportDocument => {
     const identities = collectWordIdentityMap(interpreter);
     const words: ExportWord[] = collectUserWords(interpreter).map((word) => {
         const id = identities.get(buildWordKey(word.name));
@@ -268,10 +274,11 @@ export const parseImportDocument = (jsonString: string): Result<ParsedImport, Er
 };
 
 export const createPersistence = (
-    interpreter: AjisaiInterpreter,
+    interpreter: PlaygroundEngine,
     callbacks: PersistenceCallbacks = {}
 ): Persistence => {
     const { showError, updateDisplays, showInfo, readActiveDictionarySheet } = callbacks;
+    const exampleWords = callbacks.exampleWords ?? EXAMPLE_USER_WORDS;
     const runExclusive = callbacks.runExclusive ?? (<T>(task: () => Promise<T>) => task());
     let dbInitialized = false;
     const MAX_RETRY_COUNT = 3;
@@ -355,11 +362,12 @@ export const createPersistence = (
     }
 
     const loadExampleWords = async (): Promise<void> => {
+        if (exampleWords.length === 0) return;
         try {
-            interpreter.restore_user_words(EXAMPLE_USER_WORDS);
+            interpreter.restore_user_words(exampleWords);
             await saveCurrentState();
 
-            const wordNames = EXAMPLE_USER_WORDS.map(w => w.name).join(', ');
+            const wordNames = exampleWords.map(w => w.name).join(', ');
             showInfo?.(`Example Words loaded: ${wordNames}`, false);
         } catch (error) {
             console.error('Failed to load Example Words:', error);
@@ -498,7 +506,7 @@ export const createPersistence = (
                 }
                 if (idMismatches.length > 0) {
                     showInfo?.(
-                        // Claims no behavioural difference: spec/identity.json
+                        // Claims no behavioural difference: Ajisai's spec/identity.json
                         // reads a mismatch as `unknown`, never as `different`.
                         // Names both causes — identity is transitive over
                         // dependencies, so an untouched body can still mismatch.

@@ -5,21 +5,22 @@ import { getPlatform } from '../platform';
 import { createGUI, PLAYGROUND_CODE_HASH_MARKER } from '../gui/gui-application';
 import { toError } from '../gui/interpreter-execution-utils';
 import { EXECUTION_TIMEOUT_MS } from '../workers/execution-contract';
-import { initWasm } from '../workers/execution-worker-manager';
-import { parseHostProfile, type AjisaiInterpreter } from '../wasm-interpreter-types';
+import { initEngine } from '../workers/execution-worker-manager';
+import { ENGINES, readEngineKind, switchEngine, type EngineDescriptor } from '../engine/registry';
+import { parseHostProfile, type PlaygroundEngine } from '../wasm-interpreter-types';
 
-declare const __AJISAI_BUILD_TIMESTAMP__: string;
-declare const __AJISAI_RELEASE_VERSION__: string;
+declare const __ARARE_BUILD_TIMESTAMP__: string;
+declare const __ARARE_RELEASE_VERSION__: string;
 
 // Injected by vite.config.ts (`define`).
-const BUILD_TIMESTAMP = __AJISAI_BUILD_TIMESTAMP__;
+const BUILD_TIMESTAMP = __ARARE_BUILD_TIMESTAMP__;
 
 const COMPARE_NOTE =
     'Compare against the repository when the Playground disagrees with the specification.';
 
 /** The build half of the badge tooltip's detail. */
 function buildDetailLines(): string[] {
-    return [`Version: ${__AJISAI_RELEASE_VERSION__}`, `Build: ${BUILD_TIMESTAMP}`, COMPARE_NOTE];
+    return [`Version: ${__ARARE_RELEASE_VERSION__}`, `Build: ${BUILD_TIMESTAMP}`, COMPARE_NOTE];
 }
 
 /**
@@ -62,7 +63,7 @@ function setBuildVersionLabel(): void {
     // for someone already chasing a discrepancy, so it stays in the tooltip.
     setLabelForAll(['#splash-version-line'], (el) => {
         el.hidden = false;
-        el.textContent = `${__AJISAI_RELEASE_VERSION__} · build ${BUILD_TIMESTAMP}`;
+        el.textContent = `${__ARARE_RELEASE_VERSION__} · build ${BUILD_TIMESTAMP}`;
     });
 }
 
@@ -93,10 +94,10 @@ function setPlaygroundBadgeTooltip(lines: string[]): void {
  * is never a value, so the difference is a named failure on one host and an
  * answer on the other, never two answers; it is only a trap when a host does
  * not disclose what it applies, so this one does.
- * See Ajisai's docs/dev/mcp-host-profiles.md (at the commit UPSTREAM.md
+ * See Ajisai's Ajisai's docs/dev/mcp-host-profiles.md (at the commit UPSTREAM.md
  * names) for the comparison.
  */
-function setHostProfileLabel(interpreter: AjisaiInterpreter): void {
+function setHostProfileLabel(interpreter: PlaygroundEngine): void {
     // Best effort throughout: this is a label, and nothing below it may throw
     // into initializeApplication() and take the GUI down with it. The call
     // itself sits inside the guard for the same reason as the parse.
@@ -178,7 +179,7 @@ function initSplashScreen(): void {
     const splash = document.querySelector<HTMLElement>('#splash-screen');
     if (!splash) return;
 
-    const SESSION_KEY = 'ajisai-splash-seen';
+    const SESSION_KEY = 'arare-splash-seen';
     const markSeen = (): void => {
         try {
             sessionStorage.setItem(SESSION_KEY, '1');
@@ -237,22 +238,43 @@ function initSplashScreen(): void {
     splash.addEventListener('keydown', dismiss);
 }
 
+/**
+ * Say which engine this page runs, everywhere it shows (AR-LLR-035): the
+ * badges, the engine selector, and the Reference link, which goes to the
+ * running engine's Reference in the reader's language.
+ */
+function applyEngineLabels(engine: EngineDescriptor): void {
+    setLabelForAll(['.version'], (el) => { el.textContent = engine.badge; });
+    const select = document.querySelector<HTMLSelectElement>('#engine-select');
+    if (select) {
+        select.value = engine.kind;
+        select.addEventListener('change', () => {
+            const kind = select.value;
+            if ((kind === 'arare' || kind === 'ajisai') && kind !== engine.kind) switchEngine(kind);
+        });
+    }
+    const reference = document.querySelector<HTMLAnchorElement>('#reference-link');
+    if (reference) {
+        const lang = (navigator.language || '').toLowerCase().startsWith('ja') ? 'ja' : 'en';
+        reference.href = engine.reference(lang);
+    }
+}
+
 async function initializeApplication(): Promise<void> {
-    console.log('[Main] Starting Ajisai application...');
+    const engine = ENGINES[readEngineKind()];
+    console.log(`[Main] Starting the Playground on ${engine.label}...`);
+    applyEngineLabels(engine);
 
     try {
-        console.log('[Main] Initializing WASM...');
-        const wasm = await initWasm();
-        if (!wasm) {
-            throw new Error('WASM initialization failed. Application cannot start.');
+        console.log('[Main] Initializing the engine...');
+        const interpreter = await initEngine(engine.kind);
+        if (!interpreter) {
+            throw new Error(`The ${engine.label} engine did not load. Application cannot start.`);
         }
-
-        console.log('[Main] Creating main thread interpreter...');
-        const interpreter = new wasm.AjisaiInterpreter();
         setHostProfileLabel(interpreter);
 
         console.log('[Main] Initializing GUI...');
-        await createGUI(interpreter).init();
+        await createGUI(interpreter, engine).init();
 
         console.log('[Main] Application initialization completed successfully');
     } catch (error) {

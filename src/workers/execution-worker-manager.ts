@@ -1,7 +1,10 @@
-
+// The pool of workers that run the selected engine off the main thread
+// (AR-LLR-035): every worker instantiates the engine the page chose on the
+// module compiled once here.
 
 import { isMobileViewport } from '../platform/viewport';
-import type { ExecuteResult, WasmModule } from '../wasm-interpreter-types';
+import type { ExecuteResult, PlaygroundEngine } from '../wasm-interpreter-types';
+import { compileEngine, instantiateEngine, type EngineKind } from '../engine/registry';
 import {
     EXECUTION_TIMEOUT_MS,
     ExecutionAbortedError,
@@ -14,45 +17,23 @@ import {
     type ParallelCapability,
 } from '../platform/cross-origin-isolation';
 
-// The wasm bundle is compiled once on the main thread and the compiled module
-// is handed to every worker, so each worker skips the download and compile
-// and only instantiates.
-let wasmModule: WasmModule | null = null;
+// The engine's module is compiled once on the main thread and handed to every
+// worker, so each worker skips the download and compile and only
+// instantiates. Which engine is the page's choice (src/engine/registry.ts).
+let engineKind: EngineKind = 'arare';
 let compiledModule: WebAssembly.Module | null = null;
+let mainEngine: PlaygroundEngine | null = null;
 
-export async function initWasm(): Promise<WasmModule | null> {
-    if (wasmModule) return wasmModule;
-
+/** Compile `kind`'s engine and make the main thread's instance of it. */
+export async function initEngine(kind: EngineKind): Promise<PlaygroundEngine | null> {
+    if (mainEngine && kind === engineKind) return mainEngine;
     try {
-        if (!compiledModule) {
-            const wasmUrl = new URL('../wasm/ajisai-oracle/ajisai_core_bg.wasm', import.meta.url);
-            try {
-                compiledModule = await WebAssembly.compileStreaming(fetch(wasmUrl));
-            } catch {
-                const response = await fetch(wasmUrl);
-                const bytes = await response.arrayBuffer();
-                compiledModule = await WebAssembly.compile(bytes);
-            }
-        }
-
-        const module = await import('../wasm/ajisai-oracle/ajisai_core.js') as unknown as WasmModule;
-
-        if (module.default) {
-            await (module.default as (input?: unknown) => Promise<unknown>)({ module_or_path: compiledModule });
-        }
-
-        // Surface Rust panics as console.error with a real stack trace
-        // instead of an opaque `RuntimeError: unreachable executed`.
-        try {
-            module.init_panic_hook?.();
-        } catch (e) {
-            console.warn('init_panic_hook unavailable; rebuild wasm to enable.', e);
-        }
-
-        wasmModule = module;
-        return module;
+        engineKind = kind;
+        compiledModule = await compileEngine(kind);
+        mainEngine = await instantiateEngine(kind, compiledModule);
+        return mainEngine;
     } catch (error) {
-        console.error('Failed to load WASM:', error);
+        console.error(`Failed to load the ${kind} engine:`, error);
         return null;
     }
 }
@@ -114,9 +95,7 @@ export class WorkerManager {
         worker.onerror = (error) => this.resolveWorkerError(instance, error);
 
 
-        if (this.compiledModule) {
-            worker.postMessage({ type: 'init', wasmModule: this.compiledModule });
-        }
+        worker.postMessage({ type: 'init', engine: engineKind, wasmModule: this.compiledModule });
 
         this.workers.push(instance);
     }
