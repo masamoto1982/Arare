@@ -19,3 +19,4 @@ record supersedes it and says so.
 | [0010](0010-names.md) | Names, as Ajisai's BIND, in scopes without User Words | Accepted |
 | [0011](0011-coarsening.md) | Coarsening the checker's rationals outward to 2^-48 in long loops | Accepted |
 | [0012](0012-webassembly-build.md) | The WebAssembly build: wasm32-wasip1 under Node's WASI, a reduction loop per target | Accepted |
+| [0013](0013-playground-engine-boundary.md) | The Playground's engine boundary: a wasm32-wasip1 command, sessions replayed, one comparison with the oracle | Accepted |

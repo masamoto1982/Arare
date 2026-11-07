@@ -36,9 +36,13 @@ jobs:
           VERSION=$(date -u +%Y%m%d%H%M)
           sed -i "s/?v=[0-9]*/?v=${VERSION}/g" index.html
 
-      # Until Arare's engine is connected (Phase 5), the Playground runs the
-      # pinned Ajisai oracle bundle committed in src/wasm/ajisai-oracle/, so
-      # there is no WebAssembly to build here.
+      # `npm run build` builds Arare's engine for wasm32-wasip1 first
+      # (scripts/build-engine.mjs, ADR-0013); the Ajisai oracle bundle is
+      # committed in src/wasm/ajisai-oracle/.
+      - name: Add the engine's WebAssembly target
+        working-directory: rust
+        run: rustup target add wasm32-wasip1
+
       - name: Build with Vite
         run: npm run build
 

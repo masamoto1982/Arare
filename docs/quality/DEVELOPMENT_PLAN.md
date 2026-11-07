@@ -14,8 +14,8 @@ WORK_ORDER.md §7; this file fixes the process every phase follows.
    `derived: true` and the reason, and its review asks whether it can affect
    the values a program computes.
 3. Code that implements no requirement is not merged (CLAUDE.md, rule 1). The
-   inherited Playground is the one standing exception, recorded as AR-INH rows
-   in the matrix and re-based on requirements in Phase 5.
+   inherited Playground was the one standing exception, recorded as AR-INH
+   rows in the matrix until Phase 5 re-based it on AR-HLR-033 to AR-HLR-036.
 
 ## From requirement to code
 
