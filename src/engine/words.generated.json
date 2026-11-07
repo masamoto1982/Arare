@@ -1,0 +1,131 @@
+{
+  "_generated": "scripts/generate-word-reference.mjs from spec/words.json; do not edit",
+  "words": [
+    {
+      "name": "QUANTIZE",
+      "summary": "Puts x at a width and scale exponent; how a non-integer enters a program.",
+      "syntax": "x width exponent QUANTIZE",
+      "documentation": "QUANTIZE — Puts x at a width and scale exponent; how a non-integer enters a program.\nSyntax: x width exponent QUANTIZE\nWidth: The width named: 8, 16, 32 or 64.\nScale: The exponent named, within ±31.\nError: Raising the exponent rounds half to even, adding at most half an ulp of the new scale; lowering it is exact. A literal p/q is rounded once, where it is written.\nfield: Open (mayOverflow) when the value may not fit the width: it is then 1/0. Writing 1/0 or 0/0 is open (wheelPoint).\nExample: 1/3 8 -6 QUANTIZE  →  21/64"
+    },
+    {
+      "name": "ADD",
+      "summary": "The exact sum, lane by lane.",
+      "syntax": "a b ADD",
+      "documentation": "ADD — The exact sum, lane by lane.\nSyntax: a b ADD\nWidth: Widened to the narrowest width that holds the sum of the operands' ranges; int64 at most.\nScale: The smaller of the two exponents: the other operand is shifted to it exactly.\nError: Exact: the result's budget is the sum of the operands' budgets.\nfield: Open when the sum may leave int64 (mayOverflow) or an operand is a wheel point.\nExample: 126 1 ADD  →  127/1"
+    },
+    {
+      "name": "SUB",
+      "summary": "The exact difference a − b, lane by lane.",
+      "syntax": "a b SUB",
+      "documentation": "SUB — The exact difference a − b, lane by lane.\nSyntax: a b SUB\nWidth: As ADD: the narrowest width holding the difference of the ranges.\nScale: The smaller of the two exponents.\nError: Exact: the budgets add.\nfield: As ADD.\nExample: 7 3 SUB  →  4/1"
+    },
+    {
+      "name": "MUL",
+      "summary": "The exact product, lane by lane.",
+      "syntax": "a b MUL",
+      "documentation": "MUL — The exact product, lane by lane.\nSyntax: a b MUL\nWidth: Widened to the narrowest width holding the product of the ranges: int8 × int8 is int16.\nScale: The sum of the two exponents; an exponent beyond ±31 is an ERROR.\nError: Exact: each operand's budget is scaled by the other's range, as the product propagates it.\nfield: Open when the product may leave int64 or an operand is a wheel point.\nExample: 100 100 MUL  →  10000/1"
+    },
+    {
+      "name": "DIV",
+      "summary": "The quotient a / b, rounded: one of Arare's three rounding points.",
+      "syntax": "a b DIV",
+      "documentation": "DIV — The quotient a / b, rounded: one of Arare's three rounding points.\nSyntax: a b DIV\nWidth: The narrowest width holding the dividend's range shifted by the divisor's exponent.\nScale: The dividend's exponent: write the dividend at a finer scale for a finer quotient.\nError: Rounds half to even: adds at most half an ulp of the result's scale.\nfield: Open (divisorMayBeZero) when the divisor may be 0: x/0 is 1/0 and 0/0 is ⊥.\nExample: 7 2 DIV  →  4/1"
+    },
+    {
+      "name": "NEG",
+      "summary": "The negation; 1/0 and 0/0 are their own.",
+      "syntax": "a NEG",
+      "documentation": "NEG — The negation; 1/0 and 0/0 are their own.\nSyntax: a NEG\nWidth: Unchanged: finite ranges are symmetric.\nScale: Unchanged.\nError: Exact: the budget is the operand's.\nfield: Open only when the operand is a wheel point.\nExample: 1 2 SUB NEG  →  1/1"
+    },
+    {
+      "name": "RESCALE",
+      "summary": "Raises x's exponent by s bits (0 to 62), rounding: one of the three rounding points.",
+      "syntax": "x s RESCALE",
+      "documentation": "RESCALE — Raises x's exponent by s bits (0 to 62), rounding: one of the three rounding points.\nSyntax: x s RESCALE\nWidth: Unchanged.\nScale: Raised by s.\nError: Rounds half to even: adds at most half an ulp of the new scale; a value already on the grid is unchanged.\nfield: No effect of its own; a wheel point passes through.\nExample: 1000 2 RESCALE  →  1000/1"
+    },
+    {
+      "name": "NARROW",
+      "summary": "Fits x into a narrower width; a value that does not fit is 1/0, never clamped.",
+      "syntax": "x width NARROW",
+      "documentation": "NARROW — Fits x into a narrower width; a value that does not fit is 1/0, never clamped.\nSyntax: x width NARROW\nWidth: The width named.\nScale: Unchanged.\nError: Exact when the value fits.\nfield: Open (mayOverflow) when the value may not fit the width.\nExample: 100 100 MUL 100 SUB 16 NARROW  →  9900/1"
+    },
+    {
+      "name": "EQ",
+      "summary": "Whether two values denote the same, whatever their widths and scales; always TRUE or FALSE.",
+      "syntax": "a b EQ",
+      "documentation": "EQ — Whether two values denote the same, whatever their widths and scales; always TRUE or FALSE.\nSyntax: a b EQ\nWidth: A truth value, not a number.\nScale: Operands are aligned exactly before they are compared.\nError: The checker says whether Arare's answer agrees with Ajisai's: it does when the values are exact or their ranges, widened by their budgets, are apart.\nfield: No effect of its own.\nExample: 2 0.5 8 -1 QUANTIZE 4 MUL EQ  →  TRUE"
+    },
+    {
+      "name": "LT",
+      "summary": "Whether a < b, lane by lane; asked of a wheel point, UNKNOWN.",
+      "syntax": "a b LT",
+      "documentation": "LT — Whether a < b, lane by lane; asked of a wheel point, UNKNOWN.\nSyntax: a b LT\nWidth: A truth value, not a number.\nScale: Operands are aligned exactly before they are compared.\nError: Agrees with Ajisai when both values are exact or their ranges, widened by their budgets, are apart.\nfield: No effect of its own.\nExample: 1 2 LT 2 1 LT  →  TRUE  FALSE"
+    },
+    {
+      "name": "AND",
+      "summary": "Strong Kleene conjunction: FALSE settles it, NIL reads as UNKNOWN.",
+      "syntax": "a b AND",
+      "documentation": "AND — Strong Kleene conjunction: FALSE settles it, NIL reads as UNKNOWN.\nSyntax: a b AND\nWidth: Truth values only.\nScale: —\nError: Agrees with Ajisai when its operands do.\nfield: No effect.\nExample: TRUE NIL AND FALSE NIL AND  →  NIL  FALSE"
+    },
+    {
+      "name": "NOT",
+      "summary": "Strong Kleene negation: UNKNOWN stays UNKNOWN.",
+      "syntax": "a NOT",
+      "documentation": "NOT — Strong Kleene negation: UNKNOWN stays UNKNOWN.\nSyntax: a NOT\nWidth: Truth values only.\nScale: —\nError: Agrees with Ajisai when its operand does.\nfield: No effect.\nExample: FALSE NOT NIL NOT  →  TRUE  NIL"
+    },
+    {
+      "name": "FILTER",
+      "summary": "Keeps the elements the block calls TRUE; FALSE, UNKNOWN and NIL drop them, as SQL's WHERE does.",
+      "syntax": "vector [ predicate ] FILTER",
+      "documentation": "FILTER — Keeps the elements the block calls TRUE; FALSE, UNKNOWN and NIL drop them, as SQL's WHERE does.\nSyntax: vector [ predicate ] FILTER\nWidth: The elements keep theirs.\nScale: The elements keep theirs.\nError: The elements keep their budgets.\nfield: Whatever the block does.\nExample: [ 5 1 4 2 ] [ 3 LT ] FILTER  →  [ 1/1 2/1 ]"
+    },
+    {
+      "name": "MAP",
+      "summary": "Replaces each element with what the block leaves for it.",
+      "syntax": "vector [ block ] MAP",
+      "documentation": "MAP — Replaces each element with what the block leaves for it.\nSyntax: vector [ block ] MAP\nWidth: What the block gives.\nScale: What the block gives.\nError: What the block gives each element.\nfield: Whatever the block does.\nExample: [ 1 2 3 ] [ 10 MUL ] MAP  →  [ 10/1 20/1 30/1 ]"
+    },
+    {
+      "name": "FOLD",
+      "summary": "Threads an accumulator through the block, element by element from the left.",
+      "syntax": "vector initial [ block ] FOLD",
+      "documentation": "FOLD — Threads an accumulator through the block, element by element from the left.\nSyntax: vector initial [ block ] FOLD\nWidth: What the block gives the accumulator.\nScale: What the block gives the accumulator.\nError: Accumulated step by step; the checker coarsens long loops so a budget stays computable.\nfield: Whatever the block does at any step.\nExample: [ 1 2 3 4 ] 0 [ ADD ] FOLD  →  10/1"
+    },
+    {
+      "name": "SUM",
+      "summary": "The sum of a vector's elements, skipping NIL as SQL does; all NIL is NIL.",
+      "syntax": "vector SUM",
+      "documentation": "SUM — The sum of a vector's elements, skipping NIL as SQL does; all NIL is NIL.\nSyntax: vector SUM\nWidth: Widened to hold the sum of every lane.\nScale: The elements' exponent.\nError: Exact: the lanes' budgets add.\nfield: Open when the sum may leave int64.\nExample: [ 1 NIL 2 ] SUM  →  3/1"
+    },
+    {
+      "name": "SELECT",
+      "summary": "THEN where the condition is TRUE, ELSE otherwise: UNKNOWN takes ELSE, as SQL's CASE does.",
+      "syntax": "then else condition SELECT",
+      "documentation": "SELECT — THEN where the condition is TRUE, ELSE otherwise: UNKNOWN takes ELSE, as SQL's CASE does.\nSyntax: then else condition SELECT\nWidth: Wide enough for either side.\nScale: Either side's.\nError: Either side's budget, when the condition agrees with Ajisai's.\nfield: No effect of its own.\nExample: 1 2 NIL SELECT  →  2/1"
+    },
+    {
+      "name": "TRUE",
+      "summary": "The truth value TRUE.",
+      "syntax": "TRUE",
+      "documentation": "TRUE — The truth value TRUE.\nSyntax: TRUE\nWidth: —\nScale: —\nError: None.\nfield: No effect.\nExample: TRUE  →  TRUE"
+    },
+    {
+      "name": "FALSE",
+      "summary": "The truth value FALSE.",
+      "syntax": "FALSE",
+      "documentation": "FALSE — The truth value FALSE.\nSyntax: FALSE\nWidth: —\nScale: —\nError: None.\nfield: No effect.\nExample: FALSE  →  FALSE"
+    },
+    {
+      "name": "NIL",
+      "summary": "Absence. In truth position it reads as UNKNOWN; it is never a number.",
+      "syntax": "NIL",
+      "documentation": "NIL — Absence. In truth position it reads as UNKNOWN; it is never a number.\nSyntax: NIL\nWidth: —\nScale: —\nError: None: a NIL is NIL in both languages.\nfield: No effect.\nExample: NIL 1 ADD  →  NIL"
+    },
+    {
+      "name": "BIND",
+      "summary": "Names a value; X then pushes it until the scope that bound it ends.",
+      "syntax": "value 'X' BIND",
+      "documentation": "BIND — Names a value; X then pushes it until the scope that bound it ends.\nSyntax: value 'X' BIND\nWidth: The value keeps its own.\nScale: The value keeps its own.\nError: The value keeps its budget.\nfield: No effect.\nExample: 3 'X' BIND X X MUL  →  9/1"
+    }
+  ]
+}
