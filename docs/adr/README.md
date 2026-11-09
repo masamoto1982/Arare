@@ -20,3 +20,4 @@ record supersedes it and says so.
 | [0011](0011-coarsening.md) | Coarsening the checker's rationals outward to 2^-48 in long loops | Accepted |
 | [0012](0012-webassembly-build.md) | The WebAssembly build: wasm32-wasip1 under Node's WASI, a reduction loop per target | Accepted |
 | [0013](0013-playground-engine-boundary.md) | The Playground's engine boundary: a wasm32-wasip1 command, sessions replayed, one comparison with the oracle | Accepted |
+| [0014](0014-arrow-io.md) | Arrow I/O: the IPC format first in a safe crate, numbers as exact decimals, the C Data Interface later | Proposed |
