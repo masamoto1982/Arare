@@ -83,6 +83,11 @@ jobs:
       - name: The error budget holds on generated programs
         run: npm run check:oracle-random
 
+      # AR-VER-235: Arare's Arrow and an independent implementation (the
+      # apache-arrow package) read what each other writes (ADR-0014).
+      - name: Arrow agrees with apache-arrow
+        run: npm run check:arrow
+
       - name: Package, crate and Tauri versions agree
         run: npm run check:version-sync
 

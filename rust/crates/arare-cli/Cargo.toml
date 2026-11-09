@@ -21,3 +21,4 @@ arare-kernel = { path = "../arare-kernel" }
 arare-budget = { path = "../arare-budget" }
 arare-codegen = { path = "../arare-codegen" }
 arare-front = { path = "../arare-front" }
+arare-arrow = { path = "../arare-arrow" }

@@ -106,6 +106,17 @@ impl Machine {
         while self.step()? {}
         Ok(())
     }
+
+    /// The stack with every block read as data, in the scope the program
+    /// ended in, as a Word reading it there would: how the stack leaves for
+    /// Arrow (AR-LLR-042). A block that does not read as data is an error.
+    pub fn data_stack(&mut self) -> Result<Vec<Value>, Error> {
+        let stack = self.stack.clone();
+        stack
+            .into_iter()
+            .map(|v| data(v, &mut self.env).map_err(|kind| Error { word: None, kind }))
+            .collect()
+    }
 }
 
 /// Parse and run `source`, answering the final stack.

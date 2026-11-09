@@ -271,9 +271,9 @@ A vector whose lanes may be NIL carries a validity bitmap in which a cleared bit
 
 - Level: QL-A
 - Refines: AR-SYS-006
-- Refined by: AR-LLR-009
+- Refined by: AR-LLR-009, AR-LLR-039, AR-LLR-040
 - Not proved formally: A memory layout is not a law about values; it is verified by tests against the Arrow specification, not by a Lean theorem.
-- Planned: Phase 2: kernel tests of the bitmaps; Phase 6: a round trip through the Arrow C Data Interface.
+- Planned: Phase 2: kernel tests of the bitmaps; Phase 6: a truth column's bitmaps are written to Arrow as they are and read back (AR-VER-233), and an independent Arrow implementation reads them (AR-VER-235). The C Data Interface waits for an in-process host (ADR-0014).
 
 ### AR-HLR-020 — Reasons for NIL
 
@@ -433,6 +433,24 @@ The Reference (`public/docs/`, in English and Japanese) is generated from `spec/
 - Refines: AR-SYS-013, AR-SYS-001
 - Refined by: AR-LLR-038
 - Planned: Verified through AR-LLR-038.
+
+### AR-HLR-037 — Arrow output
+
+A program's final stack can be written as one Arrow IPC record batch, in the file or the stream format, one column per stack value, bottom first. A vector of numbers is a Decimal column whose values are exactly the numbers' values; a vector of truth values is a Boolean column; a NIL lane is null in either. 1/0 and 0/0 are null, and the field's metadata records the width, the exponent and which lanes held each point (ADR-0005, ADR-0014). A value that has no column — a vector mixing numbers and truth values, a nested vector, a name — or columns of different lengths stop the write with an error.
+
+- Level: QL-C
+- Refines: AR-SYS-006, AR-SYS-009, AR-SYS-010
+- Refined by: AR-LLR-039, AR-LLR-040, AR-LLR-042, AR-LLR-043
+- Planned: Verified through AR-LLR-039, AR-LLR-040, AR-LLR-042 and AR-LLR-043.
+
+### AR-HLR-038 — Arrow input
+
+An Arrow IPC file or stream can be read before a program runs, each column pushed as a vector, the first at the bottom. What Arare wrote reads back as the same numbers, at the same width and exponent, the same truth values and the same NIL lanes; a NIL lane read from Arrow carries the reason Imported. A column Arare did not write states its width and exponent where it enters (ADR-0004): an integer column is read at its own width and exponent 0, a value outside that width's finite range being 1/0; a decimal column is quantized as QUANTIZE does (AR-HLR-026) at the width and exponent the caller gives, and refused without them; a Boolean column is a truth column. Any other type, and input that is not Arrow IPC, is refused with an error naming the field, never a panic.
+
+- Level: QL-C
+- Refines: AR-SYS-006, AR-SYS-009, AR-SYS-010, AR-HLR-018
+- Refined by: AR-LLR-039, AR-LLR-040, AR-LLR-041, AR-LLR-042, AR-LLR-043
+- Planned: Verified through AR-LLR-039 to AR-LLR-043.
 
 ## Low-level requirements
 
@@ -598,13 +616,14 @@ Each Word of the Phase 2 vocabulary does what AR-HLR-003 to AR-HLR-016 and AR-HL
 
 ### AR-LLR-016 — NIL reasons in the interpreter
 
-A NIL carries one of the reasons Literal (written NIL), OrderOfPoint (an order asked of a wheel point) and EmptyAggregate (an aggregate with nothing to aggregate), and keeps it through every Word that passes it on or reads it as UNKNOWN.
+A NIL carries one of the reasons Literal (written NIL), OrderOfPoint (an order asked of a wheel point), EmptyAggregate (an aggregate with nothing to aggregate) and Imported (a null lane read from an Arrow column, AR-HLR-038), and keeps it through every Word that passes it on or reads it as UNKNOWN.
 
 - Level: QL-B
 - Refines: AR-HLR-020, AR-HLR-013
 - Implemented in: `rust/crates/arare-interp/src/value.rs`
 - Tested in `rust/crates/arare-interp/tests/words.rs` — **AR-VER-211**
 - Tested in `rust/crates/arare-interp/src/tests.rs` — **AR-VER-213**
+- Tested in `rust/crates/arare-arrow/tests/roundtrip.rs` — **AR-VER-233**
 
 ### AR-LLR-017 — The command-line interface
 
@@ -829,6 +848,55 @@ scripts/generate-word-reference.mjs reads spec/words.json and writes the English
 - Implemented in: `scripts/generate-word-reference.mjs`, `spec/words.json`
 - Tested in `src/engine/reference.test.ts` — **AR-VER-305**
 - Tested in `rust/crates/arare-wasm/tests/words.rs` — **AR-VER-232**
+
+### AR-LLR-039 — The IPC framing
+
+arare-arrow writes the stream format as the schema message, one record batch message and the end-of-stream marker, each message the continuation marker 0xFFFFFFFF, its metadata length and a FlatBuffers Message (metadata version V5) padded to 8 bytes, then its body; and the file format as `ARROW1`, two bytes of padding, that stream, a Footer naming the schema and the record batch's block, the footer's length and `ARROW1`. In the body each column has a validity and a values buffer, each starting at a multiple of 64 bytes. FlatBuffers objects are laid out front to back with every offset pointing forward, tables on 8-byte boundaries and every scalar at a multiple of its size, and a Field always has a children vector. The reader accepts both formats, a stream message with or without the continuation marker, any number of record batches (whose lanes it concatenates), and metadata version V4 or later.
+
+- Level: QL-C
+- Refines: AR-HLR-037, AR-HLR-038, AR-HLR-019
+- Implemented in: `rust/crates/arare-arrow/src/fb.rs`, `rust/crates/arare-arrow/src/ipc.rs`, `rust/crates/arare-arrow/src/read.rs`
+- Tested in `rust/crates/arare-arrow/tests/roundtrip.rs` — **AR-VER-233**
+- Tested in `scripts/check-arrow-interop.mjs` — **AR-VER-235**
+
+### AR-LLR-040 — Number and truth columns
+
+A number column of width w and exponent e is a Decimal field of scale max(0, −e) whose unscaled value is code × 5^(−e) for e < 0 and code × 2^e otherwise, computed exactly as a sign and a 256-bit magnitude; its precision is the number of decimal digits of (M − 2) × 5^(−e) or (M − 2) × 2^e, and it is Decimal128 when that is at most 38 and Decimal256 otherwise. Its metadata holds `arare:width` and `arare:exponent`, and, when it holds a point, `arare:one-over-zero` and `arare:zero-over-zero`: base64 of a bitmap of the column's lanes in Arrow's bit order. A lane is valid exactly when it is a finite number. Reading a Decimal field with that metadata recovers each code by exact division, and refuses a field whose scale does not match its exponent, a lane no code of its width gives, or a point in a valid lane. A truth column is a Boolean field whose buffers are AR-LLR-009's bitmaps as they are.
+
+- Level: QL-C
+- Refines: AR-HLR-037, AR-HLR-038, AR-HLR-019
+- Implemented in: `rust/crates/arare-arrow/src/columns.rs`, `rust/crates/arare-arrow/src/decimal.rs`, `rust/crates/arare-arrow/src/read.rs`
+- Tested in `rust/crates/arare-arrow/tests/roundtrip.rs` — **AR-VER-233**
+- Tested in `scripts/check-arrow-interop.mjs` — **AR-VER-235**
+
+### AR-LLR-041 — Untrusted Arrow input
+
+The reader checks every FlatBuffers offset, vtable, string, vector and buffer against the bytes it has before reading them, and answers an error for input that is not Arrow IPC (Malformed) or that lies outside the subset (Unsupported: big-endian data, compression, dictionaries, nested types, unsigned or odd-width integers, other types), naming the field when there is one. An Int field of 8, 16, 32 or 64 bits is read at that width and exponent 0, a value outside the finite range being 1/0; a Decimal field without Arare's metadata is quantized with Num::from_ratio at the width and exponent ReadOptions gives, after reducing value / 10^scale by its factors of 2 and 5, and is refused when either part is still 2^63 or more.
+
+- Level: QL-C
+- Refines: AR-HLR-038
+- Implemented in: `rust/crates/arare-arrow/src/fb.rs`, `rust/crates/arare-arrow/src/read.rs`
+- Tested in `rust/crates/arare-arrow/tests/malformed.rs` — **AR-VER-234**
+- Tested in `scripts/check-arrow-interop.mjs` — **AR-VER-235**
+
+### AR-LLR-042 — Stack values as columns
+
+to_columns makes each stack value a column named by its position from the bottom: a vector holding a number is a number column, its lanes aligned exactly to the smallest exponent among them at the narrowest width that holds every aligned code and is no narrower than any lane's own; any other vector of truth values and NIL, or of nothing, is a truth column; a scalar is a column of one lane; a vector mixing numbers and truth values, a nested vector, a block or a name is refused. Machine::data_stack reads the final stack's blocks as data in the scope the program ended in, before that. to_values makes each column a vector, each null lane NIL with the reason Imported.
+
+- Level: QL-C
+- Refines: AR-HLR-037, AR-HLR-038
+- Implemented in: `rust/crates/arare-arrow/src/values.rs`, `rust/crates/arare-interp/src/machine.rs`
+- Tested in `rust/crates/arare-arrow/tests/roundtrip.rs` — **AR-VER-233**
+
+### AR-LLR-043 — arare run with Arrow
+
+`arare run` takes `--arrow-in FILE`, whose columns it pushes before the program runs; `--arrow-out FILE`, to which it writes the final stack, its blocks read as data, as an Arrow IPC file and still prints the stack; `--arrow-out -`, which writes the stream format to standard output in place of the stack; and `--arrow-decimal W:E`, the width and exponent a foreign decimal field is read at. A flag without its value, or a malformed W:E, exits 2; Arrow that cannot be read or a stack that cannot be written exits 1 with the reason.
+
+- Level: QL-C
+- Refines: AR-HLR-037, AR-HLR-038
+- Implemented in: `rust/crates/arare-cli/src/arrow.rs`, `rust/crates/arare-cli/src/main.rs`
+- Tested in `rust/crates/arare-cli/tests/arrow.rs` — **AR-VER-236**
+- Tested in `scripts/check-arrow-interop.mjs` — **AR-VER-235**
 
 ## Performance requirements
 
