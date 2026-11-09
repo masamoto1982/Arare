@@ -1,0 +1,19 @@
+[package]
+name = "arare-arrow"
+description = "Arrow IPC input and output for Arare (ADR-0014)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[dependencies]
+arare-kernel = { path = "../arare-kernel" }
+arare-interp = { path = "../arare-interp" }
+
+[dev-dependencies]
+arare-front = { path = "../arare-front" }

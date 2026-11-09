@@ -15,6 +15,8 @@ pub enum Reason {
     OrderOfPoint,
     /// An aggregate had no element that was not NIL (AR-HLR-016).
     EmptyAggregate,
+    /// A null lane read from an Arrow column (AR-LLR-016, AR-HLR-038).
+    Imported,
 }
 
 impl Reason {
@@ -23,6 +25,7 @@ impl Reason {
             Reason::Literal => "literal",
             Reason::OrderOfPoint => "orderOfPoint",
             Reason::EmptyAggregate => "emptyAggregate",
+            Reason::Imported => "imported",
         }
     }
 }

@@ -31,6 +31,7 @@ Arare は、量子化を前提とし、失った精度を数字で管理する�
 - `cargo kani`（`rust/` で）：Kani 0.68.0 が要る
 - `npm run check:gates`：要求の登録簿、トレーサビリティ、版の一致、Rust のファイルサイズ、Playground のコントラスト
 - `npm run check:oracle`、`npm run check:oracle-random`：Ajisai との比較。Arare の値が、検査器の推論した誤差予算の中に収まるか（コーパスと、生成した 1 万本のプログラム）
+- `npm run check:arrow`：Arrow の入出力を、独立した実装（npm の `apache-arrow`）と相互に読み書きして突き合わせる（ADR-0014）
 - `npm run requirements:generate`：`spec/requirements.json` を変えたら、`spec/REQUIREMENTS.md` と追跡表の生成部分を作り直す
 - `npm run check`、`npm run lint`、`npm test`：TypeScript
 - 性能（Phase 4 から）：`rust/bench` で `RUSTFLAGS="-C target-cpu=x86-64-v3" cargo run --release -- --check`。AR-PERF の要件を割っていないかを、同じ実行で測った手書きループと Ajisai のネイティブ版との比で確かめる。Ajisai は `UPSTREAM.md` のコミットを Git の依存として取得する

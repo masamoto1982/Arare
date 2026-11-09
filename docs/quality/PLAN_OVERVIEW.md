@@ -39,7 +39,7 @@ as a claimed DAL.
 |---|---|---|
 | **QL-A** | `rust/crates/arare-spec`, `arare-kernel`, `arare-budget`, `arare-codegen` | A defect here gives a program a wrong value, or certifies an error budget that does not hold, without any symptom |
 | **QL-B** | `rust/crates/arare-front`, `arare-interp`, `arare-wasm`; `spec/host-protocol.schema.json` | A defect here misreads a program or misreports a value, which the QL-A checks or the oracle would usually expose |
-| **QL-C** | `rust/crates/arare-cli`; `tools/mcp-server/` once Arare's own server replaces the oracle's (Phase 6); Arrow and SQL I/O | A defect here affects how results reach a host, not what they are |
+| **QL-C** | `rust/crates/arare-cli`, `rust/crates/arare-arrow`; `tools/mcp-server/` once Arare's own server replaces the oracle's (Phase 6); Arrow and SQL I/O | A defect here affects how results reach a host, not what they are |
 | **QL-D** | The Playground (`src/`, `index.html`, `src-tauri/`), documentation | A defect here is visible to the person using it |
 
 The Lean model in `formal/` is verification evidence, not a component, and is

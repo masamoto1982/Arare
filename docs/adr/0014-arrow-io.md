@@ -1,11 +1,10 @@
 # ADR-0014: Arrow input and output
 
-Status: Proposed (Phase 6, 2026-11-09). Builds on ADR-0001, ADR-0004 and
+Status: Accepted (Phase 6, 2026-11-09). Builds on ADR-0001, ADR-0004 and
 ADR-0005, whose decisions stand; does not change WORK_ORDER.md D-06.
-Requirements: AR-SYS-006, AR-HLR-019, AR-HLR-026, AR-HLR-031. The requirements
-for the export and the import are written with the code, after this record is
-accepted (as ADR-0005 left them).
-Verification: planned below; IDs are assigned with the requirements.
+Requirements: AR-HLR-037, AR-HLR-038, AR-LLR-039 to AR-LLR-043; context
+AR-SYS-006, AR-HLR-019, AR-HLR-026.
+Verification: AR-VER-233 to AR-VER-236.
 
 ## Context
 

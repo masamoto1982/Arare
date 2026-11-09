@@ -37,6 +37,7 @@
     "requirements:generate": "node scripts/generate-requirements.mjs",
     "word:reference": "node scripts/generate-word-reference.mjs",
     "check:oracle": "cargo build --quiet --manifest-path rust/Cargo.toml -p arare-cli && node scripts/check-oracle.mjs",
+    "check:arrow": "cargo build --quiet --manifest-path rust/Cargo.toml -p arare-cli && node scripts/check-arrow-interop.mjs",
     "check:oracle-random": "cargo build --quiet --manifest-path rust/Cargo.toml -p arare-cli && node scripts/check-oracle-random.mjs"
   },
   "devDependencies": {
@@ -45,6 +46,7 @@
     "@typescript-eslint/eslint-plugin": "^8.60.0",
     "@typescript-eslint/parser": "^8.60.0",
     "@vitest/coverage-istanbul": "4.1.10",
+    "apache-arrow": "21.2.0",
     "eslint": "^10.4.1",
     "ts-prune": "^0.10.3",
     "typescript": "^5.3.3",

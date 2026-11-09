@@ -4,7 +4,7 @@
 //!
 //! ```text
 //! arare version
-//! arare run [--json] [FILE | -]
+//! arare run [--json] [--arrow-in FILE] [--arrow-out FILE | -] [--arrow-decimal W:E] [FILE | -]
 //! arare check [--json] [--lines] [FILE | -]
 //! arare compile --inputs SIGNATURE [--name NAME] [FILE | -]
 //! ```
@@ -15,6 +15,9 @@
 //! `numerator` and `denominator`), plus Arare's `width` and `scale`, so the
 //! oracle harness can read both languages the same way. Exit status 0 on
 //! success, 1 when the program is refused or stops on an error, 2 on misuse.
+//!
+//! With `--arrow-in`, `--arrow-out` or `--arrow-decimal`, `run` reads its
+//! inputs from Arrow and writes its stack to Arrow (AR-LLR-043, `arrow.rs`).
 //!
 //! `check` runs the program the same way, then the error-budget checker
 //! (`arare-budget`): each value is printed with its budget, the most its
@@ -31,6 +34,8 @@
 //! exponent, bottom of the stack first), as Rust source on standard output:
 //! a function NAME (default `kernel`) that the crate `arare-codegen` runs
 //! (AR-LLR-027). The same program and signature always give the same text.
+
+mod arrow;
 
 use arare_budget::{analyze, budget, Abs, Analysis};
 use arare_interp::{run, Value};
@@ -177,19 +182,47 @@ fn main() -> ExitCode {
             ExitCode::SUCCESS
         }
         Some("run") => {
+            let arrow = match arrow::Options::parse(&args) {
+                Ok(o) => o,
+                Err(e) => {
+                    eprintln!("arare: {e}");
+                    return ExitCode::from(2);
+                }
+            };
             let json = args.iter().any(|a| a == "--json");
             let path = args
                 .iter()
+                .enumerate()
                 .skip(1)
-                .find(|a| *a != "--json")
-                .map(String::as_str)
+                .find(|(i, a)| {
+                    *a != "--json"
+                        && !arrow::FLAGS.contains(&a.as_str())
+                        && !arrow::FLAGS.contains(&args[i - 1].as_str())
+                })
+                .map(|(_, a)| a.as_str())
                 .unwrap_or("-");
             let source = match read(path) {
                 Ok(s) => s,
                 Err(code) => return code,
             };
-            match run(&source) {
+            let inputs = match arrow.inputs() {
+                Ok(v) => v,
+                Err(e) => {
+                    eprintln!("arare: {e}");
+                    return ExitCode::from(1);
+                }
+            };
+            match arrow::run(&source, inputs, arrow.output.is_some()) {
                 Ok(stack) => {
+                    if let Some(out) = &arrow.output {
+                        if let Err(e) = arrow.write(out, &stack) {
+                            eprintln!("arare: {e}");
+                            return ExitCode::from(1);
+                        }
+                        if out == "-" {
+                            return ExitCode::SUCCESS;
+                        }
+                    }
                     if json {
                         println!(
                             "{{\"ok\":true,\"stack\":[{}]}}",
@@ -289,7 +322,7 @@ fn main() -> ExitCode {
         }
         _ => {
             eprintln!(
-                "usage: arare version | arare run [--json] [FILE | -] | arare check [--json] [--lines] [FILE | -] | arare compile --inputs SIGNATURE [--name NAME] [FILE | -]"
+                "usage: arare version | arare run [--json] [--arrow-in FILE] [--arrow-out FILE | -] [--arrow-decimal W:E] [FILE | -] | arare check [--json] [--lines] [FILE | -] | arare compile --inputs SIGNATURE [--name NAME] [FILE | -]"
             );
             ExitCode::from(2)
         }
