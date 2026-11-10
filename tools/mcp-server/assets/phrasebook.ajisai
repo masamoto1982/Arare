@@ -82,25 +82,20 @@
 
 # ── Collections ──────────────────────────────────────────────────────────
 
-# v SUM — the total; 0 for an empty Vector.
-#:contract SUM inputs=1 outputs=1 field=closed
-[ 0 [ ADD ] FOLD ] 'SUM' DEF
-#:digest SUM #c31bda040caa165c2b67071695449fe1799073faf80b749bc12a6fecc68205cc
-#= [ 1 2 3 ] SUM → 6/1
-#= [ ] SUM → 0/1
-
 # v PRODUCT — the product; 1 for an empty Vector.
 #:contract PRODUCT inputs=1 outputs=1 field=closed
 [ 1 [ MUL ] FOLD ] 'PRODUCT' DEF
 #:digest PRODUCT #b0f89bd06667dca25fd842b070b75fce5b589ad30faff768f00d06ce3430d206
 #= [ 1 2 3 4 ] PRODUCT → 24/1
 
-# v MEAN — the arithmetic mean; 0/0 for an empty Vector.
+# v MEAN — the arithmetic mean of the present elements, as SQL's AVG skips
+# NULL; NIL when no element is present. (The total is the Word SUM.)
 #:contract MEAN inputs=1 outputs=1 field=leaving
-[ 'V' BIND V SUM V LENGTH DIV ] 'MEAN' DEF
-#:digest MEAN #3a2f2abf467b6b9fd3b3d3751994159ce5c1df7d133d22609517eee0b1379ad5
+[ [ NIL? NOT ] FILTER 'V' BIND V SUM V LENGTH DIV ] 'MEAN' DEF
+#:digest MEAN #9e7f96805165a396c78854c5c51c49cc658de53e37bcdc6490dc97bb82d374b7
 #= [ 1 2 3 4 ] MEAN → 5/2
-#= [ ] MEAN → 0/0
+#= [ 1 NIL 3 ] MEAN → 2/1
+#= [ ] MEAN NIL? → TRUE
 
 # truths ANY — TRUE when some element is TRUE.
 #:contract ANY inputs=1 outputs=1 field=closed

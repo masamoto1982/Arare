@@ -559,16 +559,16 @@ for (const [source, expected] of [
   const phrasebookText = readFileSync(new URL("./assets/phrasebook.ajisai", import.meta.url), "utf8");
   const recordedDigest = (name) =>
     phrasebookText.split("\n").find((line) => line.startsWith(`#:digest ${name} `))?.split(" ")[2];
-  const mean = await client.callTool({ name: "compute", arguments: { source: "[ 1 2 3 ] MEAN", words: ["mean"] } });
+  const any = await client.callTool({ name: "compute", arguments: { source: "[ 1 5 3 ] [ 4 GT ] MAP ANY", words: ["any"] } });
   check(
     "words defines a phrasebook Word, and the Words it calls, before the source",
-    mean.structuredContent?.status === "ok" &&
-      mean.structuredContent?.stackDisplay?.[0] === "2/1" &&
-      JSON.stringify(mean.structuredContent?.prelude?.map((p) => p.name)) === JSON.stringify(["SUM", "MEAN"]),
+    any.structuredContent?.status === "ok" &&
+      any.structuredContent?.stackDisplay?.[0] === "TRUE" &&
+      JSON.stringify(any.structuredContent?.prelude?.map((p) => p.name)) === JSON.stringify(["OR", "ANY"]),
   );
   check(
     "each prelude digest is the one ajisai://phrasebook records",
-    mean.structuredContent?.prelude?.every((p) => p.digest === recordedDigest(p.name)),
+    any.structuredContent?.prelude?.every((p) => p.digest === recordedDigest(p.name)),
   );
   const resource = await client.readResource({ uri: "ajisai://phrasebook" });
   check("ajisai://phrasebook serves the packaged phrasebook", resource.contents?.[0]?.text === phrasebookText);

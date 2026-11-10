@@ -5,7 +5,8 @@
     "checker infers (AR-HLR-027) of Ajisai's exact ones. `budget` is the largest budget the checker may infer for",
     "any value of the case, worked out by hand from the rounding points the program passes through (ADR-0008).",
     "A case with `divergence` is one where Arare differs from Ajisai on purpose (ADR-0007): the harness checks",
-    "that Arare answers `arare` and that Ajisai still answers something else."
+    "that Arare answers `arare` and that Ajisai still answers something else. Since Ajisai 1.0.0-beta.4 (SELECT",
+    "on UNKNOWN takes ELSE, SUM skips NIL) the only kind left is `overflow`."
   ],
   "cases": [
     { "name": "integer sum", "source": "2 3 ADD", "budget": "0" },
@@ -48,16 +49,11 @@
     { "name": "equality across scales", "source": "0.5 8 -1 QUANTIZE 0.5 16 -4 QUANTIZE EQ", "budget": "0" },
     { "name": "order across scales", "source": "0.25 8 -2 QUANTIZE 0.5 16 -4 QUANTIZE LT", "budget": "0" },
     { "name": "requantize to a coarser scale", "source": "0.875 8 -3 QUANTIZE 8 -1 QUANTIZE", "budget": "1/4" },
-    {
-      "name": "branch on UNKNOWN takes ELSE",
-      "source": "1 2 NIL SELECT",
-      "divergence": { "kind": "sqlBranch", "decision": "WORK_ORDER D-07, AR-HLR-015", "arare": "2/1" }
-    },
-    {
-      "name": "SUM skips NIL",
-      "source": "[ 1 NIL 3 ] SUM",
-      "divergence": { "kind": "sqlAggregate", "decision": "WORK_ORDER D-08, AR-HLR-016", "arare": "4/1" }
-    },
+    { "name": "branch on UNKNOWN takes ELSE (D-07)", "source": "1 2 NIL SELECT", "budget": "0" },
+    { "name": "UNKNOWN from an order takes ELSE (D-07)", "source": "1 2 NIL 0 LT SELECT", "budget": "0" },
+    { "name": "UNKNOWN lane takes ELSE (D-07)", "source": "[ 1 2 3 ] [ 7 8 9 ] [ TRUE NIL FALSE ] SELECT", "budget": "0" },
+    { "name": "SUM skips NIL (D-08)", "source": "[ 1 NIL 3 ] SUM", "budget": "0" },
+    { "name": "SUM skips NIL after a rounding (D-08)", "source": "[ 1 NIL 3 ] 1/3 8 -6 QUANTIZE MUL SUM", "budget": "1/32" },
     {
       "name": "overflow at int64 is 1/0",
       "source": "100 100 MUL 100 MUL 100 MUL 100 MUL 100 MUL 100 MUL 100 MUL 100 MUL 100 MUL",

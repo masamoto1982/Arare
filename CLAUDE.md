@@ -20,7 +20,7 @@ Arare は、量子化を前提とし、失った精度を数字で管理する�
 
 - 既定の数は int8／int16／int32 の固定小数点（int64 は拡幅の上限）。算術演算は結果が収まる幅まで広げ、丸めの場所は `RESCALE`、`NARROW`、`DIV` だけ（ADR-0002）。
 - 輪の2点：⊥（0/0）は吸収元、1/0 は範囲外（オーバーフロー）を表す。どちらも数であり NIL ではない。大小を問うと UNKNOWN になる。
-- 三値論理は strong Kleene。UNKNOWN は真偽の位置に現れた NIL。`FILTER` は TRUE の要素だけを残す。分岐が UNKNOWN のときは ELSE 側に進み、集約は NIL を飛ばす（SQL と同じ）。
+- 三値論理は strong Kleene。UNKNOWN は真偽の位置に現れた NIL。`FILTER` は TRUE の要素だけを残す。分岐が UNKNOWN のときは ELSE 側に進み、集約は NIL を飛ばす（SQL と同じ。Ajisai も 1.0.0-beta.4 から同じで、両者の違いは丸めだけ）。
 - 真偽値と NIL のメモリ配置は Apache Arrow と同じ（有効ビット列と値ビット列）。
 - Word の名前と意味は、Arare 固有の理由がない限り Ajisai に揃える。Ajisai はオラクル（正解の基準）である。
 

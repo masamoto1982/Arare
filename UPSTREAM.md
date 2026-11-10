@@ -17,3 +17,6 @@ is Arare's and is traced in `docs/quality/` from Phase 0 on.
 Ajisai stays the oracle Arare is checked against (WORK_ORDER.md §1.3). A later
 pin of the oracle — a Git dependency on `ajisai-core` or the WebAssembly bundle
 under `src/wasm/` — names its own upstream commit where it is declared.
+Since 2026-11-10 the oracle is pinned to Ajisai `319fe84fc1c2e339284156fe310d16a395d664e9`
+(1.0.0-beta.4, the merge of masamoto1982/Ajisai#1920); every place it is pinned is listed
+in `docs/quality/CONFIGURATION_INDEX.md` (ADR-0007, Amendment).

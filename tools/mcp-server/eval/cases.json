@@ -1169,7 +1169,7 @@
    "expect": {
     "/status": "ok",
     "/stackDisplay/0": "5/1",
-    "/prelude/1/name": "MEAN"
+    "/prelude/0/name": "MEAN"
    }
   },
   {

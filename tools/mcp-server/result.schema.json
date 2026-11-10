@@ -506,7 +506,13 @@
      "type": "string"
     },
     "purity": {
-     "type": "string"
+     "type": "string",
+     "description": "`pure`, `conditional` or `effectful` (spec/words.schema.json). `conditional` is a Word that runs a code block it is given (`MAP`, `FILTER`, `FOLD`, `SCAN`, `EXEC`): it has that block's effects and no others, so it is pure exactly when the block is.",
+     "enum": [
+      "pure",
+      "conditional",
+      "effectful"
+     ]
     },
     "determinism": {
      "type": "string"
@@ -536,7 +542,12 @@
      "type": "string"
     },
     "field": {
-     "type": "string"
+     "type": "string",
+     "description": "`closed` when every number the Word answers lies in the field whenever every number it reads does; `leaving` when it can answer a point over zero (`1/0`, `0/0`) from operands that hold none (LANG.CONTRACT.FIELD). The same key a `#:contract` declaration takes as `field=closed|leaving`.",
+     "enum": [
+      "closed",
+      "leaving"
+     ]
     },
     "nilPolicy": {
      "type": "string"

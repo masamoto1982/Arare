@@ -248,7 +248,7 @@ export const TOOLS = [
     // of leaving "out of domain" to be inferred.
     description:
       "Execute a bounded Ajisai program and return its stack. Ajisai is postfix (RPN) and its numbers are exact rationals closed under square root — no floats, so results are reproducible and comparisons decide. " +
-      `Its ${REGISTRY_WORD_COUNT} Words cover arithmetic (ADD SUB MUL DIV FLOOR ROUND MIN MAX SQRT POW GCD RATIO — negate with -1 MUL), comparison (EQ LT GT — not-equal is EQ NOT, at-most is GT NOT), three-valued logic (TRUE FALSE AND NOT, a NIL read as unknown — or is a NOT b NOT AND NOT; RECONCILE answers what two sources agree on, a NIL(conflict) for two different values), ` +
+      `Its ${REGISTRY_WORD_COUNT} Words cover arithmetic (ADD SUB MUL DIV FLOOR ROUND MIN MAX SUM SQRT POW GCD RATIO — negate with -1 MUL), comparison (EQ LT GT — not-equal is EQ NOT, at-most is GT NOT), three-valued logic (TRUE FALSE AND NOT, a NIL read as unknown — or is a NOT b NOT AND NOT; RECONCILE answers what two sources agree on, a NIL(conflict) for two different values), ` +
       "vectors — arithmetic broadcasts element-wise — collections (SORT ORDER UNIQUE ZIP RANGE FILL TAKE DROP CONCAT REVERSE LENGTH GET PUT BSEARCH COLLECT SHAPE RESHAPE FLATTEN DEPTH), " +
       "records — keyed data, built by RECORD from a key vector and a value vector, read by GET KEYS VALUES HAS?, rewritten by PUT WITHOUT MERGE; TALLY and GROUP answer Records — " +
       "higher-order blocks (MAP FILTER FOLD SCAN), text (CHARS JOIN TOKENIZE TRIM UPPER LOWER SEARCH REPLACE NUM STR FORMAT), JSON (JSON-DECODE JSON-ENCODE — objects are Records, numbers exact, nothing rounded), absence (NIL NIL? NIL-REASON ABSENT), control (SELECT EXEC FAIL), reflection (DIGEST CONTRACT — a Word's or a block's contract as a Record, inferred without running it), naming (DEF to name your own Word, BIND DEL) and output (PRINT). " +
@@ -283,7 +283,9 @@ export const TOOLS = [
     // whole list is one resource read away, so a caller that does not know the
     // name has something better to do than guess again.
     description:
-      "Return the generated canonical registry entry for a Word — its arity, purity, NIL policy, contract, " +
+      "Return the generated canonical registry entry for a Word — its arity; `purity` (`pure`, `effectful`, or `conditional` " +
+      "for a Word that runs a block it is given, pure exactly when that block is); `field` (`closed`, or `leaving` when it " +
+      "can answer `1/0` or `0/0` from operands holding neither, the key a `#:contract` line declares); NIL policy, contract, " +
       "and `cost`: what the Word charges on each metered resource (`steps`/`numeric`/`collection`), as a growth class " +
       "in its input. Cost classes join pointwise under concatenation, so a phrase's bound is the widest bound among " +
       "its Words — read them here to budget a program before running it rather than discovering the ceiling by hitting it. " +

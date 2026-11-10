@@ -6,12 +6,12 @@
   ],
   "semanticMetadataFrom": "docs/formalization-coverage.json",
   "counts": {
-    "canonicalWords": 77,
+    "canonicalWords": 78,
     "semanticKernelWords": 49,
-    "standardWords": 28,
-    "corewords": 77,
+    "standardWords": 29,
+    "corewords": 78,
     "surface_forms": 4,
-    "manifestEntries": 81
+    "manifestEntries": 82
   },
   "entries": [
     {
@@ -331,6 +331,25 @@
       "classification": "Core"
     },
     {
+      "id": "core.sum",
+      "kind": "coreword",
+      "surface": "SUM",
+      "family": "collection",
+      "vocabularyTier": "standard",
+      "source": "spec/words.json",
+      "canonical": "SUM",
+      "coverage_entry_id": "core.sum",
+      "semantic_role": "Derived",
+      "algebraic_family": "exact-arithmetic",
+      "core_tier": "material",
+      "derived_from": [
+        "algebra.exact-real.bihomographic",
+        "algebra.absence.domain",
+        "algebra.structure-lift.indexed-sequence"
+      ],
+      "classification": "Core"
+    },
+    {
       "id": "core.sqrt",
       "kind": "coreword",
       "surface": "SQRT",
@@ -359,7 +378,7 @@
       "coverage_entry_id": "core.pow",
       "semantic_role": "Derived",
       "algebraic_family": "exact-arithmetic",
-      "core_tier": "identity",
+      "core_tier": "material",
       "derived_from": [
         "algebra.exact-real.bihomographic"
       ],

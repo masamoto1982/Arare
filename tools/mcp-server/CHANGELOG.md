@@ -13,10 +13,11 @@ program and its answer before and after.
 
 ## Unreleased
 
-Specification: 1.0.0-beta.3.
+Specification: 1.0.0-beta.4.
 
 ### Changed
 
+- **SELECT takes ELSE on UNKNOWN, and SUM is a Word.** As SQL's CASE WHEN, `SELECT` takes its second candidate when its truth is UNKNOWN (`'yes' 'no' NIL SELECT` was `NIL`, is `'no'`). `SUM` adds a Vector's present elements and skips NIL, as SQL's SUM; the phrasebook's own `SUM` is gone, and its `MEAN` skips NIL like SQL's AVG, so `words: ["MEAN"]` no longer brings a `SUM` into the prelude. The `compute` description lists `SUM`.
 - **A block built from data cannot run inside another.** `EXEC`, `MAP`, `FILTER`, `FOLD` and `SCAN` refuse, as `error:nestedDataBlock`, a block that is not written in the code running it while another such block runs. A block that copied itself and ran the copy used to be stopped only by `callDepth`; `[ 1 COLLECT [ 0 0 ] GET EXEC EXEC ] 1 COLLECT [ 0 0 ] GET EXEC EXEC` is now refused at its second run. Code that runs a block it is given, handed a block that does the same, is refused too; write it as Words.
 
 - **The call-depth ceiling is `callDepth`.** A run nested past 256 User Word calls and block evaluations fails as `resourceLimitExceeded` with `error.resource: "callDepth"`, like every other ceiling; it used to be the separate category `recursionLimitExceeded`, which no longer exists. `ajisai://limits` lists `callDepth`, and the golden limit cases pin its boundary.

@@ -18,11 +18,11 @@ which call to make.
 ## 0. What it does, in one table
 
 Ajisai is more than arithmetic, and a caller who assumes otherwise stops
-reaching for it exactly where it would have helped. The 77 Words are:
+reaching for it exactly where it would have helped. The 78 Words are:
 
 | you need | Words |
 |---|---|
-| arithmetic | `ADD` `SUB` `MUL` `DIV` `FLOOR` `ROUND` `MIN` `MAX` `SQRT` `POW` `GCD` `RATIO` (negate with `-1 MUL`) |
+| arithmetic | `ADD` `SUB` `MUL` `DIV` `FLOOR` `ROUND` `MIN` `MAX` `SUM` `SQRT` `POW` `GCD` `RATIO` (negate with `-1 MUL`; `SUM` skips NIL, as SQL's does) |
 | comparison and logic | `EQ` `LT` `GT` (not-equal is `EQ NOT`, at-most is `GT NOT`) · `AND` `NOT` (or is `a NOT b NOT AND NOT`) `SELECT` `TRUE` `FALSE` — SQL's three-valued logic, a NIL read as UNKNOWN · `RECONCILE` (two sources joined: agreement stays, NIL yields, any mismatch, TRUE with FALSE included, is a `conflict` NIL) |
 | vectors | arithmetic broadcasts element-wise; no separate vector Words |
 | collections | `SORT` `ORDER` `UNIQUE` `ZIP` `RANGE` `FILL` `TAKE` `DROP` `CONCAT` `REVERSE` `LENGTH` `GET` `PUT` `BSEARCH` `COLLECT` · `SHAPE` `RESHAPE` `FLATTEN` `DEPTH` |
@@ -392,7 +392,7 @@ declaration without guessing, run `infer_contracts` first and paste its
 
 ## 3. Control and iteration
 
-- Branch: the two candidates, then the truth that chooses between them, then `SELECT`: `'non-negative' 'negative' 4 0 LT NOT SELECT PRINT` (§6). Both candidates are values the program already built, so neither is skipped and nothing is evaluated by SELECT itself. The choice is made lane by lane, so a Vector of truths branches a whole Vector at once: `0 [ -3 5 -1 ] [ -3 5 -1 ] 0 LT SELECT`. An absent truth chooses neither and answers that same absence. For the same reason SELECT cannot choose between two whole Vectors: candidates of different lengths are `shapeMismatch`, and a one-element candidate is silently repeated (`[ 1 2 3 ] [ 9 ] FALSE SELECT` is `[ 9 9 9 ]`). To pick one whole value by one truth, collect both and read one: `[ 1 2 3 ] [ 9 ] 2 COLLECT 0 1 FALSE SELECT GET` is `[ 9 ]`.
+- Branch: the two candidates, then the truth that chooses between them, then `SELECT`: `'non-negative' 'negative' 4 0 LT NOT SELECT PRINT` (§6). Both candidates are values the program already built, so neither is skipped and nothing is evaluated by SELECT itself. The choice is made lane by lane, so a Vector of truths branches a whole Vector at once: `0 [ -3 5 -1 ] [ -3 5 -1 ] 0 LT SELECT`. An absent truth takes the second candidate, as FALSE does — SQL's CASE WHEN takes THEN only when its condition is true. For the same reason SELECT cannot choose between two whole Vectors: candidates of different lengths are `shapeMismatch`, and a one-element candidate is silently repeated (`[ 1 2 3 ] [ 9 ] FALSE SELECT` is `[ 9 9 9 ]`). To pick one whole value by one truth, collect both and read one: `[ 1 2 3 ] [ 9 ] 2 COLLECT 0 1 FALSE SELECT GET` is `[ 9 ]`.
 - Iterate data, not counters: `MAP` / `FILTER` / `FOLD` with block operands (examples in §6). `FOLD` requires an explicit initial value: `[ 1 2 3 ] 0 [ ADD ] FOLD`. The block leaves **exactly one** value — the mapped element, the truth, the next accumulator; leaving none or a surplus is a `blockContractViolation` (§7).
 - Budget: a block iteration costs one step per element for every Word the block runs (literals are free), so under the MCP profile's 100,000-step budget a one-Word block (`[ ADD ] FOLD`) walks 100,000 elements, a two-Word block (`[ 3 MUL 1 ADD ] MAP`) 50,000, a three-Word block 33,000 — tens of thousands of elements divided by the Words in the block, not more. Beyond that, write the operation on whole vectors — `V 3 MUL 1 ADD` over 100,000 lanes is two steps — and leave no large intermediate on the stack.
 - Irrationals cost more than their class says: an axis marked `valueDependent: "algebraicTerms"` in `word_contract` (MUL, ADD, EQ, SORT and others) also grows with the number of terms in an algebraic value, and a product of distinct square roots doubles its terms with each factor. Run a small case first and read `resourceUsage.algebraicTerms`, the largest term count a result reached.
@@ -556,8 +556,8 @@ than it looks like it answers, which is the harder kind to notice:
 ## 9. Word index
 
 Generated from `docs/word-manifest.json` — the complete inventory:
-77 canonical Words in one flat Core dictionary, of which
-49 form the Semantic Kernel and 28 are Standard Words. Both are
+78 canonical Words in one flat Core dictionary, of which
+49 form the Semantic Kernel and 29 are Standard Words. Both are
 ordinary Core Words called by their plain names; the split is a design
 classification, not a namespace. A word absent here does not exist. There is
 no module system and nothing to import. For a phrase you would otherwise
@@ -574,7 +574,7 @@ common ones at work.
 |---|---|
 | truthOrder | `TRUE` `FALSE` `AND` `NOT` `SELECT` `EQ` `LT` `GT` `MIN` `MAX` |
 | knowledgeOrder | `RECONCILE` `ADD` `SUB` `MUL` `DIV` `FLOOR` `ROUND` `SQRT` `POW` `GCD` `RATIO` |
-| collection | `GET` `LENGTH` `TAKE` `DROP` `CONCAT` `REVERSE` `COLLECT` `RANGE` `FILL` `SHAPE` `RESHAPE` `FLATTEN` `DEPTH` `SORT` `ORDER` `UNIQUE` `ZIP` `PUT` `BSEARCH` |
+| collection | `SUM` `GET` `LENGTH` `TAKE` `DROP` `CONCAT` `REVERSE` `COLLECT` `RANGE` `FILL` `SHAPE` `RESHAPE` `FLATTEN` `DEPTH` `SORT` `ORDER` `UNIQUE` `ZIP` `PUT` `BSEARCH` |
 | record | `TALLY` `GROUP` `RECORD` `KEYS` `VALUES` `WITHOUT` `HAS?` `MERGE` |
 | higherOrder | `MAP` `FILTER` `FOLD` `SCAN` |
 | text | `CHARS` `JOIN` `TRIM` `UPPER` `LOWER` `TOKENIZE` `SEARCH` `REPLACE` `NUM` `STR` `FORMAT` `JSON-DECODE` `JSON-ENCODE` |
