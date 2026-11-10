@@ -1,8 +1,8 @@
 # Ajisai oracle bundle
 
-The WebAssembly build of Ajisai that the Playground runs until Arare's own
-engine is connected (WORK_ORDER.md D-13, Phase 5), and that Arare's results are
-compared against afterwards.
+The WebAssembly build of Ajisai that the Playground ran until Arare's own
+engine was connected (WORK_ORDER.md D-13, Phase 5), and that Arare's results
+are compared against since.
 
 | Field | Value |
 |---|---|
