@@ -75,7 +75,8 @@ describe('AR-VER-304: Arare and Ajisai on the same session', () => {
         ['an exact program', ['2 3 ADD', '4 MUL'], 'within'],
         ['a rounded literal and a product', ['1/3 8 -6 QUANTIZE [ 1 2 ] MUL SUM'], 'within'],
         ['a division, in two runs', ["7 'N' BIND", 'N 2 DIV'], 'within'],
-        ['UNKNOWN takes ELSE in Arare, on purpose (D-07)', ['1 2 NIL SELECT'], 'outside']
+        ['UNKNOWN takes ELSE in both (D-07)', ['1 2 NIL SELECT'], 'within'],
+        ['SUM skips NIL in both (D-08)', ['[ 1 NIL 3 ] SUM'], 'within']
     ])('%s', async (_, programs, verdict) => {
         const e = new ArareEngine(loadArareModule());
         for (const p of programs) expect((await e.execute(p)).status).toBe('OK');

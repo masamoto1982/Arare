@@ -10,11 +10,14 @@
 // The programs are random but fixed: a seeded generator (ORACLE_SEED,
 // default 20261029) writes ORACLE_PROGRAMS of them (default 10,600, so that
 // at least ORACLE_MIN_RAN, default 10,000, run in Arare: a program Arare
-// refuses, such as one whose scale leaves ±31, is not compared). They
-// keep out of the three divergences ADR-0007 records — no NIL is written, no
-// SUM sees an empty vector, and every divisor is a nonzero literal, so the
-// exact meaning never meets a wheel point and a SELECT never branches on
-// UNKNOWN in Ajisai — so every difference is the checker's to bound. Inside
+// refuses, such as one whose scale leaves ±31, is not compared). Since
+// Ajisai 1.0.0-beta.4 the two SQL rules are shared, so programs exercise
+// them: a SELECT's condition is now and then UNKNOWN (D-07), and a vector
+// summed may hold NIL lanes, every lane included (D-08). NIL is written
+// nowhere else, and every divisor is a nonzero literal, so the exact meaning
+// never meets a wheel point; overflow, the one divergence ADR-0007 still
+// records, is left to the checker, which claims no budget for it. So every
+// difference is the checker's to bound. Inside
 // brackets Ajisai reads its operands as data and runs only its own Words, so
 // vectors hold integers and blocks use integers and Ajisai's Words; quantized
 // values reach vectors through arithmetic at the top level.
@@ -84,11 +87,21 @@ function condition(depth) {
   const k = random();
   if (depth > 0 && k < 0.15) return `${condition(depth - 1)} ${condition(depth - 1)} AND`;
   if (depth > 0 && k < 0.25) return `${condition(depth - 1)} NOT`;
+  // UNKNOWN, straight or from an order with NIL: SELECT takes ELSE (D-07).
+  if (k < 0.29) return 'NIL';
+  if (k < 0.33) return `${scalar(depth)} NIL LT`;
   return `${scalar(depth)} ${scalar(depth)} ${pick(['LT', 'LT', 'EQ'])}`;
 }
 
 function vector(n) {
   const items = Array.from({ length: n }, () => int(-20, 20)).join(' ');
+  return `[ ${items} ]`;
+}
+
+/** A vector whose lanes are now and then NIL, at times all of them (D-08). */
+function vectorWithNil(n = int(1, 5)) {
+  const share = pick([0.3, 0.3, 1]);
+  const items = Array.from({ length: n }, () => (random() < share ? 'NIL' : int(-20, 20))).join(' ');
   return `[ ${items} ]`;
 }
 
@@ -123,7 +136,8 @@ function scalar(depth) {
     return `${scalar(d)} ${width} ${exponent(width)} QUANTIZE`;
   }
   if (k < 0.87) return `${scalar(d)} ${scalar(d)} ${condition(d)} SELECT`;
-  if (k < 0.94) return `${vectorValue(d)} SUM`;
+  if (k < 0.9) return `${vectorValue(d)} SUM`;
+  if (k < 0.94) return `${vectorWithNil()} SUM`;
   return `${vectorValue(d)} ${literal()} [ ${pick(['ADD', 'ADD', 'MUL'])} ] FOLD`;
 }
 

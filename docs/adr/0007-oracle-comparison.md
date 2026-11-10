@@ -1,6 +1,8 @@
 # ADR-0007: Comparing Arare with the Ajisai oracle
 
 Status: Accepted (Phase 2b, 2026-10-28). Decides WORK_ORDER.md Q-03.
+Amended 2026-11-10: the oracle moved to Ajisai 1.0.0-beta.4, which takes
+ELSE on UNKNOWN and has a SUM that skips NIL; see "Amendment" below.
 Verification: AR-VER-209 (`scripts/check-oracle.mjs`, `tests/oracle/corpus.json`).
 
 ## Context
@@ -46,3 +48,26 @@ are inferred only in Phase 3.
   answers the committed build gives.
 - **Excluding divergent programs from the corpus.** Rejected: an excluded
   behaviour is an unchecked one.
+
+## Amendment (2026-11-10): the SQL divergences are gone
+
+Ajisai adopted both SQL rules in 1.0.0-beta.4 (masamoto1982/Ajisai#1920,
+merged as `319fe84`): SELECT takes its second candidate when the condition is
+UNKNOWN, as `CASE WHEN` takes ELSE, and a new Standard Word SUM adds the
+present elements of a vector, skipping NIL, and is NIL when none is present.
+The owner's direction is that the two languages differ only in rounding.
+
+- The oracle is pinned to `319fe84` (`docs/quality/CONFIGURATION_INDEX.md`):
+  the Playground bundle, the Node build, the MCP server and the benchmarks'
+  `ajisai-core`.
+- The prelude no longer defines SUM; Ajisai's own SUM is used. QUANTIZE,
+  RESCALE, NARROW and NEG stay as before.
+- The `sqlBranch` and `sqlAggregate` cases are now ordinary cases, compared
+  within their budget, with more cases on UNKNOWN lanes, an UNKNOWN from an
+  order, and NIL skipped after a rounding. The generated programs
+  (AR-VER-217) now write UNKNOWN conditions and NIL lanes in summed vectors.
+- `overflow` (D-09) is the one divergence left, and it is the rounding
+  difference itself: Arare's widest width is finite, Ajisai's numbers are not.
+- D-07 and D-08 are unchanged as Arare's decisions; what changed is that
+  Ajisai now agrees with them. The Lean proofs (AR-VER-106) remain their
+  primary verification, and the oracle is now a second, independent check.

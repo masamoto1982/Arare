@@ -5,7 +5,7 @@
 // Ajisai runs from the Node build committed under tools/mcp-server/wasm/
 // generated/ (the commit UPSTREAM.md records). A prelude gives it Arare's
 // Words as their exact counterparts: QUANTIZE, RESCALE and NARROW keep the
-// exact value, NEG is `-1 MUL`, SUM is a FOLD of ADD. Arare runs as
+// exact value, NEG is `-1 MUL` (SUM is Ajisai's own). Arare runs as
 // `arare check --lines` (ARARE_BIN, or rust/target/debug/arare): one process
 // for every program, each answered with its stack and the error budget the
 // checker infers for every value (AR-HLR-027). The prelude and the

@@ -10,14 +10,14 @@
 /**
  * What Ajisai runs ahead of a program: Arare's Words that Ajisai lacks, as
  * their exact counterparts. QUANTIZE, RESCALE and NARROW keep the exact
- * value, NEG is `-1 MUL`, SUM is a FOLD of ADD.
+ * value, NEG is `-1 MUL`. SUM is Ajisai's own since 1.0.0-beta.4, which skips
+ * NIL as Arare's does (D-08).
  */
 export const PRELUDE = [
   "[ 'ARARE_E' BIND 'ARARE_W' BIND ] 'QUANTIZE' DEF",
   "[ 'ARARE_S' BIND ] 'RESCALE' DEF",
   "[ 'ARARE_W' BIND ] 'NARROW' DEF",
   "[ -1 MUL ] 'NEG' DEF",
-  "[ 0 [ ADD ] FOLD ] 'SUM' DEF",
 ].join('\n');
 
 /** A rational from a string `p/q` or `p`, as BigInts. */

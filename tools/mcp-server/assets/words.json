@@ -274,7 +274,7 @@
         "LANG.COLLECTIONS.LIFT"
       ],
       "documentation": {
-        "summary": "Choose between two already-computed values by a truth value: `'yes' 'no' TRUE SELECT` is `'yes'` and `'yes' 'no' FALSE SELECT` is `'no'`. The choice is element-wise (LANG.COLLECTIONS.LIFT), so a Vector of truths weaves two Vectors lane by lane and a one-lane operand is reused across the other's length. An UNKNOWN lane — a NIL read in truth position, whatever its reason — chooses neither and answers that same absence, so the reason survives the choice. Both operands are values the program already built: SELECT evaluates nothing, and whatever computed them ran before it, exactly once.",
+        "summary": "Choose between two already-computed values by a truth value: `'yes' 'no' TRUE SELECT` is `'yes'` and `'yes' 'no' FALSE SELECT` is `'no'`. The choice is element-wise (LANG.COLLECTIONS.LIFT), so a Vector of truths weaves two Vectors lane by lane and a one-lane operand is reused across the other's length. An UNKNOWN lane — a NIL read in truth position, whatever its reason — takes the second value, as FALSE does: SQL's CASE WHEN takes THEN only when its condition is true, so `'yes' 'no' NIL SELECT` is `'no'`. Both operands are values the program already built: SELECT evaluates nothing, and whatever computed them ran before it, exactly once.",
         "hover": "SELECT — choose between two values by truth",
         "syntax": "[ 'yes' ] [ 'no' ] TRUE SELECT",
         "stackEffect": "[ whenTrue ] [ whenFalse ] [ mask ] -> [ chosen ]"
@@ -1073,6 +1073,70 @@
         "stackEffect": "[ a ] [ b ] -> [ max ]"
       },
       "executorKey": "Max",
+      "effects": [],
+      "partiality": "projecting",
+      "field": "closed",
+      "vocabularyTier": "standard",
+      "standardKind": "namedPattern"
+    },
+    {
+      "name": "SUM",
+      "family": "collection",
+      "stack": {
+        "inputs": 1,
+        "outputs": 1,
+        "operands": [
+          "data"
+        ],
+        "domains": {
+          "operands": [
+            "vector"
+          ],
+          "results": [
+            "any"
+          ]
+        }
+      },
+      "nilPolicy": "passthroughThenProject",
+      "projection": {
+        "when": "noPresentElement",
+        "reason": "domainMiss"
+      },
+      "errorWhen": [
+        "nonVector",
+        "nonNumeric",
+        "shapeMismatch"
+      ],
+      "purity": "pure",
+      "determinism": "deterministic",
+      "cost": {
+        "steps": {
+          "class": "const",
+          "exact": true
+        },
+        "numeric": {
+          "class": "linear",
+          "exact": false,
+          "valueDependent": "algebraicTerms"
+        },
+        "collection": {
+          "class": "linear",
+          "exact": true
+        }
+      },
+      "clauses": [
+        "LANG.VALUES.ORDER",
+        "LANG.VALUES.EXACT",
+        "LANG.VALUES.NIL",
+        "LANG.FAILURE.PROJECT"
+      ],
+      "documentation": {
+        "summary": "The total of a Vector's elements, skipping every NIL as SQL's SUM skips NULL: `[ 1 2 3 ] SUM` is `6` and `[ 1 NIL 2 ] SUM` is `3`. The elements that are present are added by `ADD` from the left, so `[ 1/3 1/6 ] SUM` is `1/2`, a point over zero is added like any number, and Vector elements add lane by lane. A Vector with no element present — empty, or every element absent — projects NIL(domainMiss), as SQL's SUM over no rows is NULL: `[ ] SUM` and `[ NIL NIL ] SUM` are both NIL. The sister language Arare's SUM answers the same values. A non-Vector is `nonVector`, and an element ADD cannot add is `nonNumeric` or `shapeMismatch`.",
+        "hover": "SUM — total, skipping NIL",
+        "syntax": "[ 1 2 3 ] SUM",
+        "stackEffect": "[ vec ] -> [ total ]"
+      },
+      "executorKey": "Sum",
       "effects": [],
       "partiality": "projecting",
       "field": "closed",

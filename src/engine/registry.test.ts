@@ -28,7 +28,7 @@ describe('AR-VER-306: choosing the engine', () => {
         expect(ENGINES.arare.reference('ja')).toBe('docs/ja/index.html');
         expect(ENGINES.arare.reference('en')).toBe('docs/en/index.html');
         expect(ENGINES.ajisai.reference('en')).toBe(
-            'https://github.com/masamoto1982/Ajisai/blob/4d5f693def073b303d7ede3a98b3e9fa15060601/public/docs/en/index.html'
+            'https://github.com/masamoto1982/Ajisai/blob/319fe84fc1c2e339284156fe310d16a395d664e9/public/docs/en/index.html'
         );
     });
 });
