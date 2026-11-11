@@ -1,9 +1,9 @@
 //! AR-VER-216-C: the checker over programs (AR-LLR-020, AR-LLR-021): what it
-//! infers of each Word's result, the `field` contract and why it is open,
+//! infers of each Word's result, the `field` contract and why it is leaving,
 //! and that it follows the interpreter's stack exactly and the same way on
 //! every run.
 
-use arare_budget::{analyze, budget, Abs, Analysis, Info, Open, Why, Q};
+use arare_budget::{analyze, budget, Abs, Analysis, Exit, Info, Why, Q};
 use arare_front::{parse, Word};
 
 fn check(src: &str) -> Analysis {
@@ -20,7 +20,7 @@ fn budgets(src: &str) -> Vec<String> {
 }
 
 fn opens(src: &str) -> Vec<(Option<Word>, Why)> {
-    check(src).open.iter().map(|o| (o.word, o.why)).collect()
+    check(src).exits.iter().map(|o| (o.word, o.why)).collect()
 }
 
 #[test]
@@ -188,7 +188,7 @@ fn ar_ver_216_c_field() {
     assert_eq!(Why::MayOverflow.name(), "mayOverflow");
     assert_eq!(Why::DivisorMayBeZero.name(), "divisorMayBeZero");
     assert_eq!(Why::Unbounded.name(), "unbounded");
-    let o = Open {
+    let o = Exit {
         word: None,
         why: Why::Unbounded,
     };
@@ -209,7 +209,7 @@ fn ar_ver_216_c_operands_the_checker_cannot_follow() {
     ] {
         let a = check(src);
         assert_eq!(budget(&a.stack[0]), None, "{src}");
-        assert!(a.open.iter().any(|o| o.word == Some(word)), "{src}");
+        assert!(a.exits.iter().any(|o| o.word == Some(word)), "{src}");
     }
 }
 

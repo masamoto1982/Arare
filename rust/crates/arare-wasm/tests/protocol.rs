@@ -14,7 +14,7 @@ fn ar_ver_231_a_number_with_width_scale_and_budget() {
         run("1/3 8 -6 QUANTIZE [ 1 2 ] MUL SUM"),
         concat!(
             r#"{"ok":true,"stack":[{"type":"number","value":{"numerator":"63","denominator":"64"},"width":32,"scale":-6,"budget":"1/64"}],"#,
-            r#""field":"closed","open":[],"#,
+            r#""field":"closed","fieldExits":[],"#,
             r#""items":[{"line":1,"column":1,"endLine":1,"endColumn":18},{"line":1,"column":19,"endLine":1,"endColumn":26},"#,
             r#"{"line":1,"column":27,"endLine":1,"endColumn":30},{"line":1,"column":31,"endLine":1,"endColumn":34}]}"#
         )
@@ -31,7 +31,7 @@ fn ar_ver_231_every_kind_of_value() {
         r#"{"type":"vector","value":[{"type":"number","value":{"numerator":"4","denominator":"1"},"width":16,"scale":0},{"type":"number","value":{"numerator":"6","denominator":"1"},"width":16,"scale":0}],"budget":"0/1"}"#,
         r#"{"type":"block","value":"[ 2 MUL ]","budget":null}"#,
         r#"{"type":"string","value":"X","budget":"0/1"}"#,
-        r#""field":"open","open":[{"word":"DIV","why":"wheelPoint"}]"#,
+        r#""field":"leaving","fieldExits":[{"word":"DIV","why":"wheelPoint"}]"#,
     ] {
         assert!(out.contains(part), "{part} missing from {out}");
     }

@@ -17,7 +17,7 @@
   <main class="ref-main">
     <h1>Arare リファレンス</h1>
     <p>Arare は量子化を前提とし、失った精度を数字で管理する言語です。数は幅（8、16、32、64 ビット）とスケール指数 e を持ち、値は符号 × 2^e です。算術は厳密な結果が収まる幅まで広げ、丸めは QUANTIZE、RESCALE、DIV の3か所でだけ起きます。</p>
-    <p>誤差予算の検査器は、プログラムを実行せずに、残る値ごとに Ajisai が計算する厳密値からどれだけ離れうるかを推論します。すべての数値結果を抑えられたプログラムは field=closed、そうでなければ field=open で、どのワードがなぜ抑えられないかを示します。</p>
+    <p>誤差予算の検査器は、プログラムを実行せずに、残る値ごとに Ajisai が計算する厳密値からどれだけ離れうるかを推論します。すべての数値結果を抑えられたプログラムは field=closed、そうでなければ field=leaving で、どのワードがなぜ抑えられないかを示します。</p>
     <p>サンプルは Playground で開けます。Playground は同じソースを Arare と Ajisai で実行し、差を誤差予算と並べて表示します。</p>
     <nav class="ref-nav" aria-label="ワード">
       <ul>
@@ -39,7 +39,7 @@
             <dt>幅</dt><dd>指定した幅（8、16、32、64）。</dd>
             <dt>スケール</dt><dd>指定した指数（±31 以内）。</dd>
             <dt>誤差</dt><dd>指数を上げると最近接偶数に丸め、新しいスケールの 1/2 ulp 以下の誤差が加わる。下げるときは厳密。リテラル p/q は書いた場所で一度だけ丸める。</dd>
-            <dt>field</dt><dd>値が幅に収まらないおそれがあれば open（mayOverflow）。収まらない値は 1/0 になる。1/0 や 0/0 を書くと open（wheelPoint）。</dd>
+            <dt>field</dt><dd>値が幅に収まらないおそれがあれば leaving（mayOverflow）。収まらない値は 1/0 になる。1/0 や 0/0 を書くと leaving（wheelPoint）。</dd>
         </dl>
         <div class="ref-table-wrap">
           <table class="ref-table">
@@ -76,7 +76,7 @@
             <dt>幅</dt><dd>両辺の範囲の和が収まる最も狭い幅に広げる。上限は int64。</dd>
             <dt>スケール</dt><dd>2つの指数の小さいほう。もう一方を厳密にずらして揃える。</dd>
             <dt>誤差</dt><dd>厳密。結果の誤差予算は両辺の予算の和。</dd>
-            <dt>field</dt><dd>和が int64 を超えるおそれがあるか、どちらかが輪の点なら open。</dd>
+            <dt>field</dt><dd>和が int64 を超えるおそれがあるか、どちらかが輪の点なら leaving。</dd>
         </dl>
         <div class="ref-table-wrap">
           <table class="ref-table">
@@ -144,7 +144,7 @@
             <dt>幅</dt><dd>範囲の積が収まる最も狭い幅に広げる。int8 × int8 は int16。</dd>
             <dt>スケール</dt><dd>2つの指数の和。±31 を超えると ERROR。</dd>
             <dt>誤差</dt><dd>厳密。各辺の誤差予算に相手の範囲を掛けたものが伝わる。</dd>
-            <dt>field</dt><dd>積が int64 を超えるおそれがあるか、輪の点が入れば open。</dd>
+            <dt>field</dt><dd>積が int64 を超えるおそれがあるか、輪の点が入れば leaving。</dd>
         </dl>
         <div class="ref-table-wrap">
           <table class="ref-table">
@@ -181,7 +181,7 @@
             <dt>幅</dt><dd>被除数の範囲を除数の指数でずらしたものが収まる最も狭い幅。</dd>
             <dt>スケール</dt><dd>被除数の指数。細かい商が欲しければ被除数を細かいスケールで書く。</dd>
             <dt>誤差</dt><dd>最近接偶数に丸め、結果のスケールの 1/2 ulp 以下の誤差が加わる。</dd>
-            <dt>field</dt><dd>除数が 0 のおそれがあれば open（divisorMayBeZero）。x/0 は 1/0、0/0 は ⊥。</dd>
+            <dt>field</dt><dd>除数が 0 のおそれがあれば leaving（divisorMayBeZero）。x/0 は 1/0、0/0 は ⊥。</dd>
         </dl>
         <div class="ref-table-wrap">
           <table class="ref-table">
@@ -218,7 +218,7 @@
             <dt>幅</dt><dd>変わらない。有限の範囲は対称。</dd>
             <dt>スケール</dt><dd>変わらない。</dd>
             <dt>誤差</dt><dd>厳密。誤差予算は元のまま。</dd>
-            <dt>field</dt><dd>輪の点が入ったときだけ open。</dd>
+            <dt>field</dt><dd>輪の点が入ったときだけ leaving。</dd>
         </dl>
         <div class="ref-table-wrap">
           <table class="ref-table">
@@ -274,7 +274,7 @@
             <dt>幅</dt><dd>指定した幅。</dd>
             <dt>スケール</dt><dd>変わらない。</dd>
             <dt>誤差</dt><dd>収まるなら厳密。</dd>
-            <dt>field</dt><dd>幅に収まらないおそれがあれば open（mayOverflow）。</dd>
+            <dt>field</dt><dd>幅に収まらないおそれがあれば leaving（mayOverflow）。</dd>
         </dl>
         <div class="ref-table-wrap">
           <table class="ref-table">
@@ -492,7 +492,7 @@
             <dt>幅</dt><dd>全レーンの和が収まる幅に広げる。</dd>
             <dt>スケール</dt><dd>要素の指数。</dd>
             <dt>誤差</dt><dd>厳密。各レーンの予算が足し合わされる。</dd>
-            <dt>field</dt><dd>和が int64 を超えるおそれがあれば open。</dd>
+            <dt>field</dt><dd>和が int64 を超えるおそれがあれば leaving。</dd>
         </dl>
         <div class="ref-table-wrap">
           <table class="ref-table">

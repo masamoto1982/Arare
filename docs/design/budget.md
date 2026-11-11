@@ -127,7 +127,7 @@ node — so nothing overflowed — and no DIV with a zero divisor.
 
 `arare check` runs the program, then the checker, and prints each value with
 `± budget` (`± ?` when there is none) and the contract; `--json` adds
-`"budget"` to each value node of `run --json` and `"field"` and `"open"` to the
+`"budget"` to each value node of `run --json` and `"field"` and `"fieldExits"` to the
 document; `--lines` checks one program per input line, which is how the oracle
 harnesses run thousands of programs in one process (AR-VER-209, AR-VER-217).
 

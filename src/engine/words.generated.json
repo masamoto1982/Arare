@@ -5,13 +5,13 @@
       "name": "QUANTIZE",
       "summary": "Puts x at a width and scale exponent; how a non-integer enters a program.",
       "syntax": "x width exponent QUANTIZE",
-      "documentation": "QUANTIZE — Puts x at a width and scale exponent; how a non-integer enters a program.\nSyntax: x width exponent QUANTIZE\nWidth: The width named: 8, 16, 32 or 64.\nScale: The exponent named, within ±31.\nError: Raising the exponent rounds half to even, adding at most half an ulp of the new scale; lowering it is exact. A literal p/q is rounded once, where it is written.\nfield: Open (mayOverflow) when the value may not fit the width: it is then 1/0. Writing 1/0 or 0/0 is open (wheelPoint).\nExample: 1/3 8 -6 QUANTIZE  →  21/64"
+      "documentation": "QUANTIZE — Puts x at a width and scale exponent; how a non-integer enters a program.\nSyntax: x width exponent QUANTIZE\nWidth: The width named: 8, 16, 32 or 64.\nScale: The exponent named, within ±31.\nError: Raising the exponent rounds half to even, adding at most half an ulp of the new scale; lowering it is exact. A literal p/q is rounded once, where it is written.\nfield: Leaving (mayOverflow) when the value may not fit the width: it is then 1/0. Writing 1/0 or 0/0 is leaving (wheelPoint).\nExample: 1/3 8 -6 QUANTIZE  →  21/64"
     },
     {
       "name": "ADD",
       "summary": "The exact sum, lane by lane.",
       "syntax": "a b ADD",
-      "documentation": "ADD — The exact sum, lane by lane.\nSyntax: a b ADD\nWidth: Widened to the narrowest width that holds the sum of the operands' ranges; int64 at most.\nScale: The smaller of the two exponents: the other operand is shifted to it exactly.\nError: Exact: the result's budget is the sum of the operands' budgets.\nfield: Open when the sum may leave int64 (mayOverflow) or an operand is a wheel point.\nExample: 126 1 ADD  →  127/1"
+      "documentation": "ADD — The exact sum, lane by lane.\nSyntax: a b ADD\nWidth: Widened to the narrowest width that holds the sum of the operands' ranges; int64 at most.\nScale: The smaller of the two exponents: the other operand is shifted to it exactly.\nError: Exact: the result's budget is the sum of the operands' budgets.\nfield: Leaving when the sum may leave int64 (mayOverflow) or an operand is a wheel point.\nExample: 126 1 ADD  →  127/1"
     },
     {
       "name": "SUB",
@@ -23,19 +23,19 @@
       "name": "MUL",
       "summary": "The exact product, lane by lane.",
       "syntax": "a b MUL",
-      "documentation": "MUL — The exact product, lane by lane.\nSyntax: a b MUL\nWidth: Widened to the narrowest width holding the product of the ranges: int8 × int8 is int16.\nScale: The sum of the two exponents; an exponent beyond ±31 is an ERROR.\nError: Exact: each operand's budget is scaled by the other's range, as the product propagates it.\nfield: Open when the product may leave int64 or an operand is a wheel point.\nExample: 100 100 MUL  →  10000/1"
+      "documentation": "MUL — The exact product, lane by lane.\nSyntax: a b MUL\nWidth: Widened to the narrowest width holding the product of the ranges: int8 × int8 is int16.\nScale: The sum of the two exponents; an exponent beyond ±31 is an ERROR.\nError: Exact: each operand's budget is scaled by the other's range, as the product propagates it.\nfield: Leaving when the product may leave int64 or an operand is a wheel point.\nExample: 100 100 MUL  →  10000/1"
     },
     {
       "name": "DIV",
       "summary": "The quotient a / b, rounded: one of Arare's three rounding points.",
       "syntax": "a b DIV",
-      "documentation": "DIV — The quotient a / b, rounded: one of Arare's three rounding points.\nSyntax: a b DIV\nWidth: The narrowest width holding the dividend's range shifted by the divisor's exponent.\nScale: The dividend's exponent: write the dividend at a finer scale for a finer quotient.\nError: Rounds half to even: adds at most half an ulp of the result's scale.\nfield: Open (divisorMayBeZero) when the divisor may be 0: x/0 is 1/0 and 0/0 is ⊥.\nExample: 7 2 DIV  →  4/1"
+      "documentation": "DIV — The quotient a / b, rounded: one of Arare's three rounding points.\nSyntax: a b DIV\nWidth: The narrowest width holding the dividend's range shifted by the divisor's exponent.\nScale: The dividend's exponent: write the dividend at a finer scale for a finer quotient.\nError: Rounds half to even: adds at most half an ulp of the result's scale.\nfield: Leaving (divisorMayBeZero) when the divisor may be 0: x/0 is 1/0 and 0/0 is ⊥.\nExample: 7 2 DIV  →  4/1"
     },
     {
       "name": "NEG",
       "summary": "The negation; 1/0 and 0/0 are their own.",
       "syntax": "a NEG",
-      "documentation": "NEG — The negation; 1/0 and 0/0 are their own.\nSyntax: a NEG\nWidth: Unchanged: finite ranges are symmetric.\nScale: Unchanged.\nError: Exact: the budget is the operand's.\nfield: Open only when the operand is a wheel point.\nExample: 1 2 SUB NEG  →  1/1"
+      "documentation": "NEG — The negation; 1/0 and 0/0 are their own.\nSyntax: a NEG\nWidth: Unchanged: finite ranges are symmetric.\nScale: Unchanged.\nError: Exact: the budget is the operand's.\nfield: Leaving only when the operand is a wheel point.\nExample: 1 2 SUB NEG  →  1/1"
     },
     {
       "name": "RESCALE",
@@ -47,7 +47,7 @@
       "name": "NARROW",
       "summary": "Fits x into a narrower width; a value that does not fit is 1/0, never clamped.",
       "syntax": "x width NARROW",
-      "documentation": "NARROW — Fits x into a narrower width; a value that does not fit is 1/0, never clamped.\nSyntax: x width NARROW\nWidth: The width named.\nScale: Unchanged.\nError: Exact when the value fits.\nfield: Open (mayOverflow) when the value may not fit the width.\nExample: 100 100 MUL 100 SUB 16 NARROW  →  9900/1"
+      "documentation": "NARROW — Fits x into a narrower width; a value that does not fit is 1/0, never clamped.\nSyntax: x width NARROW\nWidth: The width named.\nScale: Unchanged.\nError: Exact when the value fits.\nfield: Leaving (mayOverflow) when the value may not fit the width.\nExample: 100 100 MUL 100 SUB 16 NARROW  →  9900/1"
     },
     {
       "name": "EQ",
@@ -95,7 +95,7 @@
       "name": "SUM",
       "summary": "The sum of a vector's elements, skipping NIL as SQL does; all NIL is NIL.",
       "syntax": "vector SUM",
-      "documentation": "SUM — The sum of a vector's elements, skipping NIL as SQL does; all NIL is NIL.\nSyntax: vector SUM\nWidth: Widened to hold the sum of every lane.\nScale: The elements' exponent.\nError: Exact: the lanes' budgets add.\nfield: Open when the sum may leave int64.\nExample: [ 1 NIL 2 ] SUM  →  3/1"
+      "documentation": "SUM — The sum of a vector's elements, skipping NIL as SQL does; all NIL is NIL.\nSyntax: vector SUM\nWidth: Widened to hold the sum of every lane.\nScale: The elements' exponent.\nError: Exact: the lanes' budgets add.\nfield: Leaving when the sum may leave int64.\nExample: [ 1 NIL 2 ] SUM  →  3/1"
     },
     {
       "name": "SELECT",

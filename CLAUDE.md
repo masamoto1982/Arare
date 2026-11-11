@@ -1,7 +1,7 @@
 # Arare：作業の恒久ルール
 
 Arare は、量子化を前提とし、失った精度を数字で管理するスタック型・ベクトル指向の言語である。
-開発動機は姉妹言語 Ajisai の遅さを解決することにあり、**性能要件（AR-PERF）を満たさない成果物は完成とみなさない**。
+姉妹言語 Ajisai とは対をなす同等のアンチテーゼで、Ajisai は値を固定して費用を数え、Arare は費用を固定して失った精度を数える（ADR-0015）。費用を固定すると言う以上、**性能要件（AR-PERF）を満たさない成果物は完成とみなさない**。
 全体の計画と決定事項は `WORK_ORDER.md` にある（フェーズ 0〜1 の間に `docs/quality/` の計画書群へ分解する）。
 
 ## 必ず守ること
@@ -22,7 +22,7 @@ Arare は、量子化を前提とし、失った精度を数字で管理する�
 - 輪の2点：⊥（0/0）は吸収元、1/0 は範囲外（オーバーフロー）を表す。どちらも数であり NIL ではない。大小を問うと UNKNOWN になる。
 - 三値論理は strong Kleene。UNKNOWN は真偽の位置に現れた NIL。`FILTER` は TRUE の要素だけを残す。分岐が UNKNOWN のときは ELSE 側に進み、集約は NIL を飛ばす（SQL と同じ。Ajisai も 1.0.0-beta.4 から同じで、両者の違いは丸めだけ）。
 - 真偽値と NIL のメモリ配置は Apache Arrow と同じ（有効ビット列と値ビット列）。
-- Word の名前と意味は、Arare 固有の理由がない限り Ajisai に揃える。Ajisai はオラクル（正解の基準）である。
+- 両方にある Word は両方のもので、名前と意味は一つ。どちらも単独では変えない。正解の基準はプログラムが表す厳密な値で、Ajisai はその独立した実装として相互検証の相手になる（ADR-0015）。
 
 ## 検証で使うコマンド
 
@@ -41,4 +41,4 @@ Arare は、量子化を前提とし、失った精度を数字で管理する�
 
 - 計画書と標準：`docs/quality/`（英語）。開発メモ：`docs/dev/`（日本語）
 - Phase 0 で意図的に残した課題：`docs/quality/PROBLEM_REPORTS.md`
-- Ajisai のオラクル：`src/wasm/ajisai-oracle/`（Playground）、`tools/mcp-server/`（エージェント用）。固定したコミットは `UPSTREAM.md`
+- Ajisai（相互検証の相手）：`src/wasm/ajisai-oracle/`（Playground）、`tools/mcp-server/`（エージェント用）。固定したコミットは `UPSTREAM.md`

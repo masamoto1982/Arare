@@ -32,8 +32,8 @@
         "ja": "指数を上げると最近接偶数に丸め、新しいスケールの 1/2 ulp 以下の誤差が加わる。下げるときは厳密。リテラル p/q は書いた場所で一度だけ丸める。"
       },
       "field": {
-        "en": "Open (mayOverflow) when the value may not fit the width: it is then 1/0. Writing 1/0 or 0/0 is open (wheelPoint).",
-        "ja": "値が幅に収まらないおそれがあれば open（mayOverflow）。収まらない値は 1/0 になる。1/0 や 0/0 を書くと open（wheelPoint）。"
+        "en": "Leaving (mayOverflow) when the value may not fit the width: it is then 1/0. Writing 1/0 or 0/0 is leaving (wheelPoint).",
+        "ja": "値が幅に収まらないおそれがあれば leaving（mayOverflow）。収まらない値は 1/0 になる。1/0 や 0/0 を書くと leaving（wheelPoint）。"
       },
       "examples": [
         { "source": "1/3 8 -6 QUANTIZE", "result": ["21/64"], "budget": ["1/192"] },
@@ -63,8 +63,8 @@
         "ja": "厳密。結果の誤差予算は両辺の予算の和。"
       },
       "field": {
-        "en": "Open when the sum may leave int64 (mayOverflow) or an operand is a wheel point.",
-        "ja": "和が int64 を超えるおそれがあるか、どちらかが輪の点なら open。"
+        "en": "Leaving when the sum may leave int64 (mayOverflow) or an operand is a wheel point.",
+        "ja": "和が int64 を超えるおそれがあるか、どちらかが輪の点なら leaving。"
       },
       "examples": [
         { "source": "126 1 ADD", "result": ["127/1"], "budget": ["0/1"] },
@@ -124,8 +124,8 @@
         "ja": "厳密。各辺の誤差予算に相手の範囲を掛けたものが伝わる。"
       },
       "field": {
-        "en": "Open when the product may leave int64 or an operand is a wheel point.",
-        "ja": "積が int64 を超えるおそれがあるか、輪の点が入れば open。"
+        "en": "Leaving when the product may leave int64 or an operand is a wheel point.",
+        "ja": "積が int64 を超えるおそれがあるか、輪の点が入れば leaving。"
       },
       "examples": [
         { "source": "100 100 MUL", "result": ["10000/1"], "budget": ["0/1"] },
@@ -155,8 +155,8 @@
         "ja": "最近接偶数に丸め、結果のスケールの 1/2 ulp 以下の誤差が加わる。"
       },
       "field": {
-        "en": "Open (divisorMayBeZero) when the divisor may be 0: x/0 is 1/0 and 0/0 is ⊥.",
-        "ja": "除数が 0 のおそれがあれば open（divisorMayBeZero）。x/0 は 1/0、0/0 は ⊥。"
+        "en": "Leaving (divisorMayBeZero) when the divisor may be 0: x/0 is 1/0 and 0/0 is ⊥.",
+        "ja": "除数が 0 のおそれがあれば leaving（divisorMayBeZero）。x/0 は 1/0、0/0 は ⊥。"
       },
       "examples": [
         { "source": "7 2 DIV", "result": ["4/1"], "budget": ["1/2"] },
@@ -186,8 +186,8 @@
         "ja": "厳密。誤差予算は元のまま。"
       },
       "field": {
-        "en": "Open only when the operand is a wheel point.",
-        "ja": "輪の点が入ったときだけ open。"
+        "en": "Leaving only when the operand is a wheel point.",
+        "ja": "輪の点が入ったときだけ leaving。"
       },
       "examples": [
         { "source": "1 2 SUB NEG", "result": ["1/1"], "budget": ["0/1"] }
@@ -245,8 +245,8 @@
         "ja": "収まるなら厳密。"
       },
       "field": {
-        "en": "Open (mayOverflow) when the value may not fit the width.",
-        "ja": "幅に収まらないおそれがあれば open（mayOverflow）。"
+        "en": "Leaving (mayOverflow) when the value may not fit the width.",
+        "ja": "幅に収まらないおそれがあれば leaving（mayOverflow）。"
       },
       "examples": [
         { "source": "100 100 MUL 100 SUB 16 NARROW", "result": ["9900/1"], "budget": ["0/1"] },
@@ -480,8 +480,8 @@
         "ja": "厳密。各レーンの予算が足し合わされる。"
       },
       "field": {
-        "en": "Open when the sum may leave int64.",
-        "ja": "和が int64 を超えるおそれがあれば open。"
+        "en": "Leaving when the sum may leave int64.",
+        "ja": "和が int64 を超えるおそれがあれば leaving。"
       },
       "examples": [
         { "source": "[ 1 NIL 2 ] SUM", "result": ["3/1"], "budget": ["0/1"] },

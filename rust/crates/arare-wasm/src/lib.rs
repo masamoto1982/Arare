@@ -149,8 +149,8 @@ fn checked_node(v: &Value, abs: Option<&Abs>) -> String {
 }
 
 fn field(a: &Analysis) -> String {
-    let open: Vec<String> = a
-        .open
+    let exits: Vec<String> = a
+        .exits
         .iter()
         .map(|o| {
             format!(
@@ -161,8 +161,11 @@ fn field(a: &Analysis) -> String {
             )
         })
         .collect();
-    let contract = if a.closed() { "closed" } else { "open" };
-    format!("\"field\":\"{contract}\",\"open\":[{}]", open.join(","))
+    let contract = if a.closed() { "closed" } else { "leaving" };
+    format!(
+        "\"field\":\"{contract}\",\"fieldExits\":[{}]",
+        exits.join(",")
+    )
 }
 
 /// The category a host branches on, for an error the interpreter stops with.

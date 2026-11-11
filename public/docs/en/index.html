@@ -17,7 +17,7 @@
   <main class="ref-main">
     <h1>Arare Reference</h1>
     <p>Arare quantizes by design and accounts for the precision it gives up. A number has a width (8, 16, 32 or 64 bits) and a scale exponent e: its value is its code times 2^e. Arithmetic widens to a width that holds the exact result; rounding happens only at QUANTIZE, RESCALE and DIV.</p>
-    <p>For every value a program leaves, the error-budget checker infers, without running it, how far Arare's value may be from the exact value Ajisai computes. A program is field=closed when the checker bounds every numeric result; otherwise it is field=open, and the checker says which Word and why.</p>
+    <p>For every value a program leaves, the error-budget checker infers, without running it, how far Arare's value may be from the exact value Ajisai computes. A program is field=closed when the checker bounds every numeric result; otherwise it is field=leaving, and the checker says which Word and why.</p>
     <p>Each sample opens in the Playground, which runs it in Arare and in Ajisai side by side and shows the difference against the budget.</p>
     <nav class="ref-nav" aria-label="Words">
       <ul>
@@ -39,7 +39,7 @@
             <dt>Width</dt><dd>The width named: 8, 16, 32 or 64.</dd>
             <dt>Scale</dt><dd>The exponent named, within ±31.</dd>
             <dt>Error</dt><dd>Raising the exponent rounds half to even, adding at most half an ulp of the new scale; lowering it is exact. A literal p/q is rounded once, where it is written.</dd>
-            <dt>field</dt><dd>Open (mayOverflow) when the value may not fit the width: it is then 1/0. Writing 1/0 or 0/0 is open (wheelPoint).</dd>
+            <dt>field</dt><dd>Leaving (mayOverflow) when the value may not fit the width: it is then 1/0. Writing 1/0 or 0/0 is leaving (wheelPoint).</dd>
         </dl>
         <div class="ref-table-wrap">
           <table class="ref-table">
@@ -76,7 +76,7 @@
             <dt>Width</dt><dd>Widened to the narrowest width that holds the sum of the operands' ranges; int64 at most.</dd>
             <dt>Scale</dt><dd>The smaller of the two exponents: the other operand is shifted to it exactly.</dd>
             <dt>Error</dt><dd>Exact: the result's budget is the sum of the operands' budgets.</dd>
-            <dt>field</dt><dd>Open when the sum may leave int64 (mayOverflow) or an operand is a wheel point.</dd>
+            <dt>field</dt><dd>Leaving when the sum may leave int64 (mayOverflow) or an operand is a wheel point.</dd>
         </dl>
         <div class="ref-table-wrap">
           <table class="ref-table">
@@ -144,7 +144,7 @@
             <dt>Width</dt><dd>Widened to the narrowest width holding the product of the ranges: int8 × int8 is int16.</dd>
             <dt>Scale</dt><dd>The sum of the two exponents; an exponent beyond ±31 is an ERROR.</dd>
             <dt>Error</dt><dd>Exact: each operand's budget is scaled by the other's range, as the product propagates it.</dd>
-            <dt>field</dt><dd>Open when the product may leave int64 or an operand is a wheel point.</dd>
+            <dt>field</dt><dd>Leaving when the product may leave int64 or an operand is a wheel point.</dd>
         </dl>
         <div class="ref-table-wrap">
           <table class="ref-table">
@@ -181,7 +181,7 @@
             <dt>Width</dt><dd>The narrowest width holding the dividend's range shifted by the divisor's exponent.</dd>
             <dt>Scale</dt><dd>The dividend's exponent: write the dividend at a finer scale for a finer quotient.</dd>
             <dt>Error</dt><dd>Rounds half to even: adds at most half an ulp of the result's scale.</dd>
-            <dt>field</dt><dd>Open (divisorMayBeZero) when the divisor may be 0: x/0 is 1/0 and 0/0 is ⊥.</dd>
+            <dt>field</dt><dd>Leaving (divisorMayBeZero) when the divisor may be 0: x/0 is 1/0 and 0/0 is ⊥.</dd>
         </dl>
         <div class="ref-table-wrap">
           <table class="ref-table">
@@ -218,7 +218,7 @@
             <dt>Width</dt><dd>Unchanged: finite ranges are symmetric.</dd>
             <dt>Scale</dt><dd>Unchanged.</dd>
             <dt>Error</dt><dd>Exact: the budget is the operand's.</dd>
-            <dt>field</dt><dd>Open only when the operand is a wheel point.</dd>
+            <dt>field</dt><dd>Leaving only when the operand is a wheel point.</dd>
         </dl>
         <div class="ref-table-wrap">
           <table class="ref-table">
@@ -274,7 +274,7 @@
             <dt>Width</dt><dd>The width named.</dd>
             <dt>Scale</dt><dd>Unchanged.</dd>
             <dt>Error</dt><dd>Exact when the value fits.</dd>
-            <dt>field</dt><dd>Open (mayOverflow) when the value may not fit the width.</dd>
+            <dt>field</dt><dd>Leaving (mayOverflow) when the value may not fit the width.</dd>
         </dl>
         <div class="ref-table-wrap">
           <table class="ref-table">
@@ -492,7 +492,7 @@
             <dt>Width</dt><dd>Widened to hold the sum of every lane.</dd>
             <dt>Scale</dt><dd>The elements' exponent.</dd>
             <dt>Error</dt><dd>Exact: the lanes' budgets add.</dd>
-            <dt>field</dt><dd>Open when the sum may leave int64.</dd>
+            <dt>field</dt><dd>Leaving when the sum may leave int64.</dd>
         </dl>
         <div class="ref-table-wrap">
           <table class="ref-table">

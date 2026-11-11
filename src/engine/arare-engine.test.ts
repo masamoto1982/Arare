@@ -79,10 +79,10 @@ describe('AR-VER-301: the engine adapter', () => {
     test('a Run answers the stack with widths, scales and budgets, and the field contract', async () => {
         const e = engine();
         const result = await e.execute('1/3 8 -6 QUANTIZE [ 1 2 ] MUL SUM');
-        expect(result).toEqual({ status: 'OK', output: 'field=closed', budgetReport: { field: 'closed', open: [] } });
+        expect(result).toEqual({ status: 'OK', output: 'field=closed', budgetReport: { field: 'closed', fieldExits: [] } });
         const [v] = e.collect_stack();
         expect(v).toMatchObject({ type: 'number', value: { numerator: '63', denominator: '64' }, width: 32, scale: -6, budget: '1/64' });
-        expect(e.budget_report()).toEqual({ field: 'closed', open: [] });
+        expect(e.budget_report()).toEqual({ field: 'closed', fieldExits: [] });
     });
 
     test('a session carries its stack and its names from one run to the next', async () => {
@@ -111,11 +111,11 @@ describe('AR-VER-301: the engine adapter', () => {
         expect(e.session_programs()).toEqual(['1']);
     });
 
-    test('field=open names each Word and why', async () => {
+    test('field=leaving names each Word and why', async () => {
         const e = engine();
         const result = await e.execute('1 0 DIV 300 8 NARROW');
-        expect(result.output).toBe('field=open: DIV wheelPoint, NARROW mayOverflow');
-        expect(describeReport({ field: 'open', open: [{ word: null, why: 'wheelPoint' }] })).toBe('field=open: literal wheelPoint');
+        expect(result.output).toBe('field=leaving: DIV wheelPoint, NARROW mayOverflow');
+        expect(describeReport({ field: 'leaving', fieldExits: [{ word: null, why: 'wheelPoint' }] })).toBe('field=leaving: literal wheelPoint');
     });
 
     test('the snapshot restores a session without running it, and refuses what is not one', async () => {
@@ -126,7 +126,7 @@ describe('AR-VER-301: the engine adapter', () => {
         other.restore_stack_snapshot(snapshot);
         expect(other.collect_stack()).toEqual(e.collect_stack());
         expect(other.session_programs()).toEqual(['[ 1 2 ] [ 3 4 ] ADD']);
-        expect(other.budget_report()).toEqual({ field: 'closed', open: [] });
+        expect(other.budget_report()).toEqual({ field: 'closed', fieldExits: [] });
         await other.execute('SUM');
         expect(other.collect_stack().map(shown)).toEqual(['10/1']);
         expect(() => other.restore_stack_snapshot('{"stack":[]}')).toThrow('Not a snapshot');

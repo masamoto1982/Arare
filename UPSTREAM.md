@@ -14,7 +14,7 @@ The baseline commit holds the upstream tree byte for byte, plus three files that
 are Arare's own: `WORK_ORDER.md`, `CLAUDE.md` and this file. Every later change
 is Arare's and is traced in `docs/quality/` from Phase 0 on.
 
-Ajisai stays the oracle Arare is checked against (WORK_ORDER.md §1.3). A later
+Ajisai stays the cross-check Arare is compared with, as Arare is Ajisai's (WORK_ORDER.md §1.3, ADR-0015); "oracle" in names means that cross-check. A later
 pin of the oracle — a Git dependency on `ajisai-core` or the WebAssembly bundle
 under `src/wasm/` — names its own upstream commit where it is declared.
 Since 2026-11-10 the oracle is pinned to Ajisai `319fe84fc1c2e339284156fe310d16a395d664e9`

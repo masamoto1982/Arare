@@ -11,10 +11,13 @@ and no airborne use is intended.
 ## Purpose of the software
 
 Arare is a stack-based, vector-oriented language that quantizes by design and
-accounts for the precision it gives up. Its reason to exist is speed: it must
-solve the slowness of its sister language Ajisai (WORK_ORDER.md §1.2), so its
-performance requirements (`AR-PERF-*`) carry the same weight as its functional
-ones. Ajisai remains the oracle Arare is checked against (WORK_ORDER.md §1.3).
+accounts for the precision it gives up. It is the antithesis of its sister language
+Ajisai, of equal standing (ADR-0015): Ajisai fixes the value and counts the
+cost, Arare fixes the cost and counts what it loses. Fixing the cost is a
+promise, so its performance requirements (`AR-PERF-*`) carry the same weight as
+its functional ones. The standard of correctness is the exact value a program
+denotes; Ajisai, an independent implementation of it, is the cross-check
+Arare is compared with, as Arare is Ajisai's (WORK_ORDER.md §1.3).
 
 ## The plans
 

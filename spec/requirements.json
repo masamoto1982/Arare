@@ -9,7 +9,7 @@
     {
       "id": "AR-SYS-001",
       "title": "Stack syntax",
-      "statement": "Arare programs are sequences of Words on a stack, as in Ajisai, so that one source text runs in both languages and the Playground's stack view, step execution, vocabulary panel and Reference apply unchanged.",
+      "statement": "Arare programs are sequences of Words on a stack, as in its counterpart Ajisai, so that one source text runs in both languages and the Playground's stack view, step execution, vocabulary panel and Reference apply unchanged. A Word both languages have has one name and one meaning, which neither changes alone (ADR-0015).",
       "source": "WORK_ORDER.md D-01"
     },
     {
@@ -33,7 +33,7 @@
     {
       "id": "AR-SYS-005",
       "title": "Strong Kleene truth",
-      "statement": "Truth is the strong Kleene logic of SQL, as in Ajisai: TRUE, FALSE and UNKNOWN, where UNKNOWN is NIL read in truth position.",
+      "statement": "Truth is the strong Kleene logic of SQL, as in its counterpart Ajisai: TRUE, FALSE and UNKNOWN, where UNKNOWN is NIL read in truth position.",
       "source": "WORK_ORDER.md D-05"
     },
     {
@@ -81,14 +81,14 @@
     {
       "id": "AR-SYS-013",
       "title": "One Playground shell",
-      "statement": "The Playground is one shell with an engine adapter; Ajisai runs in it as the oracle beside Arare.",
-      "source": "WORK_ORDER.md D-13"
+      "statement": "The Playground is one shell with an engine adapter; Ajisai runs in it beside Arare as its exact counterpart, and neither engine is subordinate to the other.",
+      "source": "WORK_ORDER.md D-13; ADR-0015"
     },
     {
       "id": "AR-SYS-014",
-      "title": "Faster than Ajisai",
-      "statement": "Arare exists to be fast where Ajisai is slow; a build that misses a performance requirement (AR-PERF) is not complete.",
-      "source": "WORK_ORDER.md §1.2"
+      "title": "Fixed cost",
+      "statement": "Arare fixes the cost of every value — one machine word of a width known before it runs — where its counterpart Ajisai fixes the value; a build that misses a performance requirement (AR-PERF) is not complete.",
+      "source": "WORK_ORDER.md §1.2; ADR-0015"
     },
     {
       "id": "AR-HLR-001",
@@ -566,7 +566,7 @@
     {
       "id": "AR-HLR-027",
       "title": "The error budget is sound",
-      "statement": "For every number a program leaves, the error-budget checker infers, from the program text alone and without running it, either nothing or what both meanings of the number share: the same wheel point, or a range holding the exact value Ajisai computes on the same source and an error budget bounding the distance of Arare's value from it. Whenever it infers a budget, the exact value lies in the range and Arare's value is within the budget of it; a result it cannot bound — one that may overflow, divide by zero or meet a wheel point — gets no budget, never a wrong one. Quantized literals, DIV, RESCALE and QUANTIZE add their rounding; ADD, SUB, MUL and NEG carry their operands' errors exactly as the operations propagate them.",
+      "statement": "For every number a program leaves, the error-budget checker infers, from the program text alone and without running it, either nothing or what both meanings of the number share: the same wheel point, or a range holding the exact rational the program denotes (its exact meaning, which Ajisai also computes) and an error budget bounding the distance of Arare's value from it. Whenever it infers a budget, the exact value lies in the range and Arare's value is within the budget of it; a result it cannot bound — one that may overflow, divide by zero or meet a wheel point — gets no budget, never a wrong one. Quantized literals, DIV, RESCALE and QUANTIZE add their rounding; ADD, SUB, MUL and NEG carry their operands' errors exactly as the operations propagate them.",
       "level": "QL-A",
       "refines": [
         "AR-SYS-002",
@@ -613,13 +613,13 @@
           "Arare.Budget.le_up",
           "Arare.Budget.coarsen_sound"
         ],
-        "planned": "Empirically, against Ajisai: the oracle corpus (AR-VER-209) and at least 10,000 generated programs (AR-VER-217)."
+        "planned": "Empirically, against Ajisai, an independent implementation of the exact meaning (ADR-0015): the corpus (AR-VER-209) and at least 10,000 generated programs (AR-VER-217)."
       }
     },
     {
       "id": "AR-HLR-028",
       "title": "The checker decides field=closed",
-      "statement": "A program's contract is field=closed exactly when the error-budget checker bounds every numeric result in it as a number; otherwise it is field=open, with each Word whose result it cannot bound and why: a wheel point written or flowing in, a result that may overflow the widest width or the width NARROW or QUANTIZE names, a divisor that may be zero, or an operand it cannot bound. Code that is field=closed has no wheel point anywhere, so nothing in it overflows, and no DIV in it divides by zero, in either meaning; each of its results is within its budget.",
+      "statement": "A program's contract is field=closed exactly when the error-budget checker bounds every numeric result in it as a number; otherwise it is field=leaving — Ajisai's word for code that may answer a point over zero, which in Arare an overflow is — with each Word whose result it cannot bound and why: a wheel point written or flowing in, a result that may overflow the widest width or the width NARROW or QUANTIZE names, a divisor that may be zero, or an operand it cannot bound. Code that is field=closed has no wheel point anywhere, so nothing in it overflows, and no DIV in it divides by zero, in either meaning; each of its results is within its budget.",
       "level": "QL-A",
       "refines": [
         "AR-SYS-012",
@@ -705,7 +705,7 @@
     {
       "id": "AR-HLR-033",
       "title": "One Playground shell, two engines",
-      "statement": "The Playground is one shell that drives an engine through one interface (PlaygroundEngine): run a program, read the stack, snapshot and restore a session, list the Words and their documentation. Arare is the engine it runs by default; Ajisai runs in the same shell as the oracle when chosen. The engine is chosen once per page load — `?engine=` in the URL, else the last choice, else Arare — and the stack, the saved session and the worker pool all belong to that engine, so a saved Arare session is never offered to Ajisai or the other way round. What an engine can do beyond the interface (User Words, names across steps, error budgets) is stated by its descriptor, not probed.",
+      "statement": "The Playground is one shell that drives an engine through one interface (PlaygroundEngine): run a program, read the stack, snapshot and restore a session, list the Words and their documentation. Arare is the engine it runs by default; Ajisai, its exact counterpart, runs in the same shell when chosen. The engine is chosen once per page load — `?engine=` in the URL, else the last choice, else Arare — and the stack, the saved session and the worker pool all belong to that engine, so a saved Arare session is never offered to Ajisai or the other way round. What an engine can do beyond the interface (User Words, names across steps, error budgets) is stated by its descriptor, not probed.",
       "level": "QL-D",
       "refines": [
         "AR-SYS-013"
@@ -734,8 +734,8 @@
     },
     {
       "id": "AR-HLR-035",
-      "title": "Error budgets beside the oracle",
-      "statement": "After a Run on Arare the Playground shows the field contract the checker decides for the session (field=closed, or field=open with the items that open it), each number's error budget beside it, and a comparison panel that runs the same programs on Ajisai and shows, per stack position, Arare's value, its budget, Ajisai's value, their distance, and whether the distance is within the budget. The comparison is the one `npm run check:oracle` makes (ADR-0007, ADR-0008), computed by the same code.",
+      "title": "Error budgets beside the counterpart",
+      "statement": "After a Run on Arare the Playground shows the field contract the checker decides for the session (field=closed, or field=leaving with the items it may leave by), each number's error budget beside it, and a comparison panel that runs the same programs on Ajisai and shows, per stack position, Arare's value, its budget, Ajisai's value, their distance, and whether the distance is within the budget. The comparison is the one `npm run check:oracle` makes (ADR-0007, ADR-0008), computed by the same code.",
       "level": "QL-D",
       "refines": [
         "AR-SYS-013",
@@ -1626,7 +1626,7 @@
     {
       "id": "AR-LLR-022",
       "title": "arare check",
-      "statement": "`arare check [--json] [--lines] [FILE | -]` runs a program as `arare run` does and then the checker: each value is printed with its budget (`± p/q`, or `± ?` when there is none), then `field=closed` or `field=open:` with the notes. With --json, each value node of `run --json` carries \"budget\", a rational string or null, and the document carries \"field\" and \"open\". With --lines, every input line is a program of its own and gets a JSON document of its own, and the exit status is 0 unless the input cannot be read; otherwise it is `run`'s.",
+      "statement": "`arare check [--json] [--lines] [FILE | -]` runs a program as `arare run` does and then the checker: each value is printed with its budget (`± p/q`, or `± ?` when there is none), then `field=closed` or `field=leaving:` with the notes. With --json, each value node of `run --json` carries \"budget\", a rational string or null, and the document carries \"field\" and \"fieldExits\", as Ajisai's agent output names them. With --lines, every input line is a program of its own and gets a JSON document of its own, and the exit status is 0 unless the input cannot be read; otherwise it is `run`'s.",
       "level": "QL-C",
       "refines": [
         "AR-HLR-027",

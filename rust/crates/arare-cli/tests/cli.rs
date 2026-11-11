@@ -108,7 +108,7 @@ fn ar_ver_218_check_text() {
     assert_eq!(code, 0);
     assert_eq!(
         out,
-        "1/0  ± 0/1\n1/0  ± ?\n1/0  ± 0/1\nfield=open: literal wheelPoint, DIV wheelPoint, DIV divisorMayBeZero\n"
+        "1/0  ± 0/1\n1/0  ± ?\n1/0  ± 0/1\nfield=leaving: literal wheelPoint, DIV wheelPoint, DIV divisorMayBeZero\n"
     );
     assert_eq!(
         arare(&["check"], "1 SWAP"),
@@ -130,7 +130,7 @@ fn ar_ver_218_check_json() {
             r#"{"ok":true,"stack":["#,
             r#"{"type":"number","value":{"numerator":"0","denominator":"1"},"width":8,"scale":0,"budget":"1/2"},"#,
             r#"{"type":"number","value":{"numerator":"1","denominator":"0"},"width":8,"scale":0,"budget":null}],"#,
-            r#""field":"open","open":[{"word":"DIV","why":"divisorMayBeZero"}]}"#
+            r#""field":"leaving","fieldExits":[{"word":"DIV","why":"divisorMayBeZero"}]}"#
         )
     );
     let (code, out, _) = arare(&["check", "--json"], "ADD");
@@ -138,7 +138,7 @@ fn ar_ver_218_check_json() {
     assert!(out.starts_with(r#"{"ok":false,"error":"ADD: "#), "{out}");
     let (_, out, _) = arare(&["check", "--json"], "1/0 8 0 QUANTIZE");
     assert!(
-        out.contains(r#""field":"open","open":[{"word":null,"why":"wheelPoint"}]"#),
+        out.contains(r#""field":"leaving","fieldExits":[{"word":null,"why":"wheelPoint"}]"#),
         "{out}"
     );
 }
@@ -152,7 +152,7 @@ fn ar_ver_218_check_lines() {
     let lines: Vec<&str> = out.lines().collect();
     assert_eq!(lines.len(), 3);
     assert!(
-        lines[0].ends_with(r#""budget":"0/1"}],"field":"closed","open":[]}"#),
+        lines[0].ends_with(r#""budget":"0/1"}],"field":"closed","fieldExits":[]}"#),
         "{}",
         lines[0]
     );

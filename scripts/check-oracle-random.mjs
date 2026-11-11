@@ -151,6 +151,14 @@ function program() {
 }
 
 const sources = Array.from({ length: COUNT }, program);
+// `--emit` writes the programs as a JSON array and compares nothing: Ajisai
+// keeps the same programs as its side of the shared core (its
+// tests/sister/arare-shared-core.json), so that a change to what the two
+// languages share shows in Ajisai's CI, not first at Arare's next repin.
+if (process.argv.includes('--emit')) {
+  await new Promise((done) => process.stdout.write(`${JSON.stringify(sources)}\n`, done));
+  process.exit(0);
+}
 let arare;
 try {
   arare = runArare(sources);

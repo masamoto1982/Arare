@@ -62,8 +62,8 @@ type RunAnswer =
     | {
         readonly ok: true;
         readonly stack: Value[];
-        readonly field: 'closed' | 'open';
-        readonly open: BudgetReport['open'];
+        readonly field: 'closed' | 'leaving';
+        readonly fieldExits: BudgetReport['fieldExits'];
         readonly items: ItemSpan[];
     }
     | { readonly ok: false; readonly error: EngineError; readonly items?: ItemSpan[] };
@@ -117,7 +117,7 @@ const failure = (error: EngineError): ExecuteResult => ({
 export const describeReport = (report: BudgetReport): string =>
     report.field === 'closed'
         ? 'field=closed'
-        : `field=open: ${report.open.map((o) => `${o.word ?? 'literal'} ${o.why}`).join(', ')}`;
+        : `field=leaving: ${report.fieldExits.map((o) => `${o.word ?? 'literal'} ${o.why}`).join(', ')}`;
 
 export class ArareEngine implements PlaygroundEngine {
     private session: Session = EMPTY;
@@ -135,7 +135,7 @@ export class ArareEngine implements PlaygroundEngine {
         const programs = [...this.session.programs, code];
         const answer = this.request<RunAnswer>('run', programs);
         if (!answer.ok) return failure(answer.error);
-        const report: BudgetReport = { field: answer.field, open: answer.open };
+        const report: BudgetReport = { field: answer.field, fieldExits: answer.fieldExits };
         this.session = { programs, stack: answer.stack, report };
         return { status: 'OK', output: describeReport(report), budgetReport: report };
     }

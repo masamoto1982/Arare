@@ -54,10 +54,10 @@ describe('AR-VER-304: comparing two stacks', () => {
 describe('AR-VER-304: the panel', () => {
     test('the field contract and a summary of the verdicts', () => {
         expect(describeField(null)).toBe('field: —');
-        expect(describeField({ field: 'closed', open: [] })).toContain('field=closed');
-        expect(describeField({ field: 'open', open: [{ word: 'DIV', why: 'wheelPoint' }, { word: null, why: 'wheelPoint' }] }))
-            .toBe('field=open: DIV (wheelPoint), literal (wheelPoint)');
-        const view = buildComparisonView([withBudget(num(3), '0/1')], { field: 'closed', open: [] }, { ok: true, stack: [num(4)] });
+        expect(describeField({ field: 'closed', fieldExits: [] })).toContain('field=closed');
+        expect(describeField({ field: 'leaving', fieldExits: [{ word: 'DIV', why: 'wheelPoint' }, { word: null, why: 'wheelPoint' }] }))
+            .toBe('field=leaving: DIV (wheelPoint), literal (wheelPoint)');
+        const view = buildComparisonView([withBudget(num(3), '0/1')], { field: 'closed', fieldExits: [] }, { ok: true, stack: [num(4)] });
         expect(view.summary).toContain('1 value(s) outside their budget');
         expect(buildComparisonView([], null, { ok: true, stack: [] }).summary).toBe('The stack is empty.');
         const refused = buildComparisonView([withBudget(num(1), '0/1')], null, { ok: false, error: 'Unknown word' });

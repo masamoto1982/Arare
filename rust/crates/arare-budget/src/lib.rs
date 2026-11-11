@@ -23,7 +23,7 @@ pub mod table;
 pub mod value;
 mod words;
 
-pub use check::{analyze, Analysis, Open, Why};
+pub use check::{analyze, Analysis, Exit, Why};
 pub use info::{Info, Range};
 pub use rat::Q;
 pub use value::{budget, Abs};

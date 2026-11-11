@@ -114,7 +114,7 @@ theorem mul_abs_le {u v U V : Rat} (hu1 : -U ≤ u) (hu2 : u ≤ U) (hv1 : -V �
   grind
 
 
-/-! ## The exact meaning: Ajisai's values -/
+/-! ## The exact meaning: the values a program denotes, which Ajisai computes too (ADR-0015) -/
 
 /-- The values Ajisai computes on: rationals and the two wheel points. -/
 inductive X where
@@ -195,7 +195,7 @@ def scale : E → Int
   | narrow a _ => scale a
   | quantize _ _ e => e
 
-/-- The exact value, as Ajisai computes it: QUANTIZE, RESCALE and NARROW
+/-- The exact value the program denotes, as Ajisai also computes it: QUANTIZE, RESCALE and NARROW
 keep the exact value (ADR-0007). -/
 def evalX : E → X
   | lit x _ _ => x

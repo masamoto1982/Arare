@@ -33,7 +33,7 @@ export const describeVerdict = (verdict: ComparedValue['verdict']): string => VE
 export const describeField = (report: BudgetReport | null): string => {
     if (report === null) return 'field: —';
     if (report.field === 'closed') return 'field=closed: no overflow, no division by zero, no wheel point';
-    return `field=open: ${report.open.map((o) => `${o.word ?? 'literal'} (${o.why})`).join(', ')}`;
+    return `field=leaving: ${report.fieldExits.map((o) => `${o.word ?? 'literal'} (${o.why})`).join(', ')}`;
 };
 
 /** Everything the panel shows for a stack, the checker's report and Ajisai's answer. */
