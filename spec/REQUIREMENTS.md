@@ -7,7 +7,7 @@ The identifier classes and the requirements standard are `docs/quality/STANDARDS
 
 ### AR-SYS-001 — Stack syntax
 
-Arare programs are sequences of Words on a stack, as in Ajisai, so that one source text runs in both languages and the Playground's stack view, step execution, vocabulary panel and Reference apply unchanged.
+Arare programs are sequences of Words on a stack, as in its counterpart Ajisai, so that one source text runs in both languages and the Playground's stack view, step execution, vocabulary panel and Reference apply unchanged. A Word both languages have has one name and one meaning, which neither changes alone (ADR-0015).
 
 - Source: WORK_ORDER.md D-01
 
@@ -31,7 +31,7 @@ Arare has a reference interpreter, slow and step-through, and an ahead-of-time c
 
 ### AR-SYS-005 — Strong Kleene truth
 
-Truth is the strong Kleene logic of SQL, as in Ajisai: TRUE, FALSE and UNKNOWN, where UNKNOWN is NIL read in truth position.
+Truth is the strong Kleene logic of SQL, as in its counterpart Ajisai: TRUE, FALSE and UNKNOWN, where UNKNOWN is NIL read in truth position.
 
 - Source: WORK_ORDER.md D-05
 
@@ -79,15 +79,15 @@ A contract says field=closed exactly when it is statically proved that the code 
 
 ### AR-SYS-013 — One Playground shell
 
-The Playground is one shell with an engine adapter; Ajisai runs in it as the oracle beside Arare.
+The Playground is one shell with an engine adapter; Ajisai runs in it beside Arare as its exact counterpart, and neither engine is subordinate to the other.
 
-- Source: WORK_ORDER.md D-13
+- Source: WORK_ORDER.md D-13; ADR-0015
 
-### AR-SYS-014 — Faster than Ajisai
+### AR-SYS-014 — Fixed cost
 
-Arare exists to be fast where Ajisai is slow; a build that misses a performance requirement (AR-PERF) is not complete.
+Arare fixes the cost of every value — one machine word of a width known before it runs — where its counterpart Ajisai fixes the value; a build that misses a performance requirement (AR-PERF) is not complete.
 
-- Source: WORK_ORDER.md §1.2
+- Source: WORK_ORDER.md §1.2; ADR-0015
 
 ## High-level requirements
 
@@ -341,13 +341,13 @@ Malformed use stops the program with an ERROR that names the Word: too few opera
 
 ### AR-HLR-027 — The error budget is sound
 
-For every number a program leaves, the error-budget checker infers, from the program text alone and without running it, either nothing or what both meanings of the number share: the same wheel point, or a range holding the exact value Ajisai computes on the same source and an error budget bounding the distance of Arare's value from it. Whenever it infers a budget, the exact value lies in the range and Arare's value is within the budget of it; a result it cannot bound — one that may overflow, divide by zero or meet a wheel point — gets no budget, never a wrong one. Quantized literals, DIV, RESCALE and QUANTIZE add their rounding; ADD, SUB, MUL and NEG carry their operands' errors exactly as the operations propagate them.
+For every number a program leaves, the error-budget checker infers, from the program text alone and without running it, either nothing or what both meanings of the number share: the same wheel point, or a range holding the exact rational the program denotes (its exact meaning, which Ajisai also computes) and an error budget bounding the distance of Arare's value from it. Whenever it infers a budget, the exact value lies in the range and Arare's value is within the budget of it; a result it cannot bound — one that may overflow, divide by zero or meet a wheel point — gets no budget, never a wrong one. Quantized literals, DIV, RESCALE and QUANTIZE add their rounding; ADD, SUB, MUL and NEG carry their operands' errors exactly as the operations propagate them.
 
 - Level: QL-A
 - Refines: AR-SYS-002, AR-SYS-009
 - Proved in `formal/Arare/Budget.lean` (AR-VER-107): `Budget.two_ne_zero`, `Budget.pow2_pos`, `Budget.pow2_add`, `Budget.pow2_nat`, `Budget.pow2_mono`, `Budget.shift_val`, `Budget.mul_between`, `Budget.imul_mem`, `Budget.mul_abs_le`, `Budget.X.add_bot`, `Budget.X.mul_bot`, `Budget.X.div_bot`, `Budget.W_add_bot`, `Budget.W_mul_bot`, `Budget.W_div_bot`, `Budget.mmag_bound`, `Budget.guard_sound`, `Budget.aneg_sound`, `Budget.padd_sound`, `Budget.nonzero_ne`, `Budget.isZero_eq`, `Budget.pmul_sound`, `Budget.inv_abs_le`, `Budget.inv_between`, `Budget.low_bound`, `Budget.half_unit`, `Budget.div_round`, `Budget.div_prop`, `Budget.pdiv_sound`, `Budget.rescale_val`, `Budget.arescale_sound`, `Budget.aquantize_sound`, `Budget.alit_sound`, `Budget.budget_sound`, `Budget.down_le`, `Budget.le_up`, `Budget.coarsen_sound`
 - Refined by: AR-LLR-012, AR-LLR-018, AR-LLR-019, AR-LLR-020, AR-LLR-022, AR-LLR-030
-- Planned: Empirically, against Ajisai: the oracle corpus (AR-VER-209) and at least 10,000 generated programs (AR-VER-217).
+- Planned: Empirically, against Ajisai, an independent implementation of the exact meaning (ADR-0015): the corpus (AR-VER-209) and at least 10,000 generated programs (AR-VER-217).
 
 ### AR-HLR-028 — The checker decides field=closed
 
@@ -400,7 +400,7 @@ BIND names a value, as in Ajisai: `value 'X' BIND` consumes both operands, and t
 
 ### AR-HLR-033 — One Playground shell, two engines
 
-The Playground is one shell that drives an engine through one interface (PlaygroundEngine): run a program, read the stack, snapshot and restore a session, list the Words and their documentation. Arare is the engine it runs by default; Ajisai runs in the same shell as the oracle when chosen. The engine is chosen once per page load — `?engine=` in the URL, else the last choice, else Arare — and the stack, the saved session and the worker pool all belong to that engine, so a saved Arare session is never offered to Ajisai or the other way round. What an engine can do beyond the interface (User Words, names across steps, error budgets) is stated by its descriptor, not probed.
+The Playground is one shell that drives an engine through one interface (PlaygroundEngine): run a program, read the stack, snapshot and restore a session, list the Words and their documentation. Arare is the engine it runs by default; Ajisai, its exact counterpart, runs in the same shell when chosen. The engine is chosen once per page load — `?engine=` in the URL, else the last choice, else Arare — and the stack, the saved session and the worker pool all belong to that engine, so a saved Arare session is never offered to Ajisai or the other way round. What an engine can do beyond the interface (User Words, names across steps, error budgets) is stated by its descriptor, not probed.
 
 - Level: QL-D
 - Refines: AR-SYS-013
@@ -416,7 +416,7 @@ The Playground runs Arare's reference interpreter and shows what it leaves on th
 - Refined by: AR-LLR-031, AR-LLR-032, AR-LLR-033, AR-LLR-034, AR-LLR-036
 - Planned: Verified through AR-LLR-031 to AR-LLR-034 and AR-LLR-036.
 
-### AR-HLR-035 — Error budgets beside the oracle
+### AR-HLR-035 — Error budgets beside the counterpart
 
 After a Run on Arare the Playground shows the field contract the checker decides for the session (field=closed, or field=leaving with the items it may leave by), each number's error budget beside it, and a comparison panel that runs the same programs on Ajisai and shows, per stack position, Arare's value, its budget, Ajisai's value, their distance, and whether the distance is within the budget. The comparison is the one `npm run check:oracle` makes (ADR-0007, ADR-0008), computed by the same code.
 
