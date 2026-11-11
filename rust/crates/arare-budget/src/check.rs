@@ -51,7 +51,7 @@ impl Why {
 
 /// A Word, or a literal (`None`), whose result is not bounded, and why.
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug, Hash)]
-pub struct Open {
+pub struct Exit {
     pub word: Option<Word>,
     pub why: Why,
 }
@@ -62,36 +62,36 @@ pub struct Open {
 pub struct Analysis {
     pub stack: Vec<Abs>,
     /// Sorted and without repeats.
-    pub open: Vec<Open>,
+    pub exits: Vec<Exit>,
 }
 
 impl Analysis {
     /// AR-HLR-028: the checker bounds every numeric result as a number.
     pub fn closed(&self) -> bool {
-        self.open.is_empty()
+        self.exits.is_empty()
     }
 }
 
 /// Check a parsed program.
 pub fn analyze(program: &Program) -> Analysis {
     let mut c = Checker {
-        open: Vec::new(),
+        exits: Vec::new(),
         scopes: vec![Vec::new()],
     };
     let mut stack = Vec::new();
     for item in &program.items {
         c.exec(&mut stack, item);
     }
-    c.open.sort();
-    c.open.dedup();
+    c.exits.sort();
+    c.exits.dedup();
     Analysis {
         stack,
-        open: c.open,
+        exits: c.exits,
     }
 }
 
 pub(crate) struct Checker {
-    open: Vec<Open>,
+    exits: Vec<Exit>,
     /// What is known of the value of each name bound so far, scope by scope,
     /// as `arare-interp`'s `Env` holds the values (AR-LLR-028).
     scopes: Vec<Vec<(Rc<str>, Abs)>>,
@@ -122,7 +122,7 @@ fn width(v: &Abs) -> Option<Width> {
 
 impl Checker {
     pub(crate) fn note(&mut self, word: Option<Word>, why: Why) {
-        self.open.push(Open { word, why });
+        self.exits.push(Exit { word, why });
     }
 
     /// A numeric result: noted when it is not bounded as a number. Its range

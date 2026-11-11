@@ -22,7 +22,7 @@
 //! `check` runs the program the same way, then the error-budget checker
 //! (`arare-budget`): each value is printed with its budget, the most its
 //! numbers may differ from the exact result Ajisai computes, and the program
-//! with its `field` contract, `closed` or `open` and why. With `--json`, each
+//! with its `field` contract, `closed` or `leaving` and why. With `--json`, each
 //! value node carries `"budget"`: a rational, or `null` when the checker
 //! knows nothing. With `--lines`, every input line is a program of its own and
 //! gets a JSON document of its own, for the oracle harness's thousands of
@@ -89,8 +89,8 @@ fn checked_node(v: &Value, abs: &Abs) -> String {
 }
 
 fn field(a: &Analysis) -> String {
-    let open: Vec<String> = a
-        .open
+    let exits: Vec<String> = a
+        .exits
         .iter()
         .map(|o| {
             format!(
@@ -101,8 +101,11 @@ fn field(a: &Analysis) -> String {
             )
         })
         .collect();
-    let contract = if a.closed() { "closed" } else { "open" };
-    format!("\"field\":\"{contract}\",\"open\":[{}]", open.join(","))
+    let contract = if a.closed() { "closed" } else { "leaving" };
+    format!(
+        "\"field\":\"{contract}\",\"fieldExits\":[{}]",
+        exits.join(",")
+    )
 }
 
 /// One program checked: a JSON document, or the text lines, and whether it ran.
@@ -146,7 +149,7 @@ fn check(source: &str, json: bool) -> (String, bool) {
         out.push("field=closed".to_string());
     } else {
         let why: Vec<String> = a
-            .open
+            .exits
             .iter()
             .map(|o| {
                 format!(
@@ -156,7 +159,7 @@ fn check(source: &str, json: bool) -> (String, bool) {
                 )
             })
             .collect();
-        out.push(format!("field=open: {}", why.join(", ")));
+        out.push(format!("field=leaving: {}", why.join(", ")));
     }
     (out.join("\n"), true)
 }

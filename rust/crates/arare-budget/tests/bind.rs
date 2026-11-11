@@ -78,7 +78,7 @@ fn ar_ver_229_long_loop() {
          1/2 16 -15 QUANTIZE ADD"
     );
     let a = check(&src);
-    assert!(a.closed(), "{:?}", a.open);
+    assert!(a.closed(), "{:?}", a.exits);
     let b = budget(&a.stack[0]).unwrap();
     // Within four units of 2^-16, rounded outward to 2^-48.
     assert!(b.le(q(1, 16384)) && q(1, 65536).le(b), "{b}");

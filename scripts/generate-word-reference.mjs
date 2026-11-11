@@ -49,7 +49,7 @@ const TEXT = {
     tagline: 'Every Word of Arare, generated from spec/words.json.',
     intro: [
       'Arare quantizes by design and accounts for the precision it gives up. A number has a width (8, 16, 32 or 64 bits) and a scale exponent e: its value is its code times 2^e. Arithmetic widens to a width that holds the exact result; rounding happens only at QUANTIZE, RESCALE and DIV.',
-      'For every value a program leaves, the error-budget checker infers, without running it, how far Arare\'s value may be from the exact value Ajisai computes. A program is field=closed when the checker bounds every numeric result; otherwise it is field=open, and the checker says which Word and why.',
+      'For every value a program leaves, the error-budget checker infers, without running it, how far Arare\'s value may be from the exact value Ajisai computes. A program is field=closed when the checker bounds every numeric result; otherwise it is field=leaving, and the checker says which Word and why.',
       'Each sample opens in the Playground, which runs it in Arare and in Ajisai side by side and shows the difference against the budget.',
     ],
     words: 'Words',
@@ -79,7 +79,7 @@ const TEXT = {
     tagline: 'Arare の全ワード。spec/words.json から生成しています。',
     intro: [
       'Arare は量子化を前提とし、失った精度を数字で管理する言語です。数は幅（8、16、32、64 ビット）とスケール指数 e を持ち、値は符号 × 2^e です。算術は厳密な結果が収まる幅まで広げ、丸めは QUANTIZE、RESCALE、DIV の3か所でだけ起きます。',
-      '誤差予算の検査器は、プログラムを実行せずに、残る値ごとに Ajisai が計算する厳密値からどれだけ離れうるかを推論します。すべての数値結果を抑えられたプログラムは field=closed、そうでなければ field=open で、どのワードがなぜ抑えられないかを示します。',
+      '誤差予算の検査器は、プログラムを実行せずに、残る値ごとに Ajisai が計算する厳密値からどれだけ離れうるかを推論します。すべての数値結果を抑えられたプログラムは field=closed、そうでなければ field=leaving で、どのワードがなぜ抑えられないかを示します。',
       'サンプルは Playground で開けます。Playground は同じソースを Arare と Ajisai で実行し、差を誤差予算と並べて表示します。',
     ],
     words: 'ワード',

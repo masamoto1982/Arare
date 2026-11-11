@@ -77,3 +77,17 @@ programs show no violation against Ajisai (§7).
 - **Counting the budget by running the program on exact rationals.** That is
   Ajisai, not a static checker; it says nothing about code compiled for data
   not yet seen.
+
+## Amendment (2026-11-11): `leaving`, as Ajisai says it
+
+A program the checker cannot call closed was `field=open`, with the notes under
+`"open"`. It is now `field=leaving`, with the notes under `"fieldExits"`: the
+words Ajisai's contracts and agent output use (Ajisai's LANG.CONTRACT.FIELD),
+as AR-SYS-001 asks of every name Arare shares. The meaning carries over
+exactly, because in Arare an overflow is `1/0`: code that may overflow, divide
+by zero or meet a wheel point is code that may answer a point over zero, which
+is what Ajisai calls leaving the field. An operand the checker cannot bound
+(`unbounded`) is likewise leaving, as Ajisai counts code its walk cannot read.
+Arare's `closed` stays the stronger claim — every result within its budget, so
+nothing overflows — and code Arare calls closed answers no point over zero in
+Ajisai either. Requirements: AR-HLR-028, AR-HLR-035, AR-LLR-022.

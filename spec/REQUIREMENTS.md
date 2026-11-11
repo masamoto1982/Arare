@@ -351,7 +351,7 @@ For every number a program leaves, the error-budget checker infers, from the pro
 
 ### AR-HLR-028 — The checker decides field=closed
 
-A program's contract is field=closed exactly when the error-budget checker bounds every numeric result in it as a number; otherwise it is field=open, with each Word whose result it cannot bound and why: a wheel point written or flowing in, a result that may overflow the widest width or the width NARROW or QUANTIZE names, a divisor that may be zero, or an operand it cannot bound. Code that is field=closed has no wheel point anywhere, so nothing in it overflows, and no DIV in it divides by zero, in either meaning; each of its results is within its budget.
+A program's contract is field=closed exactly when the error-budget checker bounds every numeric result in it as a number; otherwise it is field=leaving — Ajisai's word for code that may answer a point over zero, which in Arare an overflow is — with each Word whose result it cannot bound and why: a wheel point written or flowing in, a result that may overflow the widest width or the width NARROW or QUANTIZE names, a divisor that may be zero, or an operand it cannot bound. Code that is field=closed has no wheel point anywhere, so nothing in it overflows, and no DIV in it divides by zero, in either meaning; each of its results is within its budget.
 
 - Level: QL-A
 - Refines: AR-SYS-012, AR-SYS-009
@@ -418,7 +418,7 @@ The Playground runs Arare's reference interpreter and shows what it leaves on th
 
 ### AR-HLR-035 — Error budgets beside the oracle
 
-After a Run on Arare the Playground shows the field contract the checker decides for the session (field=closed, or field=open with the items that open it), each number's error budget beside it, and a comparison panel that runs the same programs on Ajisai and shows, per stack position, Arare's value, its budget, Ajisai's value, their distance, and whether the distance is within the budget. The comparison is the one `npm run check:oracle` makes (ADR-0007, ADR-0008), computed by the same code.
+After a Run on Arare the Playground shows the field contract the checker decides for the session (field=closed, or field=leaving with the items it may leave by), each number's error budget beside it, and a comparison panel that runs the same programs on Ajisai and shows, per stack position, Arare's value, its budget, Ajisai's value, their distance, and whether the distance is within the budget. The comparison is the one `npm run check:oracle` makes (ADR-0007, ADR-0008), computed by the same code.
 
 - Level: QL-D
 - Refines: AR-SYS-013, AR-SYS-012
@@ -681,7 +681,7 @@ While it runs, the checker notes every literal and every numeric Word's result t
 
 ### AR-LLR-022 — arare check
 
-`arare check [--json] [--lines] [FILE | -]` runs a program as `arare run` does and then the checker: each value is printed with its budget (`± p/q`, or `± ?` when there is none), then `field=closed` or `field=open:` with the notes. With --json, each value node of `run --json` carries "budget", a rational string or null, and the document carries "field" and "open". With --lines, every input line is a program of its own and gets a JSON document of its own, and the exit status is 0 unless the input cannot be read; otherwise it is `run`'s.
+`arare check [--json] [--lines] [FILE | -]` runs a program as `arare run` does and then the checker: each value is printed with its budget (`± p/q`, or `± ?` when there is none), then `field=closed` or `field=leaving:` with the notes. With --json, each value node of `run --json` carries "budget", a rational string or null, and the document carries "field" and "fieldExits", as Ajisai's agent output names them. With --lines, every input line is a program of its own and gets a JSON document of its own, and the exit status is 0 unless the input cannot be read; otherwise it is `run`'s.
 
 - Level: QL-C
 - Refines: AR-HLR-027, AR-HLR-028

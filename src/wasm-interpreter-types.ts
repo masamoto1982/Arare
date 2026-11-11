@@ -217,13 +217,13 @@ export type StepPieces =
 
 /**
  * What Arare's error-budget checker says of a run (AR-HLR-027, AR-HLR-028):
- * the program's field contract and, when it is open, each Word whose result
+ * the program's field contract and, when it is leaving, each Word whose result
  * the checker cannot bound and why. Each value's own budget travels on its
  * node (`Value.budget`).
  */
 export interface BudgetReport {
-    readonly field: 'closed' | 'open';
-    readonly open: ReadonlyArray<{ readonly word: string | null; readonly why: string }>;
+    readonly field: 'closed' | 'leaving';
+    readonly fieldExits: ReadonlyArray<{ readonly word: string | null; readonly why: string }>;
 }
 
 export interface ExecuteResult {
