@@ -452,6 +452,16 @@ An Arrow IPC file or stream can be read before a program runs, each column pushe
 - Refined by: AR-LLR-039, AR-LLR-040, AR-LLR-041, AR-LLR-042, AR-LLR-043
 - Planned: Verified through AR-LLR-039 to AR-LLR-043.
 
+### AR-HLR-039 — Comparisons the budget does not decide
+
+Arare marks, of every program it checks, the comparisons whose answer it cannot show to be the exact meaning's: an LT or EQ whose operands do not agree (AR-HLR-029) is undecided, and a program with none is decided. Every truth value of a decided program is the one its exact meaning computes, so a decided program's branches, filters and comparisons are exact although its numbers are rounded. The mark is Arare's own answer about its own result: Arare calls no other implementation, and what to do with an undecided comparison, such as computing it again exactly, is the caller's choice (ADR-0016).
+
+- Level: QL-A
+- Refines: AR-HLR-029, AR-SYS-005
+- Refined by: AR-LLR-044
+- Not proved formally: The mark is the checker's agreement rule for truth values (AR-HLR-029), which lives in the Rust program layer that docs/quality/FORMAL_VERIFICATION.md assigns to tests and to the comparison with Ajisai; the Lean model covers numbers, not truth values.
+- Planned: The mark is tested (AR-VER-237) and, on 10,000 generated programs, a program marked decided is held to leave every truth value with a budget, compared with Ajisai at budget 0 (AR-VER-217); it is not proved.
+
 ## Low-level requirements
 
 ### AR-LLR-001 — The executable specification mirrors the Lean model
@@ -681,7 +691,7 @@ While it runs, the checker notes every literal and every numeric Word's result t
 
 ### AR-LLR-022 — arare check
 
-`arare check [--json] [--lines] [FILE | -]` runs a program as `arare run` does and then the checker: each value is printed with its budget (`± p/q`, or `± ?` when there is none), then `field=closed` or `field=leaving:` with the notes. With --json, each value node of `run --json` carries "budget", a rational string or null, and the document carries "field" and "fieldExits", as Ajisai's agent output names them. With --lines, every input line is a program of its own and gets a JSON document of its own, and the exit status is 0 unless the input cannot be read; otherwise it is `run`'s.
+`arare check [--json] [--lines] [FILE | -]` runs a program as `arare run` does and then the checker: each value is printed with its budget (`± p/q`, or `± ?` when there is none), then `field=closed` or `field=leaving:` with the notes, then `decided` or `undecided:` with the comparisons not decided (AR-LLR-044). With --json, each value node of `run --json` carries "budget", a rational string or null, and the document carries "field" and "fieldExits", as Ajisai's agent output names them, and "decided" and "undecided". With --lines, every input line is a program of its own and gets a JSON document of its own, and the exit status is 0 unless the input cannot be read; otherwise it is `run`'s.
 
 - Level: QL-C
 - Refines: AR-HLR-027, AR-HLR-028
@@ -782,7 +792,7 @@ parse_spanned returns, with the program, the span of each of its top-level items
 
 ### AR-LLR-032 — The engine command
 
-arare-wasm is a command built for wasm32-wasip1 (ADR-0013). It reads a request on standard input — a session's programs separated by NUL, the last being the one to run — and the command named by its first argument, and writes one JSON document. `run` runs the programs in order on one machine, stopping at the first error, and answers the stack (each number with its width, scale and inferred budget, each NIL with its reason, each block with its source text), the field contract and the spans of the last program's items; an error answers its message, category, Word and the line and column within the last program. `items` answers the spans only; `version` the crate's version. Any other command, or input that is not UTF-8, exits with status 2.
+arare-wasm is a command built for wasm32-wasip1 (ADR-0013). It reads a request on standard input — a session's programs separated by NUL, the last being the one to run — and the command named by its first argument, and writes one JSON document. `run` runs the programs in order on one machine, stopping at the first error, and answers the stack (each number with its width, scale and inferred budget, each NIL with its reason, each block with its source text), the field contract, the comparisons not decided (AR-LLR-044) and the spans of the last program's items; an error answers its message, category, Word and the line and column within the last program. `items` answers the spans only; `version` the crate's version. Any other command, or input that is not UTF-8, exits with status 2.
 
 - Level: QL-B
 - Refines: AR-HLR-034, AR-HLR-035
@@ -897,6 +907,17 @@ to_columns makes each stack value a column named by its position from the bottom
 - Implemented in: `rust/crates/arare-cli/src/arrow.rs`, `rust/crates/arare-cli/src/main.rs`
 - Tested in `rust/crates/arare-cli/tests/arrow.rs` — **AR-VER-236**
 - Tested in `scripts/check-arrow-interop.mjs` — **AR-VER-235**
+
+### AR-LLR-044 — The undecided mark
+
+The checker records LT and EQ, sorted and without repeats, whenever it infers that their answer does not agree in both meanings, a comparison of an operand it knows nothing of included; `Analysis::decided` holds when it recorded none. `arare check` prints `decided`, or `undecided:` with the Words, after the field contract, and its JSON carries "decided" (a Boolean) and "undecided" (the Words' names); the engine command's `run` answers the same two fields.
+
+- Level: QL-B
+- Refines: AR-HLR-039
+- Implemented in: `rust/crates/arare-budget/src/check.rs`, `rust/crates/arare-budget/src/words.rs`, `rust/crates/arare-cli/src/main.rs`, `rust/crates/arare-wasm/src/lib.rs`
+- Tested in `rust/crates/arare-cli/tests/cli.rs` — **AR-VER-237**
+- Tested in `rust/crates/arare-wasm/tests/protocol.rs` — **AR-VER-231**
+- Tested in `scripts/check-oracle-random.mjs` — **AR-VER-217**
 
 ## Performance requirements
 

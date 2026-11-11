@@ -22,3 +22,4 @@ record supersedes it and says so.
 | [0013](0013-playground-engine-boundary.md) | The Playground's engine boundary: a wasm32-wasip1 command, sessions replayed, one comparison with the oracle | Accepted |
 | [0014](0014-arrow-io.md) | Arrow I/O: the IPC format first in a safe crate, numbers as exact decimals, the C Data Interface later | Accepted |
 | [0015](0015-counterpart-not-dependent.md) | Arare as Ajisai's counterpart: each fixes one thing and counts the other; the exact meaning is the standard; shared Words belong to both | Accepted |
+| [0016](0016-undecided-comparisons.md) | Arare marks the comparisons its budget does not decide, and calls no other implementation | Accepted |

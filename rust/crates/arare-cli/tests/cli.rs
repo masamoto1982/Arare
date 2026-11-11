@@ -97,7 +97,7 @@ fn ar_ver_218_check_text() {
         arare(&["check"], "0.1 16 -12 QUANTIZE 2 3 ADD"),
         (
             0,
-            "205/2048  ± 1/10240\n5/1  ± 0/1\nfield=closed\n".to_string(),
+            "205/2048  ± 1/10240\n5/1  ± 0/1\nfield=closed\ndecided\n".to_string(),
             String::new()
         )
     );
@@ -108,7 +108,7 @@ fn ar_ver_218_check_text() {
     assert_eq!(code, 0);
     assert_eq!(
         out,
-        "1/0  ± 0/1\n1/0  ± ?\n1/0  ± 0/1\nfield=leaving: literal wheelPoint, DIV wheelPoint, DIV divisorMayBeZero\n"
+        "1/0  ± 0/1\n1/0  ± ?\n1/0  ± 0/1\nfield=leaving: literal wheelPoint, DIV wheelPoint, DIV divisorMayBeZero\ndecided\n"
     );
     assert_eq!(
         arare(&["check"], "1 SWAP"),
@@ -130,7 +130,7 @@ fn ar_ver_218_check_json() {
             r#"{"ok":true,"stack":["#,
             r#"{"type":"number","value":{"numerator":"0","denominator":"1"},"width":8,"scale":0,"budget":"1/2"},"#,
             r#"{"type":"number","value":{"numerator":"1","denominator":"0"},"width":8,"scale":0,"budget":null}],"#,
-            r#""field":"leaving","fieldExits":[{"word":"DIV","why":"divisorMayBeZero"}]}"#
+            r#""field":"leaving","fieldExits":[{"word":"DIV","why":"divisorMayBeZero"}],"decided":true,"undecided":[]}"#
         )
     );
     let (code, out, _) = arare(&["check", "--json"], "ADD");
@@ -152,7 +152,9 @@ fn ar_ver_218_check_lines() {
     let lines: Vec<&str> = out.lines().collect();
     assert_eq!(lines.len(), 3);
     assert!(
-        lines[0].ends_with(r#""budget":"0/1"}],"field":"closed","fieldExits":[]}"#),
+        lines[0].ends_with(
+            r#""budget":"0/1"}],"field":"closed","fieldExits":[],"decided":true,"undecided":[]}"#
+        ),
         "{}",
         lines[0]
     );
@@ -188,5 +190,36 @@ fn ar_ver_225_compile() {
     assert_eq!(
         arare(&["compile", "--inputs", "v8:0", "/no/such/file"], "").0,
         2
+    );
+}
+
+/// AR-VER-237: `check` names the comparisons whose answer the checker cannot
+/// show to be the exact one (AR-HLR-039, AR-LLR-044), and says `decided`
+/// when there is none.
+#[test]
+fn ar_ver_237_undecided_comparisons() {
+    // 1/3 at scale 2^-2 is 1/4 and at 2^-3 is 3/8: the two machine values
+    // differ although the exact ones are equal, and the checker says so.
+    let (code, out, _) = arare(&["check"], "1/3 8 -2 QUANTIZE 1/3 8 -3 QUANTIZE EQ");
+    assert_eq!(code, 0);
+    assert_eq!(out, "FALSE  ± ?\nfield=closed\nundecided: EQ\n");
+    // 1/3 and 19/48 at scale 2^-2 are 1/4 and 1/2: the machine answers TRUE,
+    // as the exact meaning does, but each is within an eighth of a value the
+    // other may be within an eighth of, so the checker cannot vouch for it.
+    // An undecided comparison is one the checker cannot show right, not one
+    // that is wrong.
+    let (_, out, _) = arare(
+        &["check", "--json"],
+        "1/3 8 -2 QUANTIZE 19/48 8 -2 QUANTIZE LT",
+    );
+    assert!(
+        out.contains(r#""decided":false,"undecided":["LT"]"#),
+        "{out}"
+    );
+    // Far apart, the budget decides it.
+    let (_, out, _) = arare(&["check"], "1/3 8 -2 QUANTIZE 2 LT");
+    assert!(
+        out.ends_with("decided\n") && !out.contains("undecided"),
+        "{out}"
     );
 }

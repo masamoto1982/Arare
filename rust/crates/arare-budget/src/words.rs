@@ -32,18 +32,24 @@ pub(crate) fn any_lane(v: &Abs) -> Abs {
 impl Checker {
     /// LT: the order of two numbers; of a wheel point, UNKNOWN in both.
     pub(crate) fn less(&mut self, a: &Abs, b: &Abs) -> Abs {
-        self.lift2(Word::Lt, a, b, &mut |_, x, y| match (x, y) {
+        self.lift2(Word::Lt, a, b, &mut |c, x, y| match (x, y) {
             (Abs::Num { info: p, .. }, Abs::Num { info: q, .. }) => {
                 let point = |i: &Info| matches!(i, Info::Inf | Info::Bot);
                 if point(p) || point(q) {
                     Abs::Nil
                 } else {
-                    Abs::Truth {
-                        agree: info::lt_agrees(*p, *q).unwrap_or(false),
+                    // AR-LLR-044: an order the budget does not decide is marked.
+                    let agree = info::lt_agrees(*p, *q).unwrap_or(false);
+                    if !agree {
+                        c.undecided(Word::Lt);
                     }
+                    Abs::Truth { agree }
                 }
             }
-            _ => Abs::Top,
+            _ => {
+                c.undecided(Word::Lt);
+                Abs::Top
+            }
         })
     }
 

@@ -63,6 +63,9 @@ pub struct Analysis {
     pub stack: Vec<Abs>,
     /// Sorted and without repeats.
     pub exits: Vec<Exit>,
+    /// The comparisons (LT, EQ) whose answer the checker cannot show to be
+    /// the exact one, sorted and without repeats (AR-HLR-039).
+    pub undecided: Vec<Word>,
 }
 
 impl Analysis {
@@ -70,12 +73,19 @@ impl Analysis {
     pub fn closed(&self) -> bool {
         self.exits.is_empty()
     }
+
+    /// AR-HLR-039: every comparison the program makes answers what the exact
+    /// meaning answers, so every truth value it computes is the exact one.
+    pub fn decided(&self) -> bool {
+        self.undecided.is_empty()
+    }
 }
 
 /// Check a parsed program.
 pub fn analyze(program: &Program) -> Analysis {
     let mut c = Checker {
         exits: Vec::new(),
+        undecided: Vec::new(),
         scopes: vec![Vec::new()],
     };
     let mut stack = Vec::new();
@@ -84,14 +94,18 @@ pub fn analyze(program: &Program) -> Analysis {
     }
     c.exits.sort();
     c.exits.dedup();
+    c.undecided.sort();
+    c.undecided.dedup();
     Analysis {
         stack,
         exits: c.exits,
+        undecided: c.undecided,
     }
 }
 
 pub(crate) struct Checker {
     exits: Vec<Exit>,
+    undecided: Vec<Word>,
     /// What is known of the value of each name bound so far, scope by scope,
     /// as `arare-interp`'s `Env` holds the values (AR-LLR-028).
     scopes: Vec<Vec<(Rc<str>, Abs)>>,
@@ -123,6 +137,11 @@ fn width(v: &Abs) -> Option<Width> {
 impl Checker {
     pub(crate) fn note(&mut self, word: Option<Word>, why: Why) {
         self.exits.push(Exit { word, why });
+    }
+
+    /// A comparison whose answer may differ from the exact one (AR-LLR-044).
+    pub(crate) fn undecided(&mut self, word: Word) {
+        self.undecided.push(word);
     }
 
     /// A numeric result: noted when it is not bounded as a number. Its range
@@ -276,6 +295,9 @@ impl Checker {
             (Nil, _) | (_, Nil) => Nil,
             (Top, _) | (_, Top) => {
                 self.note(Some(w), Why::Unbounded);
+                if w == Word::Lt {
+                    self.undecided(w);
+                }
                 Top
             }
             (Lanes(xs), Lanes(ys)) => match (xs.len(), ys.len()) {
@@ -381,9 +403,13 @@ impl Checker {
                 let o = self.pop_data(stack, 2);
                 match (&o[0], &o[1]) {
                     (Abs::Nil, _) | (_, Abs::Nil) => Abs::Nil,
-                    (a, b) => Abs::Truth {
-                        agree: eq_agrees(a, b),
-                    },
+                    (a, b) => {
+                        let agree = eq_agrees(a, b);
+                        if !agree {
+                            self.undecided(w);
+                        }
+                        Abs::Truth { agree }
+                    }
                 }
             }
             Word::And => {
