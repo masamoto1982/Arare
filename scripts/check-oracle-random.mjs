@@ -25,6 +25,12 @@
 // The gate fails on any violation, on a program Ajisai refuses that Arare
 // ran, and when the checker bounds fewer than MIN_BOUNDED of the values: a
 // checker that claimed nothing would otherwise pass.
+//
+// It also holds the mark of undecided comparisons (AR-HLR-039, ADR-0016) to
+// the budget: a program marked decided may leave no truth value without a
+// budget, and its truth values, whose budget is then 0, must equal Ajisai's.
+// The count of decided programs is reported, as the share of programs whose
+// every comparison Arare answered as the exact meaning does.
 
 import { reporter } from './lib/common.mjs';
 import { runAjisai, runArare, show, showRat, within } from './lib/oracle.mjs';
@@ -170,6 +176,7 @@ let refused = 0;
 let values = 0;
 let bounded = 0;
 let closed = 0;
+let decided = 0;
 let violations = 0;
 for (const [i, source] of sources.entries()) {
   const a = arare[i];
@@ -177,6 +184,13 @@ for (const [i, source] of sources.entries()) {
   const j = await runAjisai(source);
   if (j.error) { report.fail(`Ajisai refused a program Arare ran: ${source}: ${j.error}`); continue; }
   if (a.field === 'closed') closed++;
+  if (a.decided) {
+    decided++;
+    const truth = (x) => x.kind === 'boolean' || (x.kind === 'vector' && x.items.some(truth));
+    if (a.stack.some((x) => truth(x) && x.budget === null)) {
+      report.fail(`marked decided, but a truth value has no budget: ${source}`);
+    }
+  }
   if (a.stack.length !== j.stack.length) { report.fail(`stacks differ: ${source}`); continue; }
   for (const [k, x] of a.stack.entries()) {
     values++;
@@ -195,5 +209,5 @@ if (ran < MIN_RAN) report.fail(`only ${ran} programs ran; Phase 3's exit criteri
 if (bounded < values * MIN_BOUNDED) report.fail(`the checker bounded only ${bounded} of ${values} values (floor ${MIN_BOUNDED * 100}%).`);
 report.done(
   `${ran} program(s) (seed ${SEED}, ${refused} refused by Arare), ${bounded} of ${values} value(s) bounded, ` +
-    `${violations} violation(s); ${closed} program(s) field=closed.`,
+    `${violations} violation(s); ${closed} program(s) field=closed, ${decided} decided.`,
 );

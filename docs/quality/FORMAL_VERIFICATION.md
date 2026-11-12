@@ -144,6 +144,9 @@ Read these as open, not as proved by implication:
   and on at least 10,000 generated programs (AR-VER-209, AR-VER-217), not
   proved (AR-HLR-029). Only `join`, which lanes and loop iterations go
   through, is proved.
+- **The undecided mark** (AR-HLR-039) is that same agreement rule, read off
+  as a list of comparisons: tested (AR-VER-237) and held on the generated
+  programs (AR-VER-217), not proved.
 - **The checked rationals** (`rat.rs`, AR-LLR-018) have no Kani harness:
   symbolic 128-bit division is beyond the solver in the time CI allows (a
   harness for `Q::new` over 8-bit operands took 13 minutes locally, and over

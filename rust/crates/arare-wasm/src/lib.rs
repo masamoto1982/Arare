@@ -148,6 +148,16 @@ fn checked_node(v: &Value, abs: Option<&Abs>) -> String {
     format!("{},\"budget\":{b}}}", &n[..n.len() - 1])
 }
 
+/// The comparisons the checker cannot show to answer exactly (AR-LLR-044).
+fn undecided(a: &Analysis) -> String {
+    let words: Vec<String> = a
+        .undecided
+        .iter()
+        .map(|w| format!("\"{}\"", w.name()))
+        .collect();
+    words.join(",")
+}
+
 fn field(a: &Analysis) -> String {
     let exits: Vec<String> = a
         .exits
@@ -163,8 +173,10 @@ fn field(a: &Analysis) -> String {
         .collect();
     let contract = if a.closed() { "closed" } else { "leaving" };
     format!(
-        "\"field\":\"{contract}\",\"fieldExits\":[{}]",
-        exits.join(",")
+        "\"field\":\"{contract}\",\"fieldExits\":[{}],\"decided\":{},\"undecided\":[{}]",
+        exits.join(","),
+        a.decided(),
+        undecided(a)
     )
 }
 

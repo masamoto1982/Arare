@@ -131,6 +131,16 @@ node — so nothing overflowed — and no DIV with a zero divisor.
 document; `--lines` checks one program per input line, which is how the oracle
 harnesses run thousands of programs in one process (AR-VER-209, AR-VER-217).
 
+## Undecided comparisons (AR-LLR-044)
+
+A comparison whose operands do not agree (the rule of AR-HLR-029) is recorded
+as undecided: in `less`, when `lt_agrees` fails or an operand is unknown, and
+in EQ when `eq_agrees` fails. The record is a sorted set of Words, so it says
+which kinds of comparison to look at, not where; `arare check` prints
+`decided` or `undecided: LT, EQ` and its JSON carries `"decided"` and
+`"undecided"`. A decided program's truth values are the exact meaning's; what
+to do with an undecided one is the caller's (ADR-0016).
+
 ## How each layer is held
 
 | Layer | Evidence |

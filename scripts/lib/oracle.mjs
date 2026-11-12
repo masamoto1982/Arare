@@ -42,7 +42,7 @@ export function runArare(sources) {
   if (lines.length !== sources.length) throw new Error(`arare answered ${lines.length} of ${sources.length} programs`);
   return lines.map((l) => {
     const out = JSON.parse(l);
-    return out.ok ? { stack: out.stack.map(norm), field: out.field } : { error: out.error };
+    return out.ok ? { stack: out.stack.map(norm), field: out.field, decided: out.decided } : { error: out.error };
   });
 }
 
