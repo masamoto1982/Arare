@@ -109,6 +109,9 @@ fn ar_ver_231_errors_say_where() {
     for (src, category) in [
         ("TRUE 1 ADD", "type"),
         ("[ 1 2 ] [ 1 2 3 ] ADD", "shape"),
+        ("[ [ 1 2 ] [ 3 ] ] [ 1 2 ] ADD", "shape"),
+        ("[ 1 2 ADD ] 1 ADD", "type"),
+        ("[ 1 ] [ 'K' BIND K ] MAP K", "unbound"),
         ("1 40 RESCALE", "scaleOverflow"),
         ("1 7 NARROW", "badOperand"),
         ("[ 1 2 ] [ DROP ] MAP", "syntax"),

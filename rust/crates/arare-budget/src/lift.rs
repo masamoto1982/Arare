@@ -41,22 +41,29 @@ impl Checker {
         if ops.contains(&Abs::Top) {
             return self.unknown(w);
         }
-        let vectors: Vec<usize> = (0..ops.len()).filter(|k| ops[*k].is_vector()).collect();
+        let vectors: Vec<(usize, Shape)> = ops
+            .iter()
+            .enumerate()
+            .filter_map(|(k, v)| match v {
+                Abs::Lanes(xs) => Some((k, Shape::Lanes(xs))),
+                Abs::Hull { max, elem } => Some((k, Shape::Hull(*max, elem))),
+                _ => None,
+            })
+            .collect();
         match vectors[..] {
             [] => f(self, ops),
-            [k] => {
+            [(k, shape)] => {
                 let mut with = |c: &mut Checker, lane: &Abs| {
                     let mut o = ops.to_vec();
                     o[k] = lane.clone();
                     c.lift(w, &o, nil_absorbs, f)
                 };
-                match &ops[k] {
-                    Abs::Lanes(xs) => Abs::Lanes(xs.iter().map(|x| with(self, x)).collect()),
-                    Abs::Hull { max, elem } => Abs::Hull {
-                        max: *max,
+                match shape {
+                    Shape::Lanes(xs) => Abs::Lanes(xs.iter().map(|x| with(self, x)).collect()),
+                    Shape::Hull(max, elem) => Abs::Hull {
+                        max,
                         elem: Box::new(with(self, elem)),
                     },
-                    _ => unreachable!("a vector"),
                 }
             }
             _ => match ops.iter().map(rank).collect::<Option<Vec<_>>>() {
@@ -97,17 +104,18 @@ impl Checker {
             .iter()
             .map(|r| if *r == top { r - 1 } else { *r })
             .collect();
-        let known: Option<Vec<usize>> = walked
+        let known: Option<Vec<&Vec<Abs>>> = walked
             .iter()
             .map(|k| match &ops[*k] {
-                Abs::Lanes(xs) => Some(xs.len()),
+                Abs::Lanes(xs) => Some(xs),
                 _ => None,
             })
             .collect();
         match known {
-            Some(lens) => {
+            Some(lanes) => {
                 let mut width = 1;
-                for n in lens {
+                for xs in &lanes {
+                    let n = xs.len();
                     if n != 1 {
                         if width != 1 && width != n {
                             // Lengths that do not pair: the program stops.
@@ -120,10 +128,8 @@ impl Checker {
                     (0..width)
                         .map(|i| {
                             let mut o = ops.to_vec();
-                            for k in &walked {
-                                if let Abs::Lanes(xs) = &ops[*k] {
-                                    o[*k] = xs[if xs.len() == 1 { 0 } else { i }].clone();
-                                }
+                            for (k, xs) in walked.iter().zip(&lanes) {
+                                o[*k] = xs[if xs.len() == 1 { 0 } else { i }].clone();
                             }
                             self.aligned(w, &o, next.clone(), nil_absorbs, f)
                         })
@@ -182,4 +188,11 @@ fn rank(v: &Abs) -> Option<usize> {
         Abs::Hull { elem, .. } => Some(rank(elem)? + 1),
         _ => Some(0),
     }
+}
+
+/// A vector operand: its lanes, or its longest length and every lane.
+#[derive(Clone, Copy)]
+enum Shape<'a> {
+    Lanes(&'a [Abs]),
+    Hull(usize, &'a Abs),
 }

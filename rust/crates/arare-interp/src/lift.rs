@@ -72,23 +72,25 @@ fn lift(ops: &[&Value], nil_absorbs: bool, leaf: LeafN) -> Result<Value, ErrorKi
             return Ok(Value::Nil(*r));
         }
     }
-    let is_vector = |v: &&&Value| matches!(v, Value::Vector(_));
-    match ops.iter().filter(is_vector).count() {
-        0 => leaf(ops),
-        1 => {
-            let k = ops.iter().position(|v| is_vector(&v)).expect("one vector");
-            let Value::Vector(xs) = ops[k] else {
-                unreachable!("a vector")
-            };
-            xs.iter()
-                .map(|x| {
-                    let mut o = ops.to_vec();
-                    o[k] = x;
-                    lift(&o, nil_absorbs, leaf)
-                })
-                .collect::<Result<_, _>>()
-                .map(Value::Vector)
-        }
+    let vectors: Vec<(usize, &Vec<Value>)> = ops
+        .iter()
+        .enumerate()
+        .filter_map(|(k, v)| match v {
+            Value::Vector(xs) => Some((k, xs)),
+            _ => None,
+        })
+        .collect();
+    match vectors[..] {
+        [] => leaf(ops),
+        [(k, xs)] => xs
+            .iter()
+            .map(|x| {
+                let mut o = ops.to_vec();
+                o[k] = x;
+                lift(&o, nil_absorbs, leaf)
+            })
+            .collect::<Result<_, _>>()
+            .map(Value::Vector),
         _ => {
             let shapes = ops
                 .iter()
@@ -115,15 +117,13 @@ fn aligned(
     if top == 0 {
         return lift(ops, nil_absorbs, leaf);
     }
-    let lanes = |v: &Value| match v {
-        Value::Vector(xs) => xs.len(),
-        _ => unreachable!("an operand of rank above 0 is a vector"),
-    };
     let width = ops
         .iter()
         .zip(&ranks)
-        .filter(|(_, r)| **r == top)
-        .map(|(v, _)| lanes(v))
+        .filter_map(|(v, r)| match v {
+            Value::Vector(xs) if *r == top => Some(xs.len()),
+            _ => None,
+        })
         .fold(1, |w, n| if n == 1 { w } else { n });
     let next: Vec<usize> = ranks
         .iter()

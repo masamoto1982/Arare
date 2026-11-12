@@ -344,6 +344,17 @@ fn ar_ver_216_c_every_shape_each_word_meets() {
         (&format!("[ [ 1 2 ] [ 3 4 ] ] {hull} ADD"), "0/1"),
         (&format!("[ [ 1 ] [ 2 ] ] 0 {hull} 2 LT SELECT"), "0/1"),
         ("[ [ 1 2 ] [ 3 ] ] [ 1 2 ] ADD", "?"),
+        ("[ 1 [ 2 ] ] [ 1 2 ] ADD", "?"),
+        (&format!("[ ] {hull} ADD"), "0/1"),
+        // Vectors of vectors whose count is not known: rows of one length
+        // and rows of several, joined.
+        (
+            "[ [ 1 2 ] [ 3 4 ] ] [ SUM 9 LT ] FILTER [ [ 1 2 ] ] ADD",
+            "0/1",
+        ),
+        ("[ [ 1 ] [ 2 3 ] ] [ SUM 9 LT ] FILTER", "0/1"),
+        // A vector joined with a scalar, lanes of a vector kept whole.
+        ("[ [ 2 ] 1 ] [ 'X' BIND TRUE ] FILTER", "?"),
         ("[ 2 3 MUL ] 1 ADD", "?"),
         (
             "[ [ 1 2 ] [ 3 4 ] ] [ 1 2 ] 0.1 16 -12 QUANTIZE MUL ADD",

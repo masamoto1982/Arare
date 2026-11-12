@@ -9,13 +9,9 @@ use crate::info::{self, Info};
 use crate::value::{cross, join, lanes_joined, Abs};
 use arare_front::Word;
 
-/// Every lane of `v`, joined; a scalar is its own lane.
+/// Every lane of a vector, joined; nothing for an empty one.
 pub(crate) fn any_lane(v: &Abs) -> Abs {
-    if v.is_vector() {
-        lanes_joined(v).unwrap_or(Abs::Top)
-    } else {
-        v.clone()
-    }
+    lanes_joined(v).unwrap_or(Abs::Top)
 }
 
 impl Checker {

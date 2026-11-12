@@ -83,6 +83,9 @@ fn ar_ver_212_shapes_and_operands() {
         error("[ 1 2 ADD ] 1 ADD"),
         ("ADD".into(), K::NotLiteral("ADD".into()))
     );
+    let says = |src: &str| arare_interp::run(src).unwrap_err().to_string();
+    assert!(says("[ [ 1 2 ] [ 3 ] ] [ 1 2 ] LT").contains("got a ragged one"));
+    assert!(says("[ 1 2 ADD ] 1 ADD").contains("holds only literals, not ADD"));
     assert_eq!(
         error("1 63 RESCALE").1,
         K::BadOperand("a shift from 0 to 62")
