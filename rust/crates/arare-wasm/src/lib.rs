@@ -185,7 +185,8 @@ pub fn category(kind: &ErrorKind) -> &'static str {
     match kind {
         ErrorKind::StackUnderflow { .. } => "stackUnderflow",
         ErrorKind::Type(_) => "type",
-        ErrorKind::Shape { .. } => "shape",
+        ErrorKind::Shape { .. } | ErrorKind::Ragged => "shape",
+        ErrorKind::NotLiteral(_) => "type",
         ErrorKind::ScaleOverflow => "scaleOverflow",
         ErrorKind::BadOperand(_) => "badOperand",
         ErrorKind::BlockResult(_) => "blockResult",

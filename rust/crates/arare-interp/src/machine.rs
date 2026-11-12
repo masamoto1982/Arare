@@ -1,11 +1,11 @@
 //! The machine (AR-LLR-013): a stack, a program, the position reached, and
 //! the names bound so far (AR-LLR-028). Quotes are data or code by what
-//! consumes them: a Word that runs a block runs it; any other Word evaluates
-//! it into a vector first.
+//! consumes them: a Word that runs a block runs it; any other Word reads it
+//! as the vector of literals it writes (AR-HLR-021).
 
-use crate::value::{Error, ErrorKind, Value};
+use crate::value::{Error, ErrorKind, Reason, Value};
 use crate::words::apply;
-use arare_front::{parse, FrontError, Item, Program};
+use arare_front::{parse, FrontError, Item, Program, Word};
 use arare_kernel::Num;
 use std::rc::Rc;
 
@@ -107,14 +107,14 @@ impl Machine {
         Ok(())
     }
 
-    /// The stack with every block read as data, in the scope the program
-    /// ended in, as a Word reading it there would: how the stack leaves for
-    /// Arrow (AR-LLR-042). A block that does not read as data is an error.
-    pub fn data_stack(&mut self) -> Result<Vec<Value>, Error> {
+    /// The stack with every block read as data, as a Word reading it would:
+    /// how the stack leaves for Arrow (AR-LLR-042). A block that does not
+    /// read as data is an error.
+    pub fn data_stack(&self) -> Result<Vec<Value>, Error> {
         let stack = self.stack.clone();
         stack
             .into_iter()
-            .map(|v| data(v, &mut self.env).map_err(|kind| Error { word: None, kind }))
+            .map(|v| data(v).map_err(|kind| Error { word: None, kind }))
             .collect()
     }
 }
@@ -176,22 +176,35 @@ pub(crate) fn run_block(
     }
 }
 
-/// A value as data: a quote is evaluated, on a stack of its own, into the
-/// vector of what it leaves, nested quotes included. Its names read the
-/// scope it is evaluated in.
-pub(crate) fn data(v: Value, env: &mut Env) -> Result<Value, ErrorKind> {
+/// A value as data: a quote is read as the vector its items write, nested
+/// quotes as nested vectors (AR-HLR-021). Only literals may be read so: a
+/// number, NIL, TRUE, FALSE, a name as text and a nested bracket. Any other
+/// Word or a name is refused rather than run, so a bracket means one value
+/// whatever the scope it is read in, as in Ajisai.
+pub(crate) fn data(v: Value) -> Result<Value, ErrorKind> {
     match v {
-        Value::Quote(items) => {
-            let mut stack = Vec::new();
-            for item in items.iter() {
-                exec(&mut stack, env, item).map_err(|e| e.kind)?;
-            }
-            stack
-                .into_iter()
-                .map(|v| data(v, env))
-                .collect::<Result<_, _>>()
-                .map(Value::Vector)
-        }
+        Value::Quote(items) => literal(&items),
         other => Ok(other),
     }
+}
+
+/// The vector a bracket of literals writes.
+pub fn literal(items: &[Item]) -> Result<Value, ErrorKind> {
+    items
+        .iter()
+        .map(|item| match item {
+            Item::Int(k) => Ok(Value::Num(
+                Num::int(*k).expect("the front end checked the range"),
+            )),
+            Item::Num { num, .. } => Ok(Value::Num(*num)),
+            Item::Text(name) => Ok(Value::Text(name.as_str().into())),
+            Item::Word(Word::True) => Ok(Value::Bool(true)),
+            Item::Word(Word::False) => Ok(Value::Bool(false)),
+            Item::Word(Word::Nil) => Ok(Value::Nil(Reason::Literal)),
+            Item::Quote(inner) => literal(inner),
+            Item::Word(w) => Err(ErrorKind::NotLiteral(w.name().to_string())),
+            Item::Name(name) => Err(ErrorKind::NotLiteral(name.clone())),
+        })
+        .collect::<Result<_, _>>()
+        .map(Value::Vector)
 }

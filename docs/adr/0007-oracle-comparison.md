@@ -71,3 +71,35 @@ The owner's direction is that the two languages differ only in rounding.
 - D-07 and D-08 are unchanged as Arare's decisions; what changed is that
   Ajisai now agrees with them. The Lean proofs (AR-VER-106) remain their
   primary verification, and the oracle is now a second, independent check.
+
+## Amendment (2026-11-12): one meaning for every shared construct
+
+The owner decided that a construct both languages have means the same thing
+in both, and that both follow Ajisai's specification where they differed. A
+differential run against Ajisai found four such constructs, which no corpus
+case or generated program had reached because none put a Word in a bracket or
+nested two vectors of different rank:
+
+- **A bracket read as data.** Arare ran it and took the vector of what it
+  left, so `[ 2 3 MUL ] [ 6 ] EQ` was TRUE; Ajisai reads it as the vector of
+  what it writes, the Word a name in it, so FALSE. Arare now reads a bracket
+  of literals the same way and refuses one that holds any other Word or a
+  name (AR-HLR-021), which leaves the difference a refusal, not an answer.
+- **Two vectors of different rank.** Arare paired them at the outermost
+  axis, Ajisai's arithmetic at the innermost. Both now align at the innermost
+  axis, as NumPy broadcasts (AR-HLR-022). Ajisai's comparison and logic Words
+  and SELECT had paired at the outermost axis too, against its own
+  LANG.COLLECTIONS.LIFT; masamoto1982/Ajisai#1922 corrects them.
+- **SELECT under one truth.** Arare took a whole branch; Ajisai lifts all
+  three operands. Arare now lifts them, so `[ [ 1 2 ] [ 3 4 ] ] [ 8 9 ] FALSE
+  SELECT` is `[ [ 8 9 ] [ 8 9 ] ]` in both.
+- **A ragged vector paired with another vector.** Arare paired the lanes it
+  could; both now refuse it. A ragged vector still pairs with a scalar.
+
+The same run found `[ TRUE ] SUM` answering TRUE in Ajisai, which #1922 also
+corrects. The oracle moves to the head of #1922 (`dd5d1b2`), and to its merge
+commit when it merges. `overflow` (D-09) is still the one divergence in an
+answer; what one language accepts and the other refuses (Arare's decimals,
+Ajisai's strings and symbols in brackets) is not a divergence, because no
+program answers differently.
+

@@ -116,7 +116,10 @@ fn ar_ver_233_lengths_must_agree() {
 
 #[test]
 fn ar_ver_233_stack_values_through_columns() {
-    let stack = run("[ 1 2 NIL ] [ 1 0 DIV 0 0 DIV 3 ] [ TRUE NIL FALSE ] [ 1 1000 NIL ]").unwrap();
+    let stack = run(
+        "[ 1 2 NIL ] [ 1/0 8 0 QUANTIZE 0/0 8 0 QUANTIZE 3 ] [ TRUE NIL FALSE ] [ 1 1000 NIL ]",
+    )
+    .unwrap();
     let columns = to_columns(&stack).unwrap();
     let bytes = write_file(&Batch {
         columns: columns.clone(),

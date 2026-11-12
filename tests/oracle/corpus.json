@@ -75,6 +75,36 @@
       "name": "logistic map, 16 steps (AR-PERF-003's program; 20 steps exceed the oracle build's limits)",
       "source": "[ 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ] 0 16 -15 QUANTIZE [ 'I' BIND 'Y' BIND 5/16 16 -15 QUANTIZE 13 Y MUL Y MUL 2 RESCALE 1/4 8 -2 QUANTIZE MUL SUB 15 RESCALE 16 NARROW ] FOLD 1/2 16 -15 QUANTIZE ADD",
       "budget": "1/16384"
+    },
+    {
+      "name": "vectors of different rank align from the innermost axis (AR-HLR-022)",
+      "source": "[ [ 1 2 ] [ 3 4 ] ] [ 10 20 ] ADD",
+      "budget": "0"
+    },
+    {
+      "name": "an order over vectors of different rank aligns the same way",
+      "source": "[ [ 1 2 ] [ 3 4 ] ] [ 2 3 ] LT",
+      "budget": "0"
+    },
+    {
+      "name": "SELECT under one truth lifts its branches",
+      "source": "[ [ 1 2 ] [ 3 4 ] ] [ 8 9 ] FALSE SELECT",
+      "budget": "0"
+    },
+    {
+      "name": "a NIL branch is a lane of SELECT",
+      "source": "NIL [ 1 2 ] TRUE SELECT",
+      "budget": "0"
+    },
+    {
+      "name": "a bracket of literals is the vector it writes (AR-HLR-021)",
+      "source": "[ 1 NIL TRUE [ 2 ] ] [ 1 NIL TRUE [ 2 ] ] EQ",
+      "budget": "0"
+    },
+    {
+      "name": "a quantized vector against a nested one, aligned innermost",
+      "source": "[ [ 1 2 3 ] [ 4 5 6 ] ] [ 1 2 3 ] 0.1 16 -12 QUANTIZE MUL ADD",
+      "budget": "3/10240"
     }
   ]
 }

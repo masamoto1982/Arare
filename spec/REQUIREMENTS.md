@@ -286,7 +286,7 @@ The reference interpreter keeps, with each NIL, the reason it arose; the compile
 
 ### AR-HLR-021 — Program structure
 
-A program is a sequence of integer literals, quantized literals, Words and bracketed quotes; `#` begins a comment that runs to the end of the line. A quote is code to a Word that runs a block (MAP, FILTER, FOLD) and data to every other Word, which evaluates it, on a stack of its own, into the vector of what it leaves.
+A program is a sequence of integer literals, quantized literals, Words and bracketed quotes; `#` begins a comment that runs to the end of the line. A quote is code to a Word that runs a block (MAP, FILTER, FOLD) and data to every other Word, which reads it as the vector of the literals it writes: numbers, NIL, TRUE, FALSE, names as text and nested quotes. A quote read as data that holds any other Word or a name is an ERROR, as the same bracket is a vector of names in Ajisai and so never means a computed value (ADR-0015).
 
 - Level: QL-B
 - Refines: AR-SYS-001
@@ -295,7 +295,7 @@ A program is a sequence of integer literals, quantized literals, Words and brack
 
 ### AR-HLR-022 — Lane-wise lifting
 
-ADD, SUB, MUL, DIV, NEG, LT, AND, NOT, RESCALE, NARROW, QUANTIZE and SELECT apply lane by lane to vectors: two vectors of equal length pair their lanes, and a one-element vector or a scalar pairs with every lane of the other; any other pairing is an ERROR. EQ compares whole values.
+ADD, SUB, MUL, DIV, NEG, LT, AND, NOT, RESCALE, NARROW, QUANTIZE and SELECT apply lane by lane to vectors, as Ajisai's LANG.COLLECTIONS.LIFT does: a scalar pairs with every lane of a vector however it nests; two or more vectors must each have a shape (every lane of a vector the same shape) and align from the innermost axis, a lane of length 1 and a vector of lower rank reused; any other pairing, a ragged vector paired with another vector included, is an ERROR. SELECT lifts its condition and both branches alike. EQ compares whole values.
 
 - Level: QL-B
 - Refines: AR-SYS-001
@@ -595,7 +595,7 @@ The parser nests quotes by brackets, maps names to the twenty Words of the Phase
 
 ### AR-LLR-013 — The machine
 
-A Machine holds a stack and a program and executes one top-level item per step, from an empty stack or from inputs already on it (how the compiled route hands a program its inputs): a literal pushes a number, a quote pushes itself, a Word pops its operands in the order they were pushed and pushes its result. A quote consumed as data is evaluated on a stack of its own, nested quotes included; a block runs on a stack holding only its inputs and must leave one value. An ERROR stops the machine and names the Word.
+A Machine holds a stack and a program and executes one top-level item per step, from an empty stack or from inputs already on it (how the compiled route hands a program its inputs): a literal pushes a number, a quote pushes itself, a Word pops its operands in the order they were pushed and pushes its result. A quote consumed as data is read as the vector of the literals it writes, nested quotes included, and any other item in it is an ERROR; a block runs on a stack holding only its inputs and must leave one value. An ERROR stops the machine and names the Word.
 
 - Level: QL-B
 - Refines: AR-HLR-021, AR-HLR-024, AR-HLR-025
@@ -605,7 +605,7 @@ A Machine holds a stack and a program and executes one top-level item per step, 
 
 ### AR-LLR-014 — Lifting
 
-lift2 pairs two vectors lane by lane when their lengths are equal, reuses the lane of a one-element vector or a scalar, and refuses other pairings with their two lengths; a NIL operand is the result, the left of two. AND and NOT lift the same way but read NIL as UNKNOWN, and an UNKNOWN result is the NIL it came from, the left one's reason when both are NIL.
+lift walks a vector paired only with scalars lane by lane, whatever its nesting; two or more vectors must each have a shape, else it refuses them as ragged, and align from the innermost axis as NumPy broadcasts, a lane of length 1 and a vector of lower rank reused, refusing other pairings with the two lengths that differ. For arithmetic and LT, a NIL operand is the result, the left of two. AND, NOT and SELECT lift the same way but read a NIL as a lane, UNKNOWN to AND and NOT, and an UNKNOWN result is the NIL it came from, the left one's reason when both are NIL.
 
 - Level: QL-B
 - Refines: AR-HLR-022, AR-HLR-023, AR-HLR-012, AR-HLR-013
@@ -670,11 +670,11 @@ Info is Lean's Info: nothing, 1/0 or 0/0 in both meanings, or a range [lo, hi] f
 
 ### AR-LLR-020 — The checker over a program
 
-analyze runs a parsed program as the reference interpreter does, item by item and Word by Word, on what is known of each value — nothing; NIL in both meanings; a number (possibly NIL in both instead) with its Info; a truth value or NIL, agreeing or not; a vector of known length lane by lane, or of a length at most max shared by both meanings with one description of every lane; or a quote — and never on a value a Word computes. Numeric Words apply AR-LLR-019's functions lane by lane under the interpreter's lifting; a RESCALE shift, NARROW width or QUANTIZE exponent must be an integer exact in both meanings; LT of a wheel point is NIL in both; SELECT joins its branches when its condition agrees and bounds them across otherwise; FILTER with an agreeing predicate keeps a vector of unknown length; MAP, FOLD and SUM over such a vector run once per length it may have, joined, a FOLD stopping when an iteration changes nothing. BIND binds what is known of a value as the interpreter binds the value, in the same scopes, a block of names taking a vector's lanes; a name pushes what is known of its value, nothing where the checker does not see it bound; and every numeric result is coarsened (AR-LLR-030). It leaves as many values as the interpreter and takes the same steps on every run.
+analyze runs a parsed program as the reference interpreter does, item by item and Word by Word, on what is known of each value — nothing; NIL in both meanings; a number (possibly NIL in both instead) with its Info; a truth value or NIL, agreeing or not; a vector of known length lane by lane, or of a length at most max shared by both meanings with one description of every lane; or a quote — and never on a value a Word computes. A quote read as data is the vector of its literals, and one holding anything else is nothing. Numeric Words, LT, AND and SELECT apply lane by lane under the interpreter's lifting (AR-LLR-014), a vector of unknown length walked through the description of every lane; a RESCALE shift, NARROW width or QUANTIZE exponent must be an integer exact in both meanings; LT of a wheel point is NIL in both; SELECT joins its branches when its condition agrees and bounds them across otherwise; FILTER with an agreeing predicate keeps a vector of unknown length; MAP, FOLD and SUM over such a vector run once per length it may have, joined, a FOLD stopping when an iteration changes nothing. BIND binds what is known of a value as the interpreter binds the value, in the same scopes, a block of names taking a vector's lanes; a name pushes what is known of its value, nothing where the checker does not see it bound; and every numeric result is coarsened (AR-LLR-030). It leaves as many values as the interpreter and takes the same steps on every run.
 
 - Level: QL-A
 - Refines: AR-HLR-027, AR-HLR-029
-- Implemented in: `rust/crates/arare-budget/src/value.rs`, `rust/crates/arare-budget/src/check.rs`, `rust/crates/arare-budget/src/words.rs`
+- Implemented in: `rust/crates/arare-budget/src/value.rs`, `rust/crates/arare-budget/src/check.rs`, `rust/crates/arare-budget/src/lift.rs`, `rust/crates/arare-budget/src/words.rs`
 - Tested in `rust/crates/arare-budget/tests/check.rs` — **AR-VER-216-C**
 - Tested in `tests/oracle/corpus.json` — **AR-VER-209**
 - Tested in `scripts/check-oracle-random.mjs` — **AR-VER-217**

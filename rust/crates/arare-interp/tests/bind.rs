@@ -69,8 +69,15 @@ fn ar_ver_228_scopes() {
     // An error in a block is the Word's that ran it, bindings or not.
     let e = error("[ 1 ] [ 'K' BIND K TRUE ADD ] MAP");
     assert_eq!((e.word, e.kind), (Some(Word::Map), K::Type("a number")));
-    // A quote evaluated as data reads the names where it is evaluated.
-    assert_eq!(shown("3 'C' BIND [ C C ] SUM"), "6/1");
+    // A bracket read as data holds only literals; a name in it is refused,
+    // not read, as Ajisai keeps it a name (AR-HLR-021).
+    assert_eq!(
+        error("3 'C' BIND [ C C ] SUM"),
+        Error {
+            word: Some(Word::Sum),
+            kind: K::NotLiteral("C".into())
+        }
+    );
     // A FILTER's predicate reads them too.
     assert_eq!(shown("2 'T' BIND [ 1 2 3 ] [ T LT ] FILTER"), "[ 1/1 ]");
 }

@@ -156,7 +156,55 @@ function program() {
   return `${vectorValue(depth)} [ ${int(-20, 20)} LT ] FILTER`;
 }
 
-const sources = Array.from({ length: COUNT }, program);
+// A second family, from a stream of its own so that the programs above stay
+// the same (Ajisai keeps the first of them): vectors nested two deep and
+// vectors of different rank meeting in one Word, which align from the
+// innermost axis in both languages (AR-HLR-022), SELECT under one truth over
+// such vectors, AND over nested truths, and brackets of literals with NIL,
+// TRUE and FALSE read as data (AR-HLR-021). Quantized values enter through
+// arithmetic at the top level, since a bracket holds only literals.
+const SHAPES = Number(process.env.ORACLE_SHAPES ?? (process.env.ORACLE_PROGRAMS ? 0 : 1500));
+const shapeRandom = generator(SEED + 1);
+const sInt = (lo, hi) => lo + Math.floor(shapeRandom() * (hi - lo + 1));
+const sPick = (xs) => xs[Math.floor(shapeRandom() * xs.length)];
+const lanes = (n, item) => `[ ${Array.from({ length: n }, item).join(' ')} ]`;
+const numberLane = () => (shapeRandom() < 0.1 ? 'NIL' : String(sInt(-20, 20)));
+const truthLane = () => sPick(['TRUE', 'FALSE', 'TRUE', 'FALSE', 'NIL']);
+/** A literal of shape `shape`, outermost axis first. */
+const shaped = (shape, item) =>
+  shape.length === 0 ? item() : lanes(shape[0], () => shaped(shape.slice(1), item));
+/** A shape and one that aligns with it from the innermost axis. */
+function shapePair() {
+  const inner = sInt(1, 4);
+  const outer = sInt(1, 3);
+  const big = [outer, inner];
+  const small = sPick([[inner], [1], [outer, 1], [1, inner], [outer, inner], []]);
+  return shapeRandom() < 0.5 ? [big, small] : [small, big];
+}
+function scaledBy() {
+  const width = sPick([16, 32]);
+  const value = `${sPick(['0.5', '0.25', '1.75', '-0.125', '3/7', '-2/3'])} ${width} ${sPick([-8, -6, -4])} QUANTIZE`;
+  return `${value} ${sPick(['MUL', 'ADD'])}`;
+}
+function shapeProgram() {
+  const [a, b] = shapePair();
+  const k = shapeRandom();
+  const num = (shape) => `${shaped(shape, numberLane)}${shapeRandom() < 0.6 ? ` ${scaledBy()}` : ''}`;
+  if (k < 0.35) return `${num(a)} ${num(b)} ${sPick(['ADD', 'SUB', 'MUL'])}`;
+  if (k < 0.5) return `${num(a)} ${num(b)} LT`;
+  if (k < 0.62) return `${shaped(a, truthLane)} ${shaped(b, truthLane)} AND`;
+  if (k < 0.85) {
+    const cond = sPick([sPick(['TRUE', 'FALSE', 'NIL']), shaped(sPick([a, b]), truthLane)]);
+    return `${num(a)} ${num(b)} ${cond} SELECT`;
+  }
+  // Brackets of literals compared whole, and a lane-wise Word of one operand.
+  return `${shaped(a, numberLane)} ${shaped(a, numberLane)} EQ ${num(b)} NEG`;
+}
+
+const sources = [
+  ...Array.from({ length: COUNT }, program),
+  ...Array.from({ length: SHAPES }, shapeProgram),
+];
 // `--emit` writes the programs as a JSON array and compares nothing: Ajisai
 // keeps the same programs as its side of the shared core (its
 // tests/sister/arare-shared-core.json), so that a change to what the two
@@ -203,8 +251,8 @@ for (const [i, source] of sources.entries()) {
   }
 }
 
-const ran = COUNT - refused;
-if (ran < COUNT * 0.9) report.fail(`Arare refused ${refused} of ${COUNT} programs; the generator is writing programs Arare cannot run.`);
+const ran = sources.length - refused;
+if (ran < sources.length * 0.9) report.fail(`Arare refused ${refused} of ${sources.length} programs; the generator is writing programs Arare cannot run.`);
 if (ran < MIN_RAN) report.fail(`only ${ran} programs ran; Phase 3's exit criterion asks for at least ${MIN_RAN}.`);
 if (bounded < values * MIN_BOUNDED) report.fail(`the checker bounded only ${bounded} of ${values} values (floor ${MIN_BOUNDED * 100}%).`);
 report.done(

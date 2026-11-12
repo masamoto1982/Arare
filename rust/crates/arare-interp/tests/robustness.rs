@@ -63,6 +63,26 @@ fn ar_ver_212_shapes_and_operands() {
         error("[ 1 2 ] 0 [ TRUE FALSE TRUE ] SELECT").1,
         K::Shape { left: 2, right: 3 }
     );
+    // Shapes align from the innermost axis; a ragged vector pairs with no
+    // other vector; SELECT's branches meet even under one truth.
+    assert_eq!(
+        error("[ [ 1 2 ] [ 3 4 ] ] [ 1 2 3 ] ADD").1,
+        K::Shape { left: 2, right: 3 }
+    );
+    assert_eq!(
+        error("[ [ 1 2 ] [ 3 ] ] [ 1 2 ] LT"),
+        ("LT".into(), K::Ragged)
+    );
+    assert_eq!(error("[ [ 1 2 ] [ 3 ] ] [ 7 8 ] TRUE SELECT").1, K::Ragged);
+    assert_eq!(
+        error("[ 1 2 ] [ 3 4 5 ] TRUE SELECT").1,
+        K::Shape { left: 2, right: 3 }
+    );
+    // A bracket read as data holds only literals.
+    assert_eq!(
+        error("[ 1 2 ADD ] 1 ADD"),
+        ("ADD".into(), K::NotLiteral("ADD".into()))
+    );
     assert_eq!(
         error("1 63 RESCALE").1,
         K::BadOperand("a shift from 0 to 62")

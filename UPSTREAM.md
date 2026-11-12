@@ -17,6 +17,8 @@ is Arare's and is traced in `docs/quality/` from Phase 0 on.
 Ajisai stays the cross-check Arare is compared with, as Arare is Ajisai's (WORK_ORDER.md §1.3, ADR-0015); "oracle" in names means that cross-check. A later
 pin of the oracle — a Git dependency on `ajisai-core` or the WebAssembly bundle
 under `src/wasm/` — names its own upstream commit where it is declared.
-Since 2026-11-10 the oracle is pinned to Ajisai `319fe84fc1c2e339284156fe310d16a395d664e9`
-(1.0.0-beta.4, the merge of masamoto1982/Ajisai#1920); every place it is pinned is listed
+Since 2026-11-12 the oracle is pinned to Ajisai `dd5d1b222f11b72e8aa1664ad68b890dcafc06c4`
+(1.0.0-beta.4, the head of masamoto1982/Ajisai#1922, which makes every lifted
+Word align at the innermost axis; to be moved to its merge commit once it
+merges); every place it is pinned is listed
 in `docs/quality/CONFIGURATION_INDEX.md` (ADR-0007, Amendment).

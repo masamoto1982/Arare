@@ -5,7 +5,7 @@ version = 4
 [[package]]
 name = "ajisai-core"
 version = "1.0.0-beta.4"
-source = "git+https://github.com/masamoto1982/Ajisai?rev=319fe84fc1c2e339284156fe310d16a395d664e9#319fe84fc1c2e339284156fe310d16a395d664e9"
+source = "git+https://github.com/masamoto1982/Ajisai?rev=dd5d1b222f11b72e8aa1664ad68b890dcafc06c4#dd5d1b222f11b72e8aa1664ad68b890dcafc06c4"
 dependencies = [
  "blake3",
  "lazy_static",

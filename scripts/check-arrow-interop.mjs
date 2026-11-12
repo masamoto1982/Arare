@@ -58,7 +58,7 @@ function lanes(table, name) {
 const eq = (a, b) => JSON.stringify(a, (_, x) => (typeof x === 'bigint' ? `${x}n` : x)) === JSON.stringify(b, (_, x) => (typeof x === 'bigint' ? `${x}n` : x));
 
 // 1. Arare writes, apache-arrow reads.
-const program = '[ 1 2 3 ] [ TRUE NIL FALSE ] [ 1 0 DIV 0.5 8 -1 QUANTIZE NIL ] [ 0 0 DIV -3 9223372036854775806 ] [ 1 64 -30 QUANTIZE 2 64 -30 QUANTIZE 0 0 DIV ]';
+const program = '[ 1 2 3 ] [ TRUE NIL FALSE ] [ 1/0 8 0 QUANTIZE 0.5 8 -1 QUANTIZE NIL ] [ 0/0 8 0 QUANTIZE -3 9223372036854775806 ] [ 1.0 64 -30 QUANTIZE 2.0 64 -30 QUANTIZE 0/0 8 0 QUANTIZE ]';
 const file = join(dir, 'out.arrow');
 const w = arare(['--arrow-out', file], program);
 check(w.status === 0, `arare --arrow-out failed: ${w.stderr}`);

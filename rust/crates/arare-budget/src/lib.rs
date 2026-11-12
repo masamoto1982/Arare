@@ -18,6 +18,7 @@
 
 pub mod check;
 pub mod info;
+mod lift;
 pub mod rat;
 pub mod table;
 pub mod value;
