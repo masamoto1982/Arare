@@ -13,7 +13,7 @@
 //! the program is `field=closed` exactly when there is none (AR-HLR-028).
 
 use crate::info::{self, Info};
-use crate::value::{eq_agrees, max_len, Abs};
+use crate::value::{eq_agrees, Abs};
 use crate::words::any_lane;
 use arare_front::{Item, Program, Word};
 use arare_kernel::{Num, Width, MAX_SCALE};
@@ -252,16 +252,28 @@ impl Checker {
         }
     }
 
-    /// A value as data: a quote is evaluated, on a stack of its own, into the
-    /// vector of what it leaves.
+    /// A value as data: a quote is read as the vector of literals it writes,
+    /// as the interpreter reads it (AR-HLR-021); one that holds anything else
+    /// stops the program there.
     pub(crate) fn data(&mut self, v: Abs) -> Abs {
         match v {
             Abs::Quote(items) => {
-                let mut stack = Vec::new();
+                let mut lanes = Vec::new();
                 for item in items.iter() {
-                    self.exec(&mut stack, item);
+                    match item {
+                        Item::Quote(inner) => {
+                            lanes.push(self.data(Abs::Quote(Rc::new(inner.clone()))))
+                        }
+                        Item::Int(_)
+                        | Item::Num { .. }
+                        | Item::Text(_)
+                        | Item::Word(Word::True | Word::False | Word::Nil) => {
+                            self.exec(&mut lanes, item)
+                        }
+                        Item::Word(_) | Item::Name(_) => return Abs::Top,
+                    }
                 }
-                Abs::Lanes(stack.into_iter().map(|x| self.data(x)).collect())
+                Abs::Lanes(lanes)
             }
             other => other,
         }
@@ -277,59 +289,6 @@ impl Checker {
     pub(crate) fn pop_data(&mut self, stack: &mut Vec<Abs>, n: usize) -> Vec<Abs> {
         let o = self.pop(stack, n);
         o.into_iter().map(|v| self.data(v)).collect()
-    }
-
-    /// Lane-wise application, as `arare_interp::lift::lift2`: NIL is the
-    /// result; vectors pair lane by lane, a one-lane vector or a scalar is
-    /// reused, and a vector of unknown length pairs with whatever its lanes
-    /// may meet.
-    pub(crate) fn lift2(
-        &mut self,
-        w: Word,
-        a: &Abs,
-        b: &Abs,
-        f: &mut dyn FnMut(&mut Checker, &Abs, &Abs) -> Abs,
-    ) -> Abs {
-        use Abs::*;
-        match (a, b) {
-            (Nil, _) | (_, Nil) => Nil,
-            (Top, _) | (_, Top) => {
-                self.note(Some(w), Why::Unbounded);
-                if w == Word::Lt {
-                    self.undecided(w);
-                }
-                Top
-            }
-            (Lanes(xs), Lanes(ys)) => match (xs.len(), ys.len()) {
-                (n, m) if n == m => Lanes(
-                    xs.iter()
-                        .zip(ys)
-                        .map(|(x, y)| self.lift2(w, x, y, f))
-                        .collect(),
-                ),
-                (1, _) => Lanes(ys.iter().map(|y| self.lift2(w, &xs[0], y, f)).collect()),
-                (_, 1) => Lanes(xs.iter().map(|x| self.lift2(w, x, &ys[0], f)).collect()),
-                _ => Top,
-            },
-            (x, y) if x.is_vector() && y.is_vector() => {
-                let (p, q) = (any_lane(x), any_lane(y));
-                Hull {
-                    max: max_len(x).max(max_len(y)),
-                    elem: Box::new(self.lift2(w, &p, &q, f)),
-                }
-            }
-            (Lanes(xs), y) => Lanes(xs.iter().map(|x| self.lift2(w, x, y, f)).collect()),
-            (x, Lanes(ys)) => Lanes(ys.iter().map(|y| self.lift2(w, x, y, f)).collect()),
-            (Hull { max, elem }, y) => Hull {
-                max: *max,
-                elem: Box::new(self.lift2(w, elem, y, f)),
-            },
-            (x, Hull { max, elem }) => Hull {
-                max: *max,
-                elem: Box::new(self.lift2(w, x, elem, f)),
-            },
-            (x, y) => f(self, x, y),
-        }
     }
 
     pub(crate) fn lift1(

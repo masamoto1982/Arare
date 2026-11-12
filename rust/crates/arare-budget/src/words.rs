@@ -9,24 +9,9 @@ use crate::info::{self, Info};
 use crate::value::{cross, join, lanes_joined, Abs};
 use arare_front::Word;
 
-/// The lane of `v` that pairs with lane `i` of a condition with `n` lanes.
-fn lane(v: &Abs, i: usize, n: usize) -> Abs {
-    match v {
-        Abs::Lanes(xs) if xs.len() == n => xs[i].clone(),
-        Abs::Lanes(xs) if xs.len() == 1 => xs[0].clone(),
-        Abs::Lanes(_) => Abs::Top,
-        Abs::Hull { elem, .. } => (**elem).clone(),
-        other => other.clone(),
-    }
-}
-
-/// Every lane of `v`, joined; a scalar is its own lane.
+/// Every lane of a vector, joined; nothing for an empty one.
 pub(crate) fn any_lane(v: &Abs) -> Abs {
-    if v.is_vector() {
-        lanes_joined(v).unwrap_or(Abs::Top)
-    } else {
-        v.clone()
-    }
+    lanes_joined(v).unwrap_or(Abs::Top)
 }
 
 impl Checker {
@@ -53,29 +38,22 @@ impl Checker {
         })
     }
 
-    /// AND: a NIL is UNKNOWN here, and vectors pair lane by lane.
+    /// AND: a NIL is UNKNOWN here, and the operands align as every lifted
+    /// Word's do.
     pub(crate) fn and(&mut self, a: &Abs, b: &Abs) -> Abs {
         use Abs::*;
-        if a.is_vector() || b.is_vector() {
-            let one = |v: &Abs| {
-                if v.is_vector() {
-                    v.clone()
-                } else {
-                    Lanes(vec![v.clone()])
-                }
+        self.lift(Word::And, &[a.clone(), b.clone()], false, &mut |_, o| {
+            let truth = |v: &Abs| match v {
+                Nil => Some(true),
+                Truth { agree } => Some(*agree),
+                _ => None,
             };
-            return self.lift2(Word::And, &one(a), &one(b), &mut |c, x, y| c.and(x, y));
-        }
-        let truth = |v: &Abs| match v {
-            Nil => Some(true),
-            Truth { agree } => Some(*agree),
-            _ => None,
-        };
-        match (a, b, truth(a), truth(b)) {
-            (Nil, Nil, _, _) => Nil,
-            (_, _, Some(x), Some(y)) => Truth { agree: x && y },
-            _ => Top,
-        }
+            match (&o[0], &o[1], truth(&o[0]), truth(&o[1])) {
+                (Nil, Nil, _, _) => Nil,
+                (_, _, Some(x), Some(y)) => Truth { agree: x && y },
+                _ => Top,
+            }
+        })
     }
 
     pub(crate) fn not(&mut self, a: &Abs) -> Abs {
@@ -91,27 +69,17 @@ impl Checker {
         }
     }
 
-    /// SELECT: THEN only on TRUE, in both meanings alike when the condition
-    /// agrees; otherwise each meaning may take either branch (AR-HLR-029).
+    /// SELECT, lifted over all three operands: THEN only on TRUE, in both
+    /// meanings alike when the condition agrees; otherwise each meaning may
+    /// take either branch (AR-HLR-029).
     pub(crate) fn select(&mut self, then: &Abs, otherwise: &Abs, cond: &Abs) -> Abs {
-        match cond {
-            Abs::Lanes(cs) => Abs::Lanes(
-                (0..cs.len())
-                    .map(|i| {
-                        let (t, e) = (lane(then, i, cs.len()), lane(otherwise, i, cs.len()));
-                        self.select(&t, &e, &cs[i])
-                    })
-                    .collect(),
-            ),
-            Abs::Hull { max, elem } => Abs::Hull {
-                max: *max,
-                elem: Box::new(self.select(&any_lane(then), &any_lane(otherwise), elem)),
-            },
-            Abs::Nil => otherwise.clone(),
-            Abs::Truth { agree: true } => join(then, otherwise),
-            Abs::Truth { agree: false } => cross(then, otherwise),
+        let ops = [then.clone(), otherwise.clone(), cond.clone()];
+        self.lift(Word::Select, &ops, false, &mut |_, o| match &o[2] {
+            Abs::Nil => o[1].clone(),
+            Abs::Truth { agree: true } => join(&o[0], &o[1]),
+            Abs::Truth { agree: false } => cross(&o[0], &o[1]),
             _ => Abs::Top,
-        }
+        })
     }
 
     /// SUM: skips NIL; NIL when nothing is left (AR-HLR-016).

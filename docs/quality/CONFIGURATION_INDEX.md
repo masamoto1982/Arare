@@ -30,10 +30,10 @@ change that updates this file in the same diff
 
 | Item | Pinned to |
 |---|---|
-| Playground WebAssembly bundle | Ajisai `319fe84fc1c2e339284156fe310d16a395d664e9` (merge of masamoto1982/Ajisai#1920, engine and specification 1.0.0-beta.4), in `src/wasm/ajisai-oracle/` (`src/wasm/ajisai-oracle/ORACLE.md`) |
+| Playground WebAssembly bundle | Ajisai `0bb45c6aaf7c9603c1ec5fec37bc8aadc4800bcc` (merge of masamoto1982/Ajisai#1922, engine and specification 1.0.0-beta.4), in `src/wasm/ajisai-oracle/` (`src/wasm/ajisai-oracle/ORACLE.md`) |
 | MCP server for agent sessions | Ajisai MCP server 0.9.0 with engine 1.0.0-beta.4, in `tools/mcp-server/`, from the same commit |
-| Node build for the oracle comparison | Ajisai `319fe84`, in `tools/mcp-server/wasm/generated/`, read by `scripts/check-oracle.mjs` (ADR-0007) |
-| Native build for the benchmarks | `ajisai-core` at `319fe84fc1c2e339284156fe310d16a395d664e9`, a Git dependency of `rust/bench` (AR-VER-221) |
+| Node build for the oracle comparison | Ajisai `0bb45c6`, in `tools/mcp-server/wasm/generated/`, read by `scripts/check-oracle.mjs` (ADR-0007) |
+| Native build for the benchmarks | `ajisai-core` at `0bb45c6aaf7c9603c1ec5fec37bc8aadc4800bcc`, a Git dependency of `rust/bench` (AR-VER-221) |
 
 ## Phase record
 

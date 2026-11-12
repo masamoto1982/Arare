@@ -53,11 +53,18 @@ pub enum ErrorKind {
     },
     /// An operand of the wrong kind; names the kind expected.
     Type(&'static str),
-    /// Two vectors whose lengths neither match nor include a single element.
+    /// Two vectors whose lengths, aligned from the innermost axis, neither
+    /// match nor include a single element.
     Shape {
         left: usize,
         right: usize,
     },
+    /// A vector with no shape, its lanes of different lengths or depths,
+    /// paired with another vector (AR-LLR-014).
+    Ragged,
+    /// An item that is not a literal, in a bracket read as data (AR-HLR-021);
+    /// names it.
+    NotLiteral(String),
     /// A result exponent outside ±31 (AR-LLR-004).
     ScaleOverflow,
     /// An operand outside what the Word accepts; says what it accepts.
@@ -91,6 +98,14 @@ impl fmt::Display for Error {
             ErrorKind::Shape { left, right } => {
                 write!(f, "vectors of length {left} and {right} do not pair")
             }
+            ErrorKind::Ragged => write!(
+                f,
+                "expected two vectors with a shape, got a ragged one; a ragged vector pairs only with a scalar"
+            ),
+            ErrorKind::NotLiteral(item) => write!(
+                f,
+                "a bracket read as data holds only literals, not {item}; run it with MAP or FOLD, or compute the value outside the bracket"
+            ),
             ErrorKind::ScaleOverflow => write!(f, "the result exponent would leave ±31"),
             ErrorKind::BadOperand(accepts) => write!(f, "accepts {accepts}"),
             ErrorKind::BlockResult(n) => write!(f, "a block must leave exactly one value, not {n}"),

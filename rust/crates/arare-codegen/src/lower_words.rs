@@ -149,8 +149,9 @@ impl Lower {
             }
             Word::Select => {
                 let o = self.pop_data(stack, 3)?;
-                // A vector condition picks lane by lane; a scalar one picks a
-                // whole branch, so both branches must be of one shape.
+                // SELECT lifts all three operands, so it picks lane by lane
+                // whatever the condition is; the compiled route takes only
+                // branches of one shape when the condition is a scalar.
                 let vector = o[2].vector || o[0].vector;
                 if !o[2].vector && o[0].vector != o[1].vector {
                     return no("SELECT between a vector and a scalar");

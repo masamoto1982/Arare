@@ -87,7 +87,9 @@ fn ar_ver_216_c_select() {
     assert_eq!(budgets(&format!("NIL NIL {flip} SELECT")), ["0/1"]);
     assert_eq!(budgets(&format!("TRUE NIL {flip} SELECT")), ["?"]);
     assert_eq!(budgets(&format!("[ 1 2 ] [ 3 4 ] {flip} SELECT")), ["2/1"]);
-    assert_eq!(budgets(&format!("[ 1 2 ] [ 3 ] {flip} SELECT")), ["?"]);
+    // SELECT lifts all three operands, so a one-lane branch is reused
+    // against the other lane by lane, under one condition too.
+    assert_eq!(budgets(&format!("[ 1 2 ] [ 3 ] {flip} SELECT")), ["2/1"]);
 }
 
 #[test]
@@ -321,9 +323,10 @@ fn ar_ver_216_c_every_shape_each_word_meets() {
         ("[ 1 2 ] [ 0 LT ] FILTER SUM 1 ADD", "0/1"),
         // A wheel point flows into a result the checker cannot bound.
         ("1 0 DIV 0.001 8 0 QUANTIZE MUL", "?"),
-        // A sum that may be NIL, joined; a vector joined with a scalar.
+        // A sum that may be NIL, joined; a scalar branch reused against a
+        // vector's lanes.
         ("[ 1 2 ] [ 0 LT ] FILTER SUM 1 TRUE SELECT", "0/1"),
-        ("[ 1 ] 1 TRUE SELECT", "?"),
+        ("[ 1 ] 1 TRUE SELECT", "0/1"),
         // Lanes whose equality an error may flip; AND over such a truth.
         (
             "[ 1 ] 0.1 16 -12 QUANTIZE MUL [ 1 ] 0.1 16 -11 QUANTIZE MUL EQ",
@@ -334,6 +337,29 @@ fn ar_ver_216_c_every_shape_each_word_meets() {
         (&format!("{flip} TRUE EQ"), "?"),
         (&format!("{flip} 1 EQ"), "?"),
         ("[ 1 2 ] [ 1 ] EQ", "0/1"),
+        // Vectors of different rank align from the innermost axis, as the
+        // interpreter aligns them; a ragged pair and a bracket that is not
+        // literal stop the program, so nothing is known (AR-HLR-021/022).
+        ("[ [ 1 2 ] [ 3 4 ] ] [ 10 20 ] ADD", "0/1"),
+        (&format!("[ [ 1 2 ] [ 3 4 ] ] {hull} ADD"), "0/1"),
+        (&format!("[ [ 1 ] [ 2 ] ] 0 {hull} 2 LT SELECT"), "0/1"),
+        ("[ [ 1 2 ] [ 3 ] ] [ 1 2 ] ADD", "?"),
+        ("[ 1 [ 2 ] ] [ 1 2 ] ADD", "?"),
+        (&format!("[ ] {hull} ADD"), "0/1"),
+        // Vectors of vectors whose count is not known: rows of one length
+        // and rows of several, joined.
+        (
+            "[ [ 1 2 ] [ 3 4 ] ] [ SUM 9 LT ] FILTER [ [ 1 2 ] ] ADD",
+            "0/1",
+        ),
+        ("[ [ 1 ] [ 2 3 ] ] [ SUM 9 LT ] FILTER", "0/1"),
+        // A vector joined with a scalar, lanes of a vector kept whole.
+        ("[ [ 2 ] 1 ] [ 'X' BIND TRUE ] FILTER", "?"),
+        ("[ 2 3 MUL ] 1 ADD", "?"),
+        (
+            "[ [ 1 2 ] [ 3 4 ] ] [ 1 2 ] 0.1 16 -12 QUANTIZE MUL ADD",
+            "1/5120",
+        ),
         // The largest lane's budget, wherever it is.
         ("[ 2 1 ] 0.1 16 -12 QUANTIZE MUL", "1/5120"),
     ] {

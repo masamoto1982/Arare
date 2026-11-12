@@ -23,8 +23,19 @@ fn ar_ver_211_arithmetic() {
         shown("[ 1 2 3 ] 10 MUL 10 [ 1 2 ] SUB"),
         "[ 10/1 20/1 30/1 ]  [ 9/1 8/1 ]"
     );
+    // Two vectors align from the innermost axis, as Ajisai's do: a vector
+    // of lower rank is reused against every lane of the higher one.
     assert_eq!(
-        shown("[ [ 1 2 ] [ 3 ] ] [ 10 ] ADD"),
+        shown("[ [ 1 2 ] [ 3 4 ] ] [ 10 20 ] ADD"),
+        "[ [ 11/1 22/1 ] [ 13/1 24/1 ] ]"
+    );
+    assert_eq!(
+        shown("[ [ 1 2 ] [ 3 4 ] ] [ [ 10 ] [ 20 ] ] ADD"),
+        "[ [ 11/1 12/1 ] [ 23/1 24/1 ] ]"
+    );
+    // A scalar combines with any nesting, a ragged one included.
+    assert_eq!(
+        shown("[ [ 1 2 ] [ 3 ] ] 10 ADD"),
         "[ [ 11/1 12/1 ] [ 13/1 ] ]"
     );
     assert_eq!(shown("[ 1 2 3 ] [ 1 0 2 ] DIV"), "[ 1/1 1/0 2/1 ]");
@@ -111,11 +122,14 @@ fn ar_ver_211_nil_and_quotes() {
         shown("NIL [ 2 MUL ] MAP NIL [ TRUE ] FILTER NIL 0 [ ADD ] FOLD NIL SUM NIL 1 EQ"),
         "NIL(literal)  NIL(literal)  NIL(literal)  NIL(literal)  NIL(literal)"
     );
-    // A quote used as data is evaluated into the vector of what it leaves.
-    assert_eq!(shown("[ 1 2 ADD 4 ] 1 ADD"), "[ 4/1 5/1 ]");
+    // A quote used as data is the vector of literals it writes.
     assert_eq!(
-        shown("[ [ 1 2 ] [ 3 ] ] [ [ 1 ] ] ADD"),
-        "[ [ 2/1 3/1 ] [ 4/1 ] ]"
+        shown("[ 1 NIL TRUE 'A' [ 2 ] ] [ 1 NIL TRUE 'A' [ 2 ] ] EQ"),
+        "TRUE"
+    );
+    assert_eq!(
+        shown("[ [ 1 2 ] [ 3 4 ] ] [ [ 1 ] ] ADD"),
+        "[ [ 2/1 3/1 ] [ 4/1 5/1 ] ]"
     );
     assert_eq!(run("NIL").unwrap(), [Value::Nil(Reason::Literal)]);
     assert!(matches!(run("[ 1 ]").unwrap()[0], Value::Quote(_)));
@@ -137,8 +151,18 @@ fn ar_ver_211_edges() {
         shown("TRUE TRUE EQ TRUE FALSE EQ [ NIL ] [ NIL ] EQ [ 1 ] [ 1 2 ] EQ 1 TRUE EQ"),
         "TRUE  FALSE  TRUE  FALSE  FALSE"
     );
-    // SELECT reuses a one-element THEN or ELSE across the lanes.
+    // SELECT reuses a one-element THEN or ELSE across the lanes, and lifts
+    // all three operands: one truth chooses lane by lane over aligned
+    // branches, and a NIL branch is a lane.
     assert_eq!(shown("[ 1 ] [ 2 3 ] [ TRUE FALSE ] SELECT"), "[ 1/1 3/1 ]");
+    assert_eq!(
+        shown("[ [ 1 2 ] [ 3 4 ] ] [ 8 9 ] FALSE SELECT"),
+        "[ [ 8/1 9/1 ] [ 8/1 9/1 ] ]"
+    );
+    assert_eq!(
+        shown("NIL [ 1 2 ] TRUE SELECT [ [ 1 ] [ 2 3 ] ] 0 TRUE SELECT"),
+        "[ NIL(literal) NIL(literal) ]  [ [ 1/1 ] [ 2/1 3/1 ] ]"
+    );
     assert_eq!(run("[ 1 ]").unwrap()[0].to_string(), "[ …1 item(s) ]");
 }
 

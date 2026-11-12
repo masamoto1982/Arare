@@ -29,24 +29,32 @@ reason, a vector, or a quote not yet consumed. UNKNOWN is not a value of its
 own: it is a NIL where a truth value is expected (AR-HLR-013). The machine runs
 one top-level item per step, which is what the Playground's step-through will
 show (Phase 5). A quote is code to MAP, FILTER and FOLD and data to every other
-Word, which evaluates it on a stack of its own into the vector of what it
-leaves; for a quote of literals that is the vector Ajisai writes the same way.
+Word, which reads it as the vector of the literals it writes (numbers, NIL,
+TRUE, FALSE, names as text, nested quotes), the vector Ajisai writes the same
+way. Any other Word or a name in a quote read as data is an error, not run:
+Ajisai keeps it a name, so running it would give the bracket a second meaning.
 
 ## Lifting and NIL (AR-LLR-014)
 
-Lane-wise Words pair equal-length vectors, reuse a one-element vector or a
-scalar, and refuse any other pairing. A NIL operand of an arithmetic or order
-Word is the result, unread — the left one when both are NIL, as in Ajisai. AND
-and NOT instead read NIL as UNKNOWN, so `FALSE NIL AND` is FALSE and
+Lane-wise Words lift as Ajisai's LANG.COLLECTIONS.LIFT does. A scalar pairs
+with every lane of a vector however it nests. Two or more vectors must each
+have a shape and align from the innermost axis, as NumPy broadcasts: a lane of
+length 1 and a vector of lower rank are reused, so `[ [ 1 2 ] [ 3 4 ] ] [ 10 20 ]
+ADD` is `[ [ 11 22 ] [ 13 24 ] ]`; any other pairing, and a ragged vector
+paired with another vector, is refused. SELECT lifts its condition and both
+branches alike, so `[ [ 1 2 ] [ 3 4 ] ] [ 8 9 ] FALSE SELECT` is
+`[ [ 8 9 ] [ 8 9 ] ]`. A NIL operand of an arithmetic or order
+Word is the result, unread — the left one when both are NIL, as in Ajisai. AND,
+NOT and SELECT instead read a NIL as a lane, UNKNOWN to AND and NOT, so `FALSE NIL AND` is FALSE and
 `TRUE NIL AND` is that NIL, its reason intact.
 
 ## The Words (AR-LLR-015)
 
 The twenty Words of WORK_ORDER.md §7 plus the literals TRUE, FALSE and NIL.
 Their operand order follows Ajisai's (`vector block MAP`, `vector init block
-FOLD`, `then else condition SELECT`), and their arithmetic is the kernel's. The
-two SQL departures from Ajisai are SELECT on UNKNOWN taking ELSE and SUM
-skipping NIL (ADR-0007). EQ compares whole values, as Ajisai's EQ does; LT is
+FOLD`, `then else condition SELECT`), and their arithmetic is the kernel's.
+SELECT on UNKNOWN takes ELSE and SUM skips NIL, as SQL's do and as Ajisai's do
+since 1.0.0-beta.4 (ADR-0007, Amendment). EQ compares whole values, as Ajisai's EQ does; LT is
 lane-wise.
 
 ## Names (AR-HLR-032, AR-LLR-028)

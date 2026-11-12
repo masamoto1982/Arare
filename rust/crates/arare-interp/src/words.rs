@@ -2,7 +2,7 @@
 //! AR-HLR-021 to AR-HLR-026). Operands are popped in the order they were
 //! pushed; the arithmetic is `arare-kernel`'s.
 
-use crate::lift::{and, lift1, lift2, not};
+use crate::lift::{and, lift1, lift2, not, select};
 use crate::machine::{data, run_block, Env};
 use crate::value::{ErrorKind, Reason, Value};
 use arare_front::{Item, Word};
@@ -19,8 +19,8 @@ fn pop(stack: &mut Vec<Value>, n: usize) -> Result<Vec<Value>, ErrorKind> {
     Ok(stack.split_off(stack.len() - n))
 }
 
-fn pop_data(stack: &mut Vec<Value>, n: usize, env: &mut Env) -> Result<Vec<Value>, ErrorKind> {
-    pop(stack, n)?.into_iter().map(|v| data(v, env)).collect()
+fn pop_data(stack: &mut Vec<Value>, n: usize) -> Result<Vec<Value>, ErrorKind> {
+    pop(stack, n)?.into_iter().map(data).collect()
 }
 
 fn num(v: &Value) -> Result<Num, ErrorKind> {
@@ -98,34 +98,6 @@ fn equal(a: &Value, b: &Value) -> bool {
     }
 }
 
-/// SELECT: THEN only on TRUE; FALSE, UNKNOWN and NIL take ELSE (AR-HLR-015).
-fn select(then: &Value, otherwise: &Value, cond: &Value) -> Result<Value, ErrorKind> {
-    let lane = |v: &Value, i: usize, n: usize| match v {
-        Value::Vector(xs) if xs.len() == n => Ok(xs[i].clone()),
-        Value::Vector(xs) if xs.len() == 1 => Ok(xs[0].clone()),
-        Value::Vector(xs) => Err(ErrorKind::Shape {
-            left: xs.len(),
-            right: n,
-        }),
-        other => Ok(other.clone()),
-    };
-    match cond {
-        Value::Vector(cs) => (0..cs.len())
-            .map(|i| {
-                select(
-                    &lane(then, i, cs.len())?,
-                    &lane(otherwise, i, cs.len())?,
-                    &cs[i],
-                )
-            })
-            .collect::<Result<_, _>>()
-            .map(Value::Vector),
-        Value::Bool(true) => Ok(then.clone()),
-        Value::Bool(false) | Value::Nil(_) => Ok(otherwise.clone()),
-        _ => Err(ErrorKind::Type("a truth value")),
-    }
-}
-
 fn elements(v: Value) -> Result<Vec<Value>, ErrorKind> {
     match v {
         Value::Vector(xs) => Ok(xs),
@@ -200,14 +172,14 @@ fn bind(stack: &mut Vec<Value>, env: &mut Env) -> Result<(), ErrorKind> {
         }
         Value::Quote(_) => {
             let mut texts = Vec::new();
-            for n in elements(data(names, env)?)? {
+            for n in elements(data(names)?)? {
                 let Value::Text(n) = n else {
                     return Err(ErrorKind::BadOperand("a name, or a block of names"));
                 };
                 texts.push(n);
             }
             let names = texts;
-            let values = elements(data(value, env)?)?;
+            let values = elements(data(value)?)?;
             if values.len() != names.len() {
                 return Err(ErrorKind::Shape {
                     left: values.len(),
@@ -229,43 +201,43 @@ pub(crate) fn apply(w: Word, stack: &mut Vec<Value>, env: &mut Env) -> Result<()
         Word::False => Value::Bool(false),
         Word::Nil => Value::Nil(Reason::Literal),
         Word::Add | Word::Sub | Word::Mul | Word::Div => {
-            let o = pop_data(stack, 2, env)?;
+            let o = pop_data(stack, 2)?;
             arithmetic(w, &o[0], &o[1])?
         }
         Word::Neg => {
-            let o = pop_data(stack, 1, env)?;
+            let o = pop_data(stack, 1)?;
             lift1(&o[0], &|x| Ok(Value::Num(num(x)?.neg())))?
         }
         Word::Lt => {
-            let o = pop_data(stack, 2, env)?;
+            let o = pop_data(stack, 2)?;
             less(&o[0], &o[1])?
         }
         Word::Eq => {
-            let o = pop_data(stack, 2, env)?;
+            let o = pop_data(stack, 2)?;
             match (&o[0], &o[1]) {
                 (Value::Nil(r), _) | (_, Value::Nil(r)) => Value::Nil(*r),
                 (a, b) => Value::Bool(equal(a, b)),
             }
         }
         Word::And => {
-            let o = pop_data(stack, 2, env)?;
+            let o = pop_data(stack, 2)?;
             and(&o[0], &o[1])?
         }
-        Word::Not => not(&pop_data(stack, 1, env)?[0])?,
+        Word::Not => not(&pop_data(stack, 1)?[0])?,
         Word::Rescale => {
-            let o = pop_data(stack, 2, env)?;
+            let o = pop_data(stack, 2)?;
             let s = integer(&o[1], 0, 62, "a shift from 0 to 62")? as u32;
             lift1(&o[0], &|x| {
                 Ok(Value::Num(scale_overflow(num(x)?.rescale(s))?))
             })?
         }
         Word::Narrow => {
-            let o = pop_data(stack, 2, env)?;
+            let o = pop_data(stack, 2)?;
             let w = width(&o[1])?;
             lift1(&o[0], &|x| Ok(Value::Num(num(x)?.narrow(w))))?
         }
         Word::Quantize => {
-            let o = pop_data(stack, 3, env)?;
+            let o = pop_data(stack, 3)?;
             let (w, e) = (
                 width(&o[1])?,
                 integer(
@@ -280,17 +252,17 @@ pub(crate) fn apply(w: Word, stack: &mut Vec<Value>, env: &mut Env) -> Result<()
             })?
         }
         Word::Select => {
-            let o = pop_data(stack, 3, env)?;
+            let o = pop_data(stack, 3)?;
             select(&o[0], &o[1], &o[2])?
         }
-        Word::Sum => match data(pop(stack, 1)?.remove(0), env)? {
+        Word::Sum => match data(pop(stack, 1)?.remove(0))? {
             Value::Nil(r) => Value::Nil(r),
             v => sum(v)?,
         },
         Word::Map | Word::Filter => {
             let mut o = pop(stack, 2)?;
             let code = block(o.pop().expect("two operands"))?;
-            match data(o.pop().expect("two operands"), env)? {
+            match data(o.pop().expect("two operands"))? {
                 Value::Nil(r) => Value::Nil(r),
                 v => {
                     let mut out = Vec::new();
@@ -313,8 +285,8 @@ pub(crate) fn apply(w: Word, stack: &mut Vec<Value>, env: &mut Env) -> Result<()
         Word::Fold => {
             let mut o = pop(stack, 3)?;
             let code = block(o.pop().expect("three operands"))?;
-            let init = data(o.pop().expect("three operands"), env)?;
-            match data(o.pop().expect("three operands"), env)? {
+            let init = data(o.pop().expect("three operands"))?;
+            match data(o.pop().expect("three operands"))? {
                 Value::Nil(r) => Value::Nil(r),
                 v => elements(v)?
                     .into_iter()

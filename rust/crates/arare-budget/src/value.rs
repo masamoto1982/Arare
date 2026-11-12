@@ -126,11 +126,8 @@ pub fn cross(a: &Abs, b: &Abs) -> Abs {
         ) => Abs::num(info::cross(*x, *y)),
         (Nil, Nil) => Nil,
         (Truth { .. } | Nil, Truth { .. } | Nil) => Truth { agree: false },
-        (Lanes(xs), Lanes(ys)) if xs.len() == ys.len() => {
-            Lanes(xs.iter().zip(ys).map(|(x, y)| cross(x, y)).collect())
-        }
-        // Vectors whose lengths may differ between the two meanings, and
-        // anything else.
+        // SELECT lifts over vectors, so only lanes meet here; anything else
+        // (a lane of one kind against one of another) is not known.
         _ => Top,
     }
 }
