@@ -34,7 +34,7 @@ export interface EngineDescriptor {
     readonly reference: (lang: 'en' | 'ja') => string;
 }
 
-const AJISAI_COMMIT = 'dd5d1b222f11b72e8aa1664ad68b890dcafc06c4';
+const AJISAI_COMMIT = '0bb45c6aaf7c9603c1ec5fec37bc8aadc4800bcc';
 
 export const ENGINES: Readonly<Record<EngineKind, EngineDescriptor>> = {
     arare: {

@@ -7,7 +7,7 @@ are compared against since.
 | Field | Value |
 |---|---|
 | Source | https://github.com/masamoto1982/Ajisai |
-| Commit | `dd5d1b222f11b72e8aa1664ad68b890dcafc06c4` |
+| Commit | `0bb45c6aaf7c9603c1ec5fec37bc8aadc4800bcc` |
 | Engine | 1.0.0-beta.4 |
 | Files | `ajisai_core.js`, `ajisai_core.d.ts`, `ajisai_core_bg.wasm`, `ajisai_core_bg.wasm.d.ts`, byte for byte as committed upstream under `src/wasm/generated/` |
 

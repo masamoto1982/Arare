@@ -97,8 +97,8 @@ nested two vectors of different rank:
   could; both now refuse it. A ragged vector still pairs with a scalar.
 
 The same run found `[ TRUE ] SUM` answering TRUE in Ajisai, which #1922 also
-corrects. The oracle moves to the head of #1922 (`dd5d1b2`), and to its merge
-commit when it merges. `overflow` (D-09) is still the one divergence in an
+corrects. The oracle moves to the merge of #1922 (`0bb45c6`). `overflow`
+(D-09) is still the one divergence in an
 answer; what one language accepts and the other refuses (Arare's decimals,
 Ajisai's strings and symbols in brackets) is not a divergence, because no
 program answers differently.

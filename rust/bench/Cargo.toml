@@ -21,7 +21,7 @@ arare-kernel = { path = "../crates/arare-kernel" }
 # Ajisai's exact answers are rationals of a million bits; the budget is
 # checked against them in big integers (the version Ajisai itself uses).
 num-bigint = "0.4"
-ajisai-core = { git = "https://github.com/masamoto1982/Ajisai", rev = "dd5d1b222f11b72e8aa1664ad68b890dcafc06c4" }
+ajisai-core = { git = "https://github.com/masamoto1982/Ajisai", rev = "0bb45c6aaf7c9603c1ec5fec37bc8aadc4800bcc" }
 
 [profile.release]
 codegen-units = 1
